@@ -1,0 +1,29 @@
+dashboard/pages/3_Forecast.py
+  s_100f2d45f51cb7::t_3c2d6a0bd960ae 27
+  s_100f2d45f51cb7::t_ed9a1a8f8a171e 76,84
+tests/test_forecast.py
+  s_100f2d45f51cb7::t_dad79c06baa665 325-372
+dashboard/app.py
+  s_100f2d45f51cb7::t_1d109e18e51ece 26-27,29-31,45,47-53
+README.md
+  s_100f2d45f51cb7::t_8f5b06d5e3217a 117
+  s_100f2d45f51cb7::t_35c7bf89761d1c 137-140,147
+src/usda_sandbox/forecast.py
+  s_100f2d45f51cb7::t_da0f4f81ac01af 562,567,570-573,582,587-596
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "795fe5522d17a65e705463ac4ebe7c3a961c4e6b",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
