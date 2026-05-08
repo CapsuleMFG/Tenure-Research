@@ -1,0 +1,56 @@
+[project]
+name = "usda-sandbox"
+version = "0.1.0"
+description = "USDA livestock and meat data ingest, cleaning, and forecasting sandbox."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+authors = [{ name = "Tyler" }]
+dependencies = [
+    "polars>=1.0",
+    "duckdb>=1.0",
+    "pyarrow>=15.0",
+    "httpx>=0.27",
+    "openpyxl>=3.1",
+    "statsforecast>=1.7",
+    "prophet>=1.1.5",
+    "lightgbm>=4.3",
+    "scikit-learn>=1.4",
+    "plotly>=5.20",
+    "matplotlib>=3.8",
+    "jupyter>=1.0",
+    "pydantic>=2.6",
+    "statsmodels>=0.14",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+    "mypy>=1.10",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/usda_sandbox"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/usda_sandbox"]
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["statsforecast.*", "prophet.*", "lightgbm.*", "duckdb.*", "plotly.*", "openpyxl.*", "pandas.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
