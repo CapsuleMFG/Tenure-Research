@@ -6,13 +6,13 @@ from pathlib import Path
 
 import polars as pl
 import streamlit as st
-
 from components.plots import (
     build_cv_overlay,
     build_forward_forecast,
     build_residual_diagnostics,
 )
 from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
+
 from usda_sandbox.forecast import (
     BacktestProgress,
     BacktestResult,
@@ -26,26 +26,58 @@ from usda_sandbox.store import read_series
 st.set_page_config(
     page_title="Forecast -- USDA Livestock", page_icon="🐂", layout="wide"
 )
-series_id = render_sidebar()
+series_id = render_sidebar(frequencies=["monthly"])
 
 st.title("Forecast")
 
 if series_id is None:
-    st.warning("No data yet -- click **Refresh data** in the sidebar.")
+    st.warning(
+        "No monthly series available — click **Refresh data** in the sidebar "
+        "(or note that the Forecast page only supports monthly series; "
+        "quarterly WASDE series live on Explore and Visualize)."
+    )
     st.stop()
 
 obs_path = Path(DEFAULT_OBS_PATH)
 
+# Inspect the chosen series so slider bounds match what's actually possible.
+_series_full = (
+    read_series(series_id, obs_path)
+    .filter(pl.col("value").is_not_null())
+    .select(["period_start", "value"])
+)
+n_obs = _series_full.height
+
+# Adaptive slider bounds: the cross-validator needs horizon * (n_windows + 1) <= n_obs.
+# Cap horizon so at least 2 CV windows are achievable; cap n_windows from the chosen
+# horizon. If a series is too short for any meaningful backtest, surface that early.
+max_horizon = max(1, min(12, n_obs // 3 - 1))
+default_horizon = min(6, max_horizon)
+
 # ---------------- Inputs -----------------------------------------------------
 
 cfg_a, cfg_b, cfg_c, cfg_d = st.columns([1, 1, 2, 1])
-horizon = cfg_a.slider("Horizon (months)", min_value=1, max_value=12, value=6)
-n_windows = cfg_b.slider("CV windows", min_value=2, max_value=24, value=12)
+horizon = cfg_a.slider(
+    "Horizon (months)", min_value=1, max_value=max_horizon, value=default_horizon
+)
+max_n_windows = max(2, min(24, n_obs // horizon - 1))
+default_n_windows = min(12, max_n_windows)
+n_windows = cfg_b.slider(
+    "CV windows",
+    min_value=2,
+    max_value=max_n_windows,
+    value=default_n_windows,
+)
 all_models = ("AutoARIMA", "Prophet", "LightGBM")
 selected_models = cfg_c.multiselect(
     "Models", options=list(all_models), default=list(all_models)
 )
 run_clicked = cfg_d.button("> Run backtest", type="primary", use_container_width=True)
+
+st.caption(
+    f"Series has **{n_obs}** non-null observations. Sliders are bounded so "
+    f"any combination produces a valid backtest."
+)
 
 cache_key = f"backtest:{series_id}:{horizon}:{n_windows}:{','.join(sorted(selected_models))}"
 

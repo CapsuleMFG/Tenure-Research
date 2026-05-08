@@ -8,14 +8,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import polars as pl
 import streamlit as st
-from statsmodels.tsa.seasonal import seasonal_decompose
-
 from components.plots import (
     EVENT_MARKERS,
     build_series_chart,
     build_yoy_chart,
 )
 from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
+from statsmodels.tsa.seasonal import seasonal_decompose
+
 from usda_sandbox.store import read_series
 
 st.set_page_config(

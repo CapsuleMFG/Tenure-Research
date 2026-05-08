@@ -12,7 +12,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import streamlit as st
-
 from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
 
 st.set_page_config(

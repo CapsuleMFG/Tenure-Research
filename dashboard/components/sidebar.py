@@ -6,6 +6,7 @@ lives in ``st.session_state["series_id"]`` so it survives navigation.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -49,11 +50,19 @@ def _format_age(dt: datetime) -> str:
     return f"{secs // 86400}d ago"
 
 
-def render_sidebar(*, obs_path: Path = DEFAULT_OBS_PATH) -> str | None:
+def render_sidebar(
+    *,
+    obs_path: Path = DEFAULT_OBS_PATH,
+    frequencies: Sequence[str] | None = None,
+) -> str | None:
     """Render the sidebar and return the currently-selected series_id (or None).
 
     If ``observations.parquet`` does not exist, returns ``None`` and shows a
     bootstrap message + refresh button.
+
+    ``frequencies`` optionally restricts the picker to series of the given
+    frequencies (e.g. ``["monthly"]`` on the Forecast page so quarterly
+    series are hidden). When ``None``, all series are shown.
     """
     st.sidebar.title("USDA Livestock")
 
@@ -68,6 +77,15 @@ def render_sidebar(*, obs_path: Path = DEFAULT_OBS_PATH) -> str | None:
     series_df = cached_list_series(str(obs_path))
     overview = cached_dataset_overview(str(obs_path))
 
+    if frequencies is not None:
+        wanted = set(frequencies)
+        series_df = series_df.filter(pl.col("frequency").is_in(wanted))
+        if series_df.is_empty():
+            st.sidebar.warning(
+                f"No series match the requested frequencies: {sorted(wanted)}"
+            )
+            return None
+
     st.sidebar.subheader("Series")
     series_ids = series_df["series_id"].to_list()
     name_lookup = {
@@ -79,8 +97,24 @@ def render_sidebar(*, obs_path: Path = DEFAULT_OBS_PATH) -> str | None:
         )
     }
 
+    # Use a unique selectbox key per frequency-filter so session_state on a
+    # filtered page (e.g. Forecast: monthly only) doesn't clobber the global
+    # cross-page selection used by Explore/Visualize.
+    state_key = (
+        "series_id"
+        if frequencies is None
+        else f"series_id__{'_'.join(sorted(frequencies))}"
+    )
+
     default_index = 0
-    if "series_id" in st.session_state and st.session_state["series_id"] in series_ids:
+    if state_key in st.session_state and st.session_state[state_key] in series_ids:
+        default_index = series_ids.index(st.session_state[state_key])
+    elif (
+        frequencies is not None
+        and "series_id" in st.session_state
+        and st.session_state["series_id"] in series_ids
+    ):
+        # Carry over from the global picker if it happens to fit the filter
         default_index = series_ids.index(st.session_state["series_id"])
 
     chosen = st.sidebar.selectbox(
@@ -88,7 +122,7 @@ def render_sidebar(*, obs_path: Path = DEFAULT_OBS_PATH) -> str | None:
         options=series_ids,
         index=default_index,
         format_func=lambda sid: name_lookup.get(sid, sid),
-        key="series_id",
+        key=state_key,
     )
 
     st.sidebar.subheader("Data status")

@@ -6,13 +6,13 @@ from pathlib import Path
 
 import polars as pl
 import streamlit as st
-
 from components.sidebar import (
     DEFAULT_OBS_PATH,
     cached_dataset_overview,
     cached_list_series,
     render_sidebar,
 )
+
 from usda_sandbox.store import duckdb_connection
 
 st.set_page_config(page_title="Explore — USDA Livestock", page_icon="🐂", layout="wide")

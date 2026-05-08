@@ -10,7 +10,6 @@ from datetime import date, timedelta
 
 import plotly.graph_objects as go
 import polars as pl
-
 from components.plots import (
     EVENT_MARKERS,
     build_cv_overlay,
