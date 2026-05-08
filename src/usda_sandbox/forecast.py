@@ -20,7 +20,7 @@ import os
 import random
 import warnings
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -95,14 +95,13 @@ class BaseForecaster(ABC):
     @abstractmethod
     def predict(self, horizon: int) -> pl.DataFrame: ...
 
-    def cross_validate(
+    def cross_validate_iter(
         self, df: pl.DataFrame, horizon: int, n_windows: int
-    ) -> pl.DataFrame:
-        """Rolling-origin CV with ``n_windows`` non-overlapping forecast blocks.
+    ) -> Iterator[tuple[int, pl.DataFrame]]:
+        """Yield ``(window_index, window_results_df)`` as each window completes.
 
-        Window 0 is the oldest cutoff; window ``n_windows - 1`` is the most
-        recent. Each window holds out ``horizon`` observations after fitting
-        on everything before them.
+        Same validation and windowing semantics as :meth:`cross_validate`,
+        but lets callers observe progress between windows.
         """
         if horizon <= 0 or n_windows <= 0:
             raise ValueError("horizon and n_windows must both be positive")
@@ -115,7 +114,6 @@ class BaseForecaster(ABC):
                 f"horizon {horizon}; got {n}"
             )
 
-        results: list[pl.DataFrame] = []
         for w in range(n_windows):
             cutoff_idx = n - (n_windows - w) * horizon
             train = df.slice(0, cutoff_idx)
@@ -135,8 +133,22 @@ class BaseForecaster(ABC):
                     ["window", "period_start", "point", "lower_80", "upper_80", "actual"]
                 )
             )
-            results.append(merged)
-        return pl.concat(results).sort(["window", "period_start"])
+            yield w, merged
+
+    def cross_validate(
+        self, df: pl.DataFrame, horizon: int, n_windows: int
+    ) -> pl.DataFrame:
+        """Rolling-origin CV with ``n_windows`` non-overlapping forecast blocks.
+
+        Window 0 is the oldest cutoff; window ``n_windows - 1`` is the most
+        recent. Each window holds out ``horizon`` observations after fitting
+        on everything before them. Implemented on top of
+        :meth:`cross_validate_iter`.
+        """
+        frames = [
+            merged for _, merged in self.cross_validate_iter(df, horizon, n_windows)
+        ]
+        return pl.concat(frames).sort(["window", "period_start"])
 
 
 # --------------------------------------------------------------------------- #

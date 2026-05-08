@@ -156,6 +156,27 @@ def test_cross_validate_rejects_bad_args(synthetic_series: pl.DataFrame) -> None
         m.cross_validate(synthetic_series, horizon=3, n_windows=0)
 
 
+def test_cross_validate_iter_yields_per_window(synthetic_series: pl.DataFrame) -> None:
+    m = StatsForecastAutoARIMA(seed=42)
+    items = list(m.cross_validate_iter(synthetic_series, horizon=3, n_windows=2))
+    assert len(items) == 2
+    for idx, (w, window_df) in enumerate(items):
+        assert w == idx
+        assert window_df.columns == _CV_COLS
+        assert window_df.height == 3
+
+
+def test_cross_validate_uses_iter_under_the_hood(
+    synthetic_series: pl.DataFrame,
+) -> None:
+    m = StatsForecastAutoARIMA(seed=42)
+    full = m.cross_validate(synthetic_series, horizon=3, n_windows=2)
+    iterated = pl.concat(
+        [df for _, df in m.cross_validate_iter(synthetic_series, horizon=3, n_windows=2)]
+    ).sort(["window", "period_start"])
+    assert full.equals(iterated)
+
+
 # --------------------------------------------------------------------------- #
 # Input validation
 # --------------------------------------------------------------------------- #
