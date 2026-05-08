@@ -1,0 +1,26 @@
+dashboard/components/__init__.py
+  s_100f2d45f51cb7::t_888a1a1c35dfd4 1
+dashboard/__init__.py
+  s_100f2d45f51cb7::t_075c2775859a76 1
+tests/test_dashboard_plots.py
+  s_100f2d45f51cb7::t_f52b123e15fb94 71
+  s_100f2d45f51cb7::t_af6ec43bc92d5a 1-70,72-131
+dashboard/components/plots.py
+  s_100f2d45f51cb7::t_988fc252d34151 1-347
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "a33b18cf35d21a532bcfd3995df1607baacf110a",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
