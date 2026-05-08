@@ -1,0 +1,19 @@
+docs/superpowers/plans/2026-05-08-dashboard.md
+  s_100f2d45f51cb7::t_c9411acd34ded2 1-1904
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "630acaec6dadb5ee488d8fd3f33799987762b0dd",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "unknown"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
