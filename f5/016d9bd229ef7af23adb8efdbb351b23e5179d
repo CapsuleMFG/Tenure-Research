@@ -1,0 +1,29 @@
+dashboard/pages/1_Explore.py
+  s_100f2d45f51cb7::t_66118772434916 10
+dashboard/pages/2_Visualize.py
+  s_100f2d45f51cb7::t_9092e859482b78 13,18
+tests/test_dashboard_plots.py
+  s_100f2d45f51cb7::t_1791decb38624d 14
+dashboard/app.py
+  s_100f2d45f51cb7::t_63cbd86a582a50 16
+dashboard/pages/3_Forecast.py
+  s_100f2d45f51cb7::t_f124d370c25ca1 10,15
+pyproject.toml
+  s_100f2d45f51cb7::t_cd96f2fb141cdf 58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "f5016d9bd229ef7af23adb8efdbb351b23e5179d",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
