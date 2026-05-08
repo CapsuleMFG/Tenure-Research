@@ -1,0 +1,19 @@
+dashboard/pages/1_Explore.py
+  s_100f2d45f51cb7::t_1de08571ebdf9c 1-97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "4784a59db25a39dc454792e792b96eb8d71d5a32",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
