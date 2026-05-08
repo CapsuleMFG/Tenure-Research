@@ -256,3 +256,69 @@ def test_run_backtest_end_to_end(synthetic_obs_parquet: Path) -> None:
 def test_run_backtest_unknown_series_raises(synthetic_obs_parquet: Path) -> None:
     with pytest.raises(ValueError, match="No observations"):
         run_backtest("does_not_exist", obs_path=synthetic_obs_parquet)
+
+
+def test_iter_run_backtest_yields_progress_then_result(
+    synthetic_obs_parquet: Path,
+) -> None:
+    from usda_sandbox.forecast import (
+        BacktestProgress,
+        BacktestResult,
+        iter_run_backtest,
+    )
+
+    items = list(
+        iter_run_backtest(
+            "synthetic_test",
+            horizon=3,
+            n_windows=2,
+            obs_path=synthetic_obs_parquet,
+        )
+    )
+    # 3 models * 2 windows = 6 progress events, then 1 final result
+    assert len(items) == 7
+    progress_events = items[:-1]
+    final = items[-1]
+
+    assert all(isinstance(e, BacktestProgress) for e in progress_events)
+    assert isinstance(final, BacktestResult)
+
+    # First event is for the first model, first window
+    assert progress_events[0].model == "AutoARIMA"
+    assert progress_events[0].window == 0
+    assert progress_events[0].n_windows == 2
+    assert progress_events[0].running_mape is not None
+    assert progress_events[0].elapsed_s >= 0
+
+
+def test_iter_run_backtest_final_matches_run_backtest(
+    synthetic_obs_parquet: Path,
+) -> None:
+    from usda_sandbox.forecast import iter_run_backtest, run_backtest
+
+    direct = run_backtest(
+        "synthetic_test", horizon=3, n_windows=2, obs_path=synthetic_obs_parquet
+    )
+    items = list(
+        iter_run_backtest(
+            "synthetic_test",
+            horizon=3,
+            n_windows=2,
+            obs_path=synthetic_obs_parquet,
+        )
+    )
+    final = items[-1]
+    assert final.series_id == direct.series_id
+    assert final.horizon == direct.horizon
+    assert final.n_windows == direct.n_windows
+    assert final.cv_details.equals(direct.cv_details)
+    assert final.metrics.equals(direct.metrics)
+
+
+def test_iter_run_backtest_unknown_series_raises(
+    synthetic_obs_parquet: Path,
+) -> None:
+    from usda_sandbox.forecast import iter_run_backtest
+
+    with pytest.raises(ValueError, match="No observations"):
+        list(iter_run_backtest("does_not_exist", obs_path=synthetic_obs_parquet))

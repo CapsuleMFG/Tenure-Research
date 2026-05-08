@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 import os
 import random
+import time
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
@@ -264,7 +265,7 @@ class ProphetForecaster(BaseForecaster):
                 )
             }
         )
-        with warnings.catch_warnings():
+        with _seeded(self.seed), warnings.catch_warnings():
             warnings.simplefilter("ignore")
             forecast = self._model.predict(future)
         out = pl.from_pandas(forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]])
@@ -480,6 +481,22 @@ def _per_model_metrics(
 
 
 @dataclass(frozen=True)
+class BacktestProgress:
+    """Yielded by :func:`iter_run_backtest` after each (model, window) completes.
+
+    ``running_mape`` is the MAPE accumulated across the windows completed so
+    far for the current model — ``None`` only if every actual is zero (which
+    the metric helpers can't divide by).
+    """
+
+    model: str
+    window: int
+    n_windows: int
+    elapsed_s: float
+    running_mape: float | None
+
+
+@dataclass(frozen=True)
 class BacktestResult:
     series_id: str
     horizon: int
@@ -527,6 +544,72 @@ def run_backtest(
     metrics = _per_model_metrics(cv_details, train_values)
 
     return BacktestResult(
+        series_id=series_id,
+        horizon=horizon,
+        n_windows=n_windows,
+        cv_details=cv_details,
+        metrics=metrics,
+    )
+
+
+def iter_run_backtest(
+    series_id: str,
+    horizon: int = 6,
+    n_windows: int = 8,
+    *,
+    obs_path: Path | str | None = None,
+    seed: int = DEFAULT_SEED,
+) -> Iterator[BacktestProgress | BacktestResult]:
+    """Generator variant of :func:`run_backtest`.
+
+    Yields one :class:`BacktestProgress` event after each (model, window)
+    completes (``3 * n_windows`` events total), then a single final
+    :class:`BacktestResult` with the same content :func:`run_backtest` would
+    return for the same inputs.
+    """
+    series = read_series(series_id, obs_path)
+    if series.is_empty():
+        raise ValueError(f"No observations found for series_id={series_id!r}")
+    series = series.filter(pl.col("value").is_not_null()).select(
+        ["period_start", "value"]
+    )
+
+    forecasters: list[tuple[str, BaseForecaster]] = [
+        ("AutoARIMA", StatsForecastAutoARIMA(seed=seed)),
+        ("Prophet", ProphetForecaster(seed=seed)),
+        ("LightGBM", LightGBMForecaster(seed=seed)),
+    ]
+
+    detail_frames: list[pl.DataFrame] = []
+    started = time.time()
+
+    for name, fcst in forecasters:
+        per_model_frames: list[pl.DataFrame] = []
+        for w, window_df in fcst.cross_validate_iter(series, horizon, n_windows):
+            per_model_frames.append(window_df)
+            so_far = pl.concat(per_model_frames)
+            actual = so_far["actual"].to_numpy().astype(float)
+            point = so_far["point"].to_numpy().astype(float)
+            running = _mape(actual, point)
+            yield BacktestProgress(
+                model=name,
+                window=w,
+                n_windows=n_windows,
+                elapsed_s=time.time() - started,
+                running_mape=None if running != running else running,  # NaN guard
+            )
+        cv = (
+            pl.concat(per_model_frames)
+            .sort(["window", "period_start"])
+            .with_columns(model=pl.lit(name))
+        )
+        detail_frames.append(cv)
+
+    cv_details = pl.concat(detail_frames).sort(["model", "window", "period_start"])
+    train_values = series["value"].to_numpy().astype(float)
+    metrics = _per_model_metrics(cv_details, train_values)
+
+    yield BacktestResult(
         series_id=series_id,
         horizon=horizon,
         n_windows=n_windows,
