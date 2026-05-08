@@ -1,0 +1,32 @@
+data/catalog.json
+  s_100f2d45f51cb7::t_1f7b179b9b6150 14,28,42,56,70,84,98,112,126,140,154,168
+dashboard/components/sidebar.py
+  s_100f2d45f51cb7::t_5e681ae4e5d658 16,31
+  s_100f2d45f51cb7::t_4b9b654ba7c6ba 32-36
+dashboard/pages/2_Visualize.py
+  s_100f2d45f51cb7::t_220311fbfc3788 16-20
+  s_100f2d45f51cb7::t_1fb2cf83b7bb8e 51-53
+dashboard/pages/3_Forecast.py
+  s_100f2d45f51cb7::t_a6e9f2c98c81d8 204
+  s_100f2d45f51cb7::t_9448a3af6ba72b 48-57,59-64,67
+  s_100f2d45f51cb7::t_f1fd59155ea9ef 130
+  s_100f2d45f51cb7::t_12c44393a18c15 14-16,18-19
+  s_100f2d45f51cb7::t_4d3e6d52ee6bff 58,65-66
+  s_100f2d45f51cb7::t_557442c94bc703 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "f54a66d9be17721c87db4ab3e35b7cd345d5d0a2",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
