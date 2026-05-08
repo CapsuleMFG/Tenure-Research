@@ -103,6 +103,15 @@ else:
     )
 
 st.subheader("Seasonal decomposition")
+st.caption(
+    "Splits the series into three pieces that add (or multiply) back to the "
+    "original: **trend** (the long-run drift), **seasonal** (the recurring "
+    "annual pattern — for multiplicative, 1.0 means no seasonal effect; 1.05 "
+    "means 5% above trend in that month), and **residual** (whatever's left — "
+    "real shocks or noise the trend+seasonal can't explain). Use it to see "
+    "*how much* of the price movement is just predictable seasonality vs. "
+    "actual cycle/shock."
+)
 with st.expander("Decomposition options"):
     period = st.number_input(
         "Period (months)",
