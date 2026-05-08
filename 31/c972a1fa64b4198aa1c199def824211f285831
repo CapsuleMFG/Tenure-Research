@@ -1,0 +1,20 @@
+dashboard/components/sidebar.py
+  s_100f2d45f51cb7::t_17ebd899778a68 1-8,10-40,42-94,96-125
+  s_100f2d45f51cb7::t_2351857874d49d 9,41,95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "31c972a1fa64b4198aa1c199def824211f285831",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
