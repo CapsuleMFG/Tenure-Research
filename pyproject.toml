@@ -20,6 +20,7 @@ dependencies = [
     "jupyter>=1.0",
     "pydantic>=2.6",
     "statsmodels>=0.14",
+    "streamlit>=1.32",
 ]
 
 [dependency-groups]
