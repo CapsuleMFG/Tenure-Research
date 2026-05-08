@@ -13,7 +13,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from dashboard.components.sidebar import DEFAULT_OBS_PATH, render_sidebar
+from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
 
 st.set_page_config(
     page_title="USDA Livestock Sandbox",

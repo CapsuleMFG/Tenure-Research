@@ -7,12 +7,12 @@ from pathlib import Path
 import polars as pl
 import streamlit as st
 
-from dashboard.components.plots import (
+from components.plots import (
     build_cv_overlay,
     build_forward_forecast,
     build_residual_diagnostics,
 )
-from dashboard.components.sidebar import DEFAULT_OBS_PATH, render_sidebar
+from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
 from usda_sandbox.forecast import (
     BacktestProgress,
     BacktestResult,

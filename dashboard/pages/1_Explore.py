@@ -7,7 +7,7 @@ from pathlib import Path
 import polars as pl
 import streamlit as st
 
-from dashboard.components.sidebar import (
+from components.sidebar import (
     DEFAULT_OBS_PATH,
     cached_dataset_overview,
     cached_list_series,

@@ -10,12 +10,12 @@ import polars as pl
 import streamlit as st
 from statsmodels.tsa.seasonal import seasonal_decompose
 
-from dashboard.components.plots import (
+from components.plots import (
     EVENT_MARKERS,
     build_series_chart,
     build_yoy_chart,
 )
-from dashboard.components.sidebar import DEFAULT_OBS_PATH, render_sidebar
+from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
 from usda_sandbox.store import read_series
 
 st.set_page_config(
