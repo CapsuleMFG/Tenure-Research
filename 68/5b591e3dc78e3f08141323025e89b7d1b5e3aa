@@ -1,0 +1,21 @@
+README.md
+  s_100f2d45f51cb7::t_1d6a770f1ab4d1 26-37
+dashboard/README.md
+  s_100f2d45f51cb7::t_3efcf7d9d33693 1-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "685b591e3dc78e3f08141323025e89b7d1b5e3aa",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
