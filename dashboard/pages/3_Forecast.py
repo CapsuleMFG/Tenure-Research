@@ -11,7 +11,12 @@ from components.plots import (
     build_forward_forecast,
     build_residual_diagnostics,
 )
-from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
+from components.sidebar import (
+    DEFAULT_OBS_PATH,
+    cached_list_series,
+    cached_series_notes,
+    render_sidebar,
+)
 
 from usda_sandbox.forecast import (
     BacktestProgress,
@@ -39,6 +44,26 @@ if series_id is None:
     st.stop()
 
 obs_path = Path(DEFAULT_OBS_PATH)
+
+# Pull the chosen series' metadata for human-readable labels and the
+# explanatory panel below.
+_meta_df = cached_list_series(str(obs_path)).filter(pl.col("series_id") == series_id)
+if _meta_df.is_empty():
+    st.error(f"Series {series_id!r} not found in catalog.")
+    st.stop()
+_meta = _meta_df.row(0, named=True)
+series_name = _meta["series_name"]
+
+# Series snapshot — what is this thing, in plain terms.
+_notes = cached_series_notes().get(series_id, "")
+with st.container(border=True):
+    a, b, c, d = st.columns([3, 1, 1, 1])
+    a.markdown(f"**{series_name}**  \n`{series_id}`")
+    b.markdown(f"**Commodity**  \n{_meta['commodity']}")
+    c.markdown(f"**Unit**  \n{_meta['unit']}")
+    d.markdown(f"**Frequency**  \n{_meta['frequency']}")
+    if _notes:
+        st.markdown(f"_{_notes}_")
 
 # Inspect the chosen series so slider bounds match what's actually possible.
 _series_full = (
@@ -102,7 +127,7 @@ if run_clicked:
         st.stop()
 
     with st.status(
-        f"Running backtest for {series_id}...", expanded=True
+        f"Running backtest for {series_name}...", expanded=True
     ) as status:
         progress_bar = st.progress(0.0)
         total_steps = len(selected_models) * n_windows
@@ -176,7 +201,7 @@ history = (
     .filter(pl.col("value").is_not_null())
     .sort("period_start")
 )
-series_label = series_id  # raw id is fine here; sidebar already shows pretty name
+series_label = series_name  # human-readable for chart titles
 st.plotly_chart(
     build_cv_overlay(
         history,

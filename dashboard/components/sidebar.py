@@ -13,6 +13,7 @@ from pathlib import Path
 import polars as pl
 import streamlit as st
 
+from usda_sandbox.catalog import load_catalog
 from usda_sandbox.clean import clean_all
 from usda_sandbox.ingest import sync_downloads
 from usda_sandbox.store import list_series, read_observations
@@ -25,6 +26,12 @@ DEFAULT_RAW_DIR = Path("data/raw")
 @st.cache_data(ttl=300)
 def cached_list_series(obs_path_str: str) -> pl.DataFrame:
     return list_series(Path(obs_path_str))
+
+
+@st.cache_data(ttl=300)
+def cached_series_notes(catalog_path_str: str = str(DEFAULT_CATALOG_PATH)) -> dict[str, str]:
+    """Map series_id to its catalog 'notes' field (plain-English description)."""
+    return {sd.series_id: sd.notes for sd in load_catalog(catalog_path_str)}
 
 
 @st.cache_data(ttl=300)

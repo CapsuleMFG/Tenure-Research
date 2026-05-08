@@ -11,7 +11,7 @@
     "header_rows_to_skip": 4,
     "value_columns": ["B"],
     "date_column": "A",
-    "notes": "Slaughter steers, fed cattle 5-area weighted reporting region (TX/OK/NM)."
+    "notes": "Live (slaughter-ready) Choice-grade steers sold in the TX/OK/NM fed-cattle reporting region. This is the price the packer pays the feedlot for finished animals. The 35-65% Choice mix reflects regional carcass quality (lower than Nebraska's). Watch this and the Nebraska series together — the spread between them tracks regional supply/demand imbalances."
   },
   {
     "series_id": "cattle_steer_choice_nebraska",
@@ -25,7 +25,7 @@
     "header_rows_to_skip": 4,
     "value_columns": ["C"],
     "date_column": "A",
-    "notes": "Higher-grade fed steer benchmark."
+    "notes": "Live Choice-grade steers sold direct (negotiated, not via auction) in Nebraska, with a higher-quality grade mix (65-80% Choice). Nebraska is the highest-grading fed-cattle region in the US — prices typically run a few dollars/cwt above southern regions. Cleanest fed-cattle benchmark for forecasting due to consistent reporting and grade mix."
   },
   {
     "series_id": "cattle_feeder_steer_500_550",
@@ -39,7 +39,7 @@
     "header_rows_to_skip": 4,
     "value_columns": ["D"],
     "date_column": "A",
-    "notes": "Feeder cattle benchmark — small frame end of the cycle."
+    "notes": "Feeder cattle — lighter-weight calves (500-550 lbs) at Oklahoma City auction. These animals are just leaving the cow-calf operation, on their way to a stocker/grower phase. Prices here lead the fed-cattle cycle by 12-18 months — the beef on the shelf in 2026 was bought as a 500-lb calf in 2025."
   },
   {
     "series_id": "cattle_feeder_steer_750_800",
@@ -53,7 +53,7 @@
     "header_rows_to_skip": 4,
     "value_columns": ["F"],
     "date_column": "A",
-    "notes": "Heavy feeder benchmark — closer to feedlot placement weight."
+    "notes": "Feeder cattle — heavier-weight steers (750-800 lbs) at Oklahoma City auction, near typical feedlot placement weight. These animals will be slaughter-ready in 4-6 months — closer to the fed-cattle cycle in time than the lighter feeders, but still a leading indicator for the boxed-beef cutout."
   },
   {
     "series_id": "hog_barrow_gilt_natbase_51_52",
@@ -67,7 +67,7 @@
     "header_rows_to_skip": 4,
     "value_columns": ["J"],
     "date_column": "A",
-    "notes": "Pre-2013 values are NA; series became the primary hog reference after the 2013 mandatory price reporting redefinition."
+    "notes": "Live hogs (barrows and gilts — castrated males and unbred females, the typical slaughter cohort) priced on the National Base lean-percentage formula at 51-52% lean carcass. This became the headline US hog price after USDA's 2013 mandatory price reporting redefinition; pre-2013 values are NA because the series didn't exist in this form."
   },
   {
     "series_id": "lamb_slaughter_choice_san_angelo",
@@ -81,7 +81,7 @@
     "header_rows_to_skip": 4,
     "value_columns": ["L"],
     "date_column": "A",
-    "notes": "Sheep and lamb pricing reference."
+    "notes": "Live slaughter-ready lambs at San Angelo, Texas — the historical center of US sheep marketing. Note: this series effectively went dark in 2018-04 when AMS changed reporting; expect ~96 nulls from then forward. The US lamb sector is small enough that no national benchmark replaced it cleanly."
   },
   {
     "series_id": "boxed_beef_cutout_choice",
@@ -95,7 +95,7 @@
     "header_rows_to_skip": 4,
     "value_columns": ["B"],
     "date_column": "A",
-    "notes": "Anchor wholesale beef value; tracks closely against fed cattle prices."
+    "notes": "Wholesale beef benchmark. The 'cutout' is a weighted-average value of all the boxed primals (chuck, rib, loin, round, brisket, etc.) cut from a Choice-grade carcass in the 600-900 lb weight band. Expressed as $/cwt of carcass-equivalent weight — effectively 'what the wholesale value of a slaughtered animal adds up to.' Packers' gross margin = cutout − fed cattle price; a widening spread means packers are profitable."
   },
   {
     "series_id": "boxed_beef_cutout_select",
@@ -109,7 +109,7 @@
     "header_rows_to_skip": 4,
     "value_columns": ["C"],
     "date_column": "A",
-    "notes": "Select-grade boxed beef. Choice-Select spread is a common cattle-cycle indicator."
+    "notes": "Same idea as the Choice cutout but for Select-grade carcasses — one quality tier below Choice. Select beef is leaner with less marbling, used mostly for ground beef, supermarket private-label, and casual restaurants. The Choice-Select spread is one of the cleanest cattle-cycle indicators: wide spread = strong demand for high-quality beef and tight Choice supply; narrow spread = the opposite."
   },
   {
     "series_id": "pork_cutout_composite",
@@ -123,7 +123,7 @@
     "header_rows_to_skip": 4,
     "value_columns": ["F"],
     "date_column": "A",
-    "notes": "Anchor wholesale pork value."
+    "notes": "Wholesale pork benchmark. Like the boxed beef cutout but for pork primals (loin, ham, belly, butt, picnic, rib, trim). Composite weighting reflects the typical sale mix to retailers and processors. Belly prices (bacon) drive most of the cyclical movement — pork demand is famously seasonal around grilling season."
   },
   {
     "series_id": "beef_production_commercial_qtr",
@@ -137,7 +137,7 @@
     "header_rows_to_skip": 3,
     "value_columns": ["C"],
     "date_column": "A+B",
-    "notes": "Quarterly commercial beef production. Skips 'Yr Jan-Dec' annual rollup rows; year column is sparse and is forward-filled."
+    "notes": "Commercial beef production — total slaughter at federally-inspected packing plants, expressed in million lbs of carcass weight. Quarterly from USDA's WASDE supply-and-use tables. 'Commercial' excludes farm slaughter (which is small and stable). Sharp drops here often signal slaughter-capacity disruption (e.g., 2020 COVID) or cattle-inventory cycle peaks."
   },
   {
     "series_id": "beef_disappearance_total_qtr",
@@ -151,7 +151,7 @@
     "header_rows_to_skip": 3,
     "value_columns": ["L"],
     "date_column": "A+B",
-    "notes": "Quarterly total beef disappearance — proxy for domestic+export demand."
+    "notes": "Total beef 'disappearance' — a USDA accounting term for production + imports + beginning stocks − exports − ending stocks. It's the quantity of beef that left the supply chain in a quarter, used as the proxy for total (domestic + export) demand. Per-capita disappearance is the headline 'how much beef are Americans eating' number; this aggregate is the input to it."
   },
   {
     "series_id": "pork_production_commercial_qtr",
@@ -165,6 +165,6 @@
     "header_rows_to_skip": 3,
     "value_columns": ["C"],
     "date_column": "A+B",
-    "notes": "Quarterly commercial pork production."
+    "notes": "Same as commercial beef production but for pork: federally-inspected pork slaughter, in million lbs of carcass weight, quarterly. Pork production has historically been more stable than beef because hog inventories cycle on roughly 3-4 year intervals vs. cattle's 8-12 years."
   }
 ]

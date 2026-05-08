@@ -13,7 +13,11 @@ from components.plots import (
     build_series_chart,
     build_yoy_chart,
 )
-from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
+from components.sidebar import (
+    DEFAULT_OBS_PATH,
+    cached_series_notes,
+    render_sidebar,
+)
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 from usda_sandbox.store import read_series
@@ -44,6 +48,9 @@ if series.is_empty():
 
 meta_row = series.row(0, named=True)
 st.subheader(meta_row["series_name"])
+_notes = cached_series_notes().get(series_id, "")
+if _notes:
+    st.markdown(f"_{_notes}_")
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("Commodity", meta_row["commodity"])
 m2.metric("Unit", meta_row["unit"])
