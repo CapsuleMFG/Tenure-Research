@@ -23,6 +23,18 @@ uv run ruff check .
 uv run mypy
 ```
 
+### Launch the dashboard
+
+```bash
+uv run streamlit run dashboard/app.py
+```
+
+Opens at http://localhost:8501. Three pages: **Explore** (catalog and
+coverage), **Visualize** (single-series time-series + decomposition + YoY),
+and **Forecast** (live backtest with per-window progress + scoreboard +
+12-month forward forecast). See [`dashboard/README.md`](dashboard/README.md)
+for details.
+
 ## Results — what's in the cleaned store
 
 12 series, 2,895 observations.
