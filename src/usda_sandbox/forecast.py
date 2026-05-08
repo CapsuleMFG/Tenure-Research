@@ -559,13 +559,18 @@ def iter_run_backtest(
     *,
     obs_path: Path | str | None = None,
     seed: int = DEFAULT_SEED,
+    models: Sequence[str] | None = None,
 ) -> Iterator[BacktestProgress | BacktestResult]:
     """Generator variant of :func:`run_backtest`.
 
     Yields one :class:`BacktestProgress` event after each (model, window)
-    completes (``3 * n_windows`` events total), then a single final
+    completes (``len(models) * n_windows`` events total), then a single final
     :class:`BacktestResult` with the same content :func:`run_backtest` would
     return for the same inputs.
+
+    ``models`` optionally restricts which forecasters are run. When ``None``
+    (the default), all three forecasters run. When provided, only the named
+    forecasters are constructed and iterated; an empty intersection raises.
     """
     series = read_series(series_id, obs_path)
     if series.is_empty():
@@ -574,11 +579,21 @@ def iter_run_backtest(
         ["period_start", "value"]
     )
 
-    forecasters: list[tuple[str, BaseForecaster]] = [
+    all_forecasters: list[tuple[str, BaseForecaster]] = [
         ("AutoARIMA", StatsForecastAutoARIMA(seed=seed)),
         ("Prophet", ProphetForecaster(seed=seed)),
         ("LightGBM", LightGBMForecaster(seed=seed)),
     ]
+    if models is None:
+        forecasters = all_forecasters
+    else:
+        wanted = set(models)
+        forecasters = [(n, f) for n, f in all_forecasters if n in wanted]
+        if not forecasters:
+            raise ValueError(
+                f"No forecasters match the requested models: {sorted(wanted)}. "
+                f"Available: {[n for n, _ in all_forecasters]}"
+            )
 
     detail_frames: list[pl.DataFrame] = []
     started = time.time()

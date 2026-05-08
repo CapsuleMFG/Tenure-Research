@@ -24,7 +24,7 @@ from usda_sandbox.forecast import (
 from usda_sandbox.store import read_series
 
 st.set_page_config(
-    page_title="Forecast -- USDA Livestock", page_icon=":cow2:", layout="wide"
+    page_title="Forecast -- USDA Livestock", page_icon="🐂", layout="wide"
 )
 series_id = render_sidebar()
 
@@ -73,7 +73,7 @@ if run_clicked:
         f"Running backtest for {series_id}...", expanded=True
     ) as status:
         progress_bar = st.progress(0.0)
-        total_steps = len(all_models) * n_windows
+        total_steps = len(selected_models) * n_windows
         completed = 0
         try:
             for event in iter_run_backtest(
@@ -81,6 +81,7 @@ if run_clicked:
                 horizon=horizon,
                 n_windows=n_windows,
                 obs_path=obs_path,
+                models=selected_models,
             ):
                 if isinstance(event, BacktestProgress):
                     completed += 1

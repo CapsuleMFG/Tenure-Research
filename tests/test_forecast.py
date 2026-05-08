@@ -322,3 +322,51 @@ def test_iter_run_backtest_unknown_series_raises(
 
     with pytest.raises(ValueError, match="No observations"):
         list(iter_run_backtest("does_not_exist", obs_path=synthetic_obs_parquet))
+
+
+def test_iter_run_backtest_respects_models_filter(
+    synthetic_obs_parquet: Path,
+) -> None:
+    from usda_sandbox.forecast import (
+        BacktestProgress,
+        BacktestResult,
+        iter_run_backtest,
+    )
+
+    items = list(
+        iter_run_backtest(
+            "synthetic_test",
+            horizon=3,
+            n_windows=2,
+            obs_path=synthetic_obs_parquet,
+            models=["AutoARIMA", "LightGBM"],  # exclude Prophet
+        )
+    )
+    progress_events = [e for e in items if isinstance(e, BacktestProgress)]
+    final = items[-1]
+    assert isinstance(final, BacktestResult)
+
+    # Only the two requested models, 2 windows each = 4 progress events
+    assert len(progress_events) == 4
+    seen_models = {e.model for e in progress_events}
+    assert seen_models == {"AutoARIMA", "LightGBM"}
+
+    # Final result also only contains the requested models
+    assert set(final.metrics["model"].to_list()) == {"AutoARIMA", "LightGBM"}
+
+
+def test_iter_run_backtest_unknown_model_raises(
+    synthetic_obs_parquet: Path,
+) -> None:
+    from usda_sandbox.forecast import iter_run_backtest
+
+    with pytest.raises(ValueError, match="No forecasters match"):
+        list(
+            iter_run_backtest(
+                "synthetic_test",
+                horizon=3,
+                n_windows=2,
+                obs_path=synthetic_obs_parquet,
+                models=["NotARealModel"],
+            )
+        )

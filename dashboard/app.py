@@ -23,13 +23,12 @@ st.set_page_config(
 )
 
 
-def main() -> None:
-    obs_path = Path(DEFAULT_OBS_PATH)
-    render_sidebar(obs_path=obs_path)
+obs_path = Path(DEFAULT_OBS_PATH)
+render_sidebar(obs_path=obs_path)
 
-    st.title("USDA Livestock Sandbox")
-    st.markdown(
-        """
+st.title("USDA Livestock Sandbox")
+st.markdown(
+    """
 A laptop-local view layer over the cleaned USDA ERS livestock and meat
 data. Use the sidebar to pick a series, then visit one of the pages:
 
@@ -43,16 +42,12 @@ The dashboard is read-only against `data/clean/observations.parquet`.
 Click **Refresh data** in the sidebar to re-run ingest and cleaning from
 the latest ERS release.
 """
+)
+
+if not obs_path.exists():
+    st.info(
+        "**No data yet.** Click *Refresh data* in the sidebar to "
+        "download the ERS files and run the cleaner."
     )
-
-    if not obs_path.exists():
-        st.info(
-            "**No data yet.** Click *Refresh data* in the sidebar to "
-            "download the ERS files and run the cleaner."
-        )
-    else:
-        st.success(f"Cleaned store loaded from `{obs_path}`. Pick a page from the sidebar.")
-
-
-if __name__ == "__main__":
-    main()
+else:
+    st.success(f"Cleaned store loaded from `{obs_path}`. Pick a page from the sidebar.")

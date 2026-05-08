@@ -114,7 +114,7 @@ By design — see [CLAUDE.md](CLAUDE.md) non-negotiables:
 
 - No deep learning, no LLMs, no fine-tuning, no GPU
 - No external data: AMS LMR, CME futures, weather, feed costs are out of scope
-- No live dashboard or API — this is a sandbox
+- No hosted/multi-user dashboard or web API — the included Streamlit app runs locally and is single-session
 
 Worth running next (out of scope for v0.1):
 
@@ -134,13 +134,17 @@ notebooks/
   01_explore.ipynb   what's in the data
   02_visualize.ipynb what it looks like over time
   03_forecast.ipynb  the bake-off + forward 12-month forecasts
+dashboard/           Streamlit dashboard (see dashboard/README.md)
+  app.py             entrypoint + landing page
+  components/        sidebar + plot builders
+  pages/             1_Explore, 2_Visualize, 3_Forecast
 src/usda_sandbox/
   ingest.py          discover + download ERS XLSX/ZIP files (idempotent)
   catalog.py         SeriesDefinition (Pydantic)
   clean.py           parse XLSX → tidy observations.parquet
   store.py           polars + DuckDB accessors
   forecast.py        AutoARIMA / Prophet / LightGBM with shared interface
-tests/               56 tests across ingest / clean / store / forecast
+tests/               67 tests across ingest / clean / store / forecast / dashboard
 pyproject.toml       uv-managed, ruff + mypy strict on src/usda_sandbox
 CLAUDE.md            project guidance and non-negotiables
 ```
