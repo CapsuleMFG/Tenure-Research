@@ -36,3 +36,6 @@ Thumbs.db
 
 # Claude Code per-project state
 .claude/
+
+# Superpowers brainstorming session artifacts
+.superpowers/
