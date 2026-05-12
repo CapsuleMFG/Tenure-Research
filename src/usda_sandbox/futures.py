@@ -19,9 +19,14 @@ This module has four responsibilities:
 from __future__ import annotations
 
 import calendar
-from datetime import date
+from collections.abc import Iterable
+from datetime import UTC, date, datetime
+from typing import Any
+
+import polars as pl
 
 __all__ = [
+    "build_deferred_series",
     "contract_delivery_date",
     "contract_months",
     "contract_ticker",
@@ -40,6 +45,17 @@ _CONTRACT_MONTHS: dict[str, tuple[str, ...]] = {
     # Lean hogs: Feb, Apr, May, Jun, Jul, Aug, Oct, Dec (eight contracts/year)
     "HE": ("G", "J", "K", "M", "N", "Q", "V", "Z"),
 }
+
+_COMMODITY_NAME: dict[str, str] = {
+    "LE": "cattle_lc",
+    "HE": "hogs_he",
+}
+
+
+def _commodity_display_name(commodity: str) -> str:
+    if commodity not in _COMMODITY_NAME:
+        raise ValueError(f"no display name for commodity {commodity!r}")
+    return _COMMODITY_NAME[commodity]
 
 
 def contract_months(commodity: str) -> tuple[str, ...]:
@@ -96,3 +112,138 @@ def parse_contract_ticker(ticker: str) -> tuple[str, str, int]:
     except ValueError as e:
         raise ValueError(f"malformed ticker {ticker!r}") from e
     return commodity, code, 2000 + yy
+
+
+def build_deferred_series(
+    *,
+    commodity: str,
+    horizon_months: int,
+    per_contract: pl.DataFrame,
+    months: Iterable[date],
+) -> pl.DataFrame:
+    """Build a deferred-h continuous series for one (commodity, horizon).
+
+    ``per_contract`` has columns ``contract_ticker``, ``period_start``,
+    ``close`` — month-end closing prices per contract.
+
+    For each requested ``month`` in ``months``, finds the two adjacent
+    active contracts and linearly interpolates the price for the target
+    delivery date ``month + horizon_months``.
+
+    Returns a DataFrame with the observations-schema columns:
+    series_id, series_name, commodity, metric, unit, frequency,
+    period_start, period_end, value, source_file, source_sheet,
+    ingested_at. The ``value`` is null on dates with no usable contract
+    data.
+    """
+    if horizon_months < 1:
+        raise ValueError(f"horizon_months must be >= 1; got {horizon_months}")
+
+    pretty = _commodity_display_name(commodity)
+    series_id = f"{pretty}_deferred_{horizon_months}mo"
+    series_name = (
+        f"{'Live Cattle' if commodity == 'LE' else 'Lean Hogs'} futures, "
+        f"{horizon_months}-month deferred (continuous)"
+    )
+    commodity_label = "cattle" if commodity == "LE" else "hogs"
+
+    # Parse each contract_ticker once -> (commodity, code, year) -> delivery_date
+    contract_meta: dict[str, date] = {}
+    for ticker in per_contract["contract_ticker"].unique().to_list():
+        c, k, y = parse_contract_ticker(ticker)
+        contract_meta[ticker] = contract_delivery_date(c, k, y)
+
+    ingested_at = datetime.now(UTC)
+    rows: list[dict[str, Any]] = []
+    for month_end in months:
+        target = _add_months(month_end, horizon_months)
+        # Active contracts on this date are those that appear in per_contract for this date
+        active = per_contract.filter(pl.col("period_start") == month_end)
+        if active.is_empty():
+            value: float | None = None
+        else:
+            tickers = active["contract_ticker"].to_list()
+            prices = active["close"].to_list()
+            # Build sorted (delivery_date, price) pairs
+            pairs = sorted(
+                ((contract_meta[t], p) for t, p in zip(tickers, prices, strict=True)),
+                key=lambda x: x[0],
+            )
+            value = _interpolate_at_target(pairs, target)
+
+        rows.append(
+            {
+                "series_id": series_id,
+                "series_name": series_name,
+                "commodity": commodity_label,
+                "metric": "futures_price",
+                "unit": "USD/cwt",
+                "frequency": "monthly",
+                "period_start": month_end.replace(day=1),
+                "period_end": month_end,
+                "value": value,
+                "source_file": f"futures:{commodity}",
+                "source_sheet": "",
+                "ingested_at": ingested_at,
+            }
+        )
+
+    schema: dict[str, Any] = {
+        "series_id": pl.Utf8,
+        "series_name": pl.Utf8,
+        "commodity": pl.Utf8,
+        "metric": pl.Utf8,
+        "unit": pl.Utf8,
+        "frequency": pl.Utf8,
+        "period_start": pl.Date,
+        "period_end": pl.Date,
+        "value": pl.Float64,
+        "source_file": pl.Utf8,
+        "source_sheet": pl.Utf8,
+        "ingested_at": pl.Datetime("us", "UTC"),
+    }
+    return pl.DataFrame(rows, schema=schema)
+
+
+def _add_months(d: date, months: int) -> date:
+    """Add a whole number of months to a date, returning the last day of the
+    resulting month.
+
+    Inputs are always month-end dates; the output is the last calendar day of
+    the target month.
+    """
+    total = d.month - 1 + months
+    new_year = d.year + total // 12
+    new_month = total % 12 + 1
+    last_day = calendar.monthrange(new_year, new_month)[1]
+    return date(new_year, new_month, last_day)
+
+
+def _interpolate_at_target(
+    pairs: list[tuple[date, float]],
+    target: date,
+) -> float | None:
+    """Linear-interpolate the price at ``target`` from a sorted list of
+    (delivery_date, price) tuples.
+
+    - If ``target`` is at or before the earliest contract -> return earliest price.
+    - If ``target`` is at or after the latest contract -> return latest price.
+    - Otherwise -> linear interpolation between the two flanking contracts.
+    """
+    if not pairs:
+        return None
+    if target <= pairs[0][0]:
+        return pairs[0][1]
+    if target >= pairs[-1][0]:
+        return pairs[-1][1]
+    # Find the flanking pair
+    for i in range(len(pairs) - 1):
+        d0, p0 = pairs[i]
+        d1, p1 = pairs[i + 1]
+        if d0 <= target <= d1:
+            span = (d1 - d0).days
+            if span == 0:
+                return p0
+            w = (target - d0).days / span
+            return p0 + w * (p1 - p0)
+    return None  # unreachable if pairs is sorted
