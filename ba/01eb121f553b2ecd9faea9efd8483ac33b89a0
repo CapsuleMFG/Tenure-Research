@@ -1,0 +1,20 @@
+dashboard/pages/3_Forecast.py
+  s_100f2d45f51cb7::t_c2fa93839f5a8a 21-24,318
+  s_100f2d45f51cb7::t_128d6bbe2c502f 303-307,312-317
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "ba01eb121f553b2ecd9faea9efd8483ac33b89a0",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
