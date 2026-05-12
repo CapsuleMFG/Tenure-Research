@@ -18,6 +18,10 @@ from components.sidebar import (
     render_sidebar,
 )
 
+from usda_sandbox.calibration import (
+    apply_conformal_scaling,
+    conformal_scale_factor,
+)
 from usda_sandbox.forecast import (
     BacktestProgress,
     BacktestResult,
@@ -296,9 +300,21 @@ with st.spinner(f"Refitting {winner} on full history..."):
     fcst.fit(history.select(["period_start", "value"]))
     forward = fcst.predict(horizon=12)
 
+# Calibrate the forward forecast's PI against CV residuals so the
+# "80% PI" actually means 80% empirical coverage on this series.
+_scale = conformal_scale_factor(result.cv_details, model_name=winner)
+forward = apply_conformal_scaling(forward, scale=_scale)
+
 st.plotly_chart(
     build_forward_forecast(history, forward, model_name=winner, label=series_label),
     use_container_width=True,
+)
+st.caption(
+    f"Prediction interval has been **conformally calibrated** against the "
+    f"{result.n_windows} CV windows above. The model's native band was scaled "
+    f"by **{_scale:.2f}x** to land at 80% empirical coverage on the calibration "
+    f"set. A factor above 1.0 means the raw model was overconfident; below 1.0 "
+    f"means it was overconservative."
 )
 
 with st.expander("Numeric forecast table"):
