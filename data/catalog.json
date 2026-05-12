@@ -9,9 +9,26 @@
     "source_file": "livestock-prices.xlsx",
     "source_sheet": "Historical",
     "header_rows_to_skip": 4,
-    "value_columns": ["B"],
+    "value_columns": [
+      "B"
+    ],
     "date_column": "A",
-    "notes": "Live (slaughter-ready) Choice-grade steers sold in the TX/OK/NM fed-cattle reporting region. This is the price the packer pays the feedlot for finished animals. The 35-65% Choice mix reflects regional carcass quality (lower than Nebraska's). Watch this and the Nebraska series together — the spread between them tracks regional supply/demand imbalances."
+    "notes": "Live (slaughter-ready) Choice-grade steers sold in the TX/OK/NM fed-cattle reporting region. This is the price the packer pays the feedlot for finished animals. The 35-65% Choice mix reflects regional carcass quality (lower than Nebraska's). Watch this and the Nebraska series together \u2014 the spread between them tracks regional supply/demand imbalances.",
+    "exogenous_regressors": [
+      "cattle_lc_deferred_1mo",
+      "cattle_lc_deferred_2mo",
+      "cattle_lc_deferred_3mo",
+      "cattle_lc_deferred_4mo",
+      "cattle_lc_deferred_5mo",
+      "cattle_lc_deferred_6mo",
+      "cattle_lc_deferred_7mo",
+      "cattle_lc_deferred_8mo",
+      "cattle_lc_deferred_9mo",
+      "cattle_lc_deferred_10mo",
+      "cattle_lc_deferred_11mo",
+      "cattle_lc_deferred_12mo"
+    ],
+    "forecastable": true
   },
   {
     "series_id": "cattle_steer_choice_nebraska",
@@ -23,9 +40,26 @@
     "source_file": "livestock-prices.xlsx",
     "source_sheet": "Historical",
     "header_rows_to_skip": 4,
-    "value_columns": ["C"],
+    "value_columns": [
+      "C"
+    ],
     "date_column": "A",
-    "notes": "Live Choice-grade steers sold direct (negotiated, not via auction) in Nebraska, with a higher-quality grade mix (65-80% Choice). Nebraska is the highest-grading fed-cattle region in the US — prices typically run a few dollars/cwt above southern regions. Cleanest fed-cattle benchmark for forecasting due to consistent reporting and grade mix."
+    "notes": "Live Choice-grade steers sold direct (negotiated, not via auction) in Nebraska, with a higher-quality grade mix (65-80% Choice). Nebraska is the highest-grading fed-cattle region in the US \u2014 prices typically run a few dollars/cwt above southern regions. Cleanest fed-cattle benchmark for forecasting due to consistent reporting and grade mix.",
+    "exogenous_regressors": [
+      "cattle_lc_deferred_1mo",
+      "cattle_lc_deferred_2mo",
+      "cattle_lc_deferred_3mo",
+      "cattle_lc_deferred_4mo",
+      "cattle_lc_deferred_5mo",
+      "cattle_lc_deferred_6mo",
+      "cattle_lc_deferred_7mo",
+      "cattle_lc_deferred_8mo",
+      "cattle_lc_deferred_9mo",
+      "cattle_lc_deferred_10mo",
+      "cattle_lc_deferred_11mo",
+      "cattle_lc_deferred_12mo"
+    ],
+    "forecastable": true
   },
   {
     "series_id": "cattle_feeder_steer_500_550",
@@ -37,9 +71,26 @@
     "source_file": "livestock-prices.xlsx",
     "source_sheet": "Historical",
     "header_rows_to_skip": 4,
-    "value_columns": ["D"],
+    "value_columns": [
+      "D"
+    ],
     "date_column": "A",
-    "notes": "Feeder cattle — lighter-weight calves (500-550 lbs) at Oklahoma City auction. These animals are just leaving the cow-calf operation, on their way to a stocker/grower phase. Prices here lead the fed-cattle cycle by 12-18 months — the beef on the shelf in 2026 was bought as a 500-lb calf in 2025."
+    "notes": "Feeder cattle \u2014 lighter-weight calves (500-550 lbs) at Oklahoma City auction. These animals are just leaving the cow-calf operation, on their way to a stocker/grower phase. Prices here lead the fed-cattle cycle by 12-18 months \u2014 the beef on the shelf in 2026 was bought as a 500-lb calf in 2025.",
+    "exogenous_regressors": [
+      "cattle_lc_deferred_1mo",
+      "cattle_lc_deferred_2mo",
+      "cattle_lc_deferred_3mo",
+      "cattle_lc_deferred_4mo",
+      "cattle_lc_deferred_5mo",
+      "cattle_lc_deferred_6mo",
+      "cattle_lc_deferred_7mo",
+      "cattle_lc_deferred_8mo",
+      "cattle_lc_deferred_9mo",
+      "cattle_lc_deferred_10mo",
+      "cattle_lc_deferred_11mo",
+      "cattle_lc_deferred_12mo"
+    ],
+    "forecastable": true
   },
   {
     "series_id": "cattle_feeder_steer_750_800",
@@ -51,9 +102,26 @@
     "source_file": "livestock-prices.xlsx",
     "source_sheet": "Historical",
     "header_rows_to_skip": 4,
-    "value_columns": ["F"],
+    "value_columns": [
+      "F"
+    ],
     "date_column": "A",
-    "notes": "Feeder cattle — heavier-weight steers (750-800 lbs) at Oklahoma City auction, near typical feedlot placement weight. These animals will be slaughter-ready in 4-6 months — closer to the fed-cattle cycle in time than the lighter feeders, but still a leading indicator for the boxed-beef cutout."
+    "notes": "Feeder cattle \u2014 heavier-weight steers (750-800 lbs) at Oklahoma City auction, near typical feedlot placement weight. These animals will be slaughter-ready in 4-6 months \u2014 closer to the fed-cattle cycle in time than the lighter feeders, but still a leading indicator for the boxed-beef cutout.",
+    "exogenous_regressors": [
+      "cattle_lc_deferred_1mo",
+      "cattle_lc_deferred_2mo",
+      "cattle_lc_deferred_3mo",
+      "cattle_lc_deferred_4mo",
+      "cattle_lc_deferred_5mo",
+      "cattle_lc_deferred_6mo",
+      "cattle_lc_deferred_7mo",
+      "cattle_lc_deferred_8mo",
+      "cattle_lc_deferred_9mo",
+      "cattle_lc_deferred_10mo",
+      "cattle_lc_deferred_11mo",
+      "cattle_lc_deferred_12mo"
+    ],
+    "forecastable": true
   },
   {
     "series_id": "hog_barrow_gilt_natbase_51_52",
@@ -65,9 +133,26 @@
     "source_file": "livestock-prices.xlsx",
     "source_sheet": "Historical",
     "header_rows_to_skip": 4,
-    "value_columns": ["J"],
+    "value_columns": [
+      "J"
+    ],
     "date_column": "A",
-    "notes": "Live hogs (barrows and gilts — castrated males and unbred females, the typical slaughter cohort) priced on the National Base lean-percentage formula at 51-52% lean carcass. This became the headline US hog price after USDA's 2013 mandatory price reporting redefinition; pre-2013 values are NA because the series didn't exist in this form."
+    "notes": "Live hogs (barrows and gilts \u2014 castrated males and unbred females, the typical slaughter cohort) priced on the National Base lean-percentage formula at 51-52% lean carcass. This became the headline US hog price after USDA's 2013 mandatory price reporting redefinition; pre-2013 values are NA because the series didn't exist in this form.",
+    "exogenous_regressors": [
+      "hogs_he_deferred_1mo",
+      "hogs_he_deferred_2mo",
+      "hogs_he_deferred_3mo",
+      "hogs_he_deferred_4mo",
+      "hogs_he_deferred_5mo",
+      "hogs_he_deferred_6mo",
+      "hogs_he_deferred_7mo",
+      "hogs_he_deferred_8mo",
+      "hogs_he_deferred_9mo",
+      "hogs_he_deferred_10mo",
+      "hogs_he_deferred_11mo",
+      "hogs_he_deferred_12mo"
+    ],
+    "forecastable": true
   },
   {
     "series_id": "lamb_slaughter_choice_san_angelo",
@@ -79,9 +164,13 @@
     "source_file": "livestock-prices.xlsx",
     "source_sheet": "Historical",
     "header_rows_to_skip": 4,
-    "value_columns": ["L"],
+    "value_columns": [
+      "L"
+    ],
     "date_column": "A",
-    "notes": "Live slaughter-ready lambs at San Angelo, Texas — the historical center of US sheep marketing. Note: this series effectively went dark in 2018-04 when AMS changed reporting; expect ~96 nulls from then forward. The US lamb sector is small enough that no national benchmark replaced it cleanly."
+    "notes": "Live slaughter-ready lambs at San Angelo, Texas \u2014 the historical center of US sheep marketing. Note: this series effectively went dark in 2018-04 when AMS changed reporting; expect ~96 nulls from then forward. The US lamb sector is small enough that no national benchmark replaced it cleanly.",
+    "exogenous_regressors": [],
+    "forecastable": true
   },
   {
     "series_id": "boxed_beef_cutout_choice",
@@ -93,9 +182,26 @@
     "source_file": "wholesale-prices.xlsx",
     "source_sheet": "Historical",
     "header_rows_to_skip": 4,
-    "value_columns": ["B"],
+    "value_columns": [
+      "B"
+    ],
     "date_column": "A",
-    "notes": "Wholesale beef benchmark. The 'cutout' is a weighted-average value of all the boxed primals (chuck, rib, loin, round, brisket, etc.) cut from a Choice-grade carcass in the 600-900 lb weight band. Expressed as $/cwt of carcass-equivalent weight — effectively 'what the wholesale value of a slaughtered animal adds up to.' Packers' gross margin = cutout − fed cattle price; a widening spread means packers are profitable."
+    "notes": "Wholesale beef benchmark. The 'cutout' is a weighted-average value of all the boxed primals (chuck, rib, loin, round, brisket, etc.) cut from a Choice-grade carcass in the 600-900 lb weight band. Expressed as $/cwt of carcass-equivalent weight \u2014 effectively 'what the wholesale value of a slaughtered animal adds up to.' Packers' gross margin = cutout \u2212 fed cattle price; a widening spread means packers are profitable.",
+    "exogenous_regressors": [
+      "cattle_lc_deferred_1mo",
+      "cattle_lc_deferred_2mo",
+      "cattle_lc_deferred_3mo",
+      "cattle_lc_deferred_4mo",
+      "cattle_lc_deferred_5mo",
+      "cattle_lc_deferred_6mo",
+      "cattle_lc_deferred_7mo",
+      "cattle_lc_deferred_8mo",
+      "cattle_lc_deferred_9mo",
+      "cattle_lc_deferred_10mo",
+      "cattle_lc_deferred_11mo",
+      "cattle_lc_deferred_12mo"
+    ],
+    "forecastable": true
   },
   {
     "series_id": "boxed_beef_cutout_select",
@@ -107,9 +213,26 @@
     "source_file": "wholesale-prices.xlsx",
     "source_sheet": "Historical",
     "header_rows_to_skip": 4,
-    "value_columns": ["C"],
+    "value_columns": [
+      "C"
+    ],
     "date_column": "A",
-    "notes": "Same idea as the Choice cutout but for Select-grade carcasses — one quality tier below Choice. Select beef is leaner with less marbling, used mostly for ground beef, supermarket private-label, and casual restaurants. The Choice-Select spread is one of the cleanest cattle-cycle indicators: wide spread = strong demand for high-quality beef and tight Choice supply; narrow spread = the opposite."
+    "notes": "Same idea as the Choice cutout but for Select-grade carcasses \u2014 one quality tier below Choice. Select beef is leaner with less marbling, used mostly for ground beef, supermarket private-label, and casual restaurants. The Choice-Select spread is one of the cleanest cattle-cycle indicators: wide spread = strong demand for high-quality beef and tight Choice supply; narrow spread = the opposite.",
+    "exogenous_regressors": [
+      "cattle_lc_deferred_1mo",
+      "cattle_lc_deferred_2mo",
+      "cattle_lc_deferred_3mo",
+      "cattle_lc_deferred_4mo",
+      "cattle_lc_deferred_5mo",
+      "cattle_lc_deferred_6mo",
+      "cattle_lc_deferred_7mo",
+      "cattle_lc_deferred_8mo",
+      "cattle_lc_deferred_9mo",
+      "cattle_lc_deferred_10mo",
+      "cattle_lc_deferred_11mo",
+      "cattle_lc_deferred_12mo"
+    ],
+    "forecastable": true
   },
   {
     "series_id": "pork_cutout_composite",
@@ -121,9 +244,26 @@
     "source_file": "wholesale-prices.xlsx",
     "source_sheet": "Historical",
     "header_rows_to_skip": 4,
-    "value_columns": ["F"],
+    "value_columns": [
+      "F"
+    ],
     "date_column": "A",
-    "notes": "Wholesale pork benchmark. Like the boxed beef cutout but for pork primals (loin, ham, belly, butt, picnic, rib, trim). Composite weighting reflects the typical sale mix to retailers and processors. Belly prices (bacon) drive most of the cyclical movement — pork demand is famously seasonal around grilling season."
+    "notes": "Wholesale pork benchmark. Like the boxed beef cutout but for pork primals (loin, ham, belly, butt, picnic, rib, trim). Composite weighting reflects the typical sale mix to retailers and processors. Belly prices (bacon) drive most of the cyclical movement \u2014 pork demand is famously seasonal around grilling season.",
+    "exogenous_regressors": [
+      "hogs_he_deferred_1mo",
+      "hogs_he_deferred_2mo",
+      "hogs_he_deferred_3mo",
+      "hogs_he_deferred_4mo",
+      "hogs_he_deferred_5mo",
+      "hogs_he_deferred_6mo",
+      "hogs_he_deferred_7mo",
+      "hogs_he_deferred_8mo",
+      "hogs_he_deferred_9mo",
+      "hogs_he_deferred_10mo",
+      "hogs_he_deferred_11mo",
+      "hogs_he_deferred_12mo"
+    ],
+    "forecastable": true
   },
   {
     "series_id": "beef_production_commercial_qtr",
@@ -135,9 +275,13 @@
     "source_file": "meat-supply-and-disappearance-tables-recent.xlsx",
     "source_sheet": "WASDE_Beef",
     "header_rows_to_skip": 3,
-    "value_columns": ["C"],
+    "value_columns": [
+      "C"
+    ],
     "date_column": "A+B",
-    "notes": "Commercial beef production — total slaughter at federally-inspected packing plants, expressed in million lbs of carcass weight. Quarterly from USDA's WASDE supply-and-use tables. 'Commercial' excludes farm slaughter (which is small and stable). Sharp drops here often signal slaughter-capacity disruption (e.g., 2020 COVID) or cattle-inventory cycle peaks."
+    "notes": "Commercial beef production \u2014 total slaughter at federally-inspected packing plants, expressed in million lbs of carcass weight. Quarterly from USDA's WASDE supply-and-use tables. 'Commercial' excludes farm slaughter (which is small and stable). Sharp drops here often signal slaughter-capacity disruption (e.g., 2020 COVID) or cattle-inventory cycle peaks.",
+    "exogenous_regressors": [],
+    "forecastable": true
   },
   {
     "series_id": "beef_disappearance_total_qtr",
@@ -149,9 +293,13 @@
     "source_file": "meat-supply-and-disappearance-tables-recent.xlsx",
     "source_sheet": "WASDE_Beef",
     "header_rows_to_skip": 3,
-    "value_columns": ["L"],
+    "value_columns": [
+      "L"
+    ],
     "date_column": "A+B",
-    "notes": "Total beef 'disappearance' — a USDA accounting term for production + imports + beginning stocks − exports − ending stocks. It's the quantity of beef that left the supply chain in a quarter, used as the proxy for total (domestic + export) demand. Per-capita disappearance is the headline 'how much beef are Americans eating' number; this aggregate is the input to it."
+    "notes": "Total beef 'disappearance' \u2014 a USDA accounting term for production + imports + beginning stocks \u2212 exports \u2212 ending stocks. It's the quantity of beef that left the supply chain in a quarter, used as the proxy for total (domestic + export) demand. Per-capita disappearance is the headline 'how much beef are Americans eating' number; this aggregate is the input to it.",
+    "exogenous_regressors": [],
+    "forecastable": true
   },
   {
     "series_id": "pork_production_commercial_qtr",
@@ -163,8 +311,444 @@
     "source_file": "meat-supply-and-disappearance-tables-recent.xlsx",
     "source_sheet": "WASDE_Pork",
     "header_rows_to_skip": 3,
-    "value_columns": ["C"],
+    "value_columns": [
+      "C"
+    ],
     "date_column": "A+B",
-    "notes": "Same as commercial beef production but for pork: federally-inspected pork slaughter, in million lbs of carcass weight, quarterly. Pork production has historically been more stable than beef because hog inventories cycle on roughly 3-4 year intervals vs. cattle's 8-12 years."
+    "notes": "Same as commercial beef production but for pork: federally-inspected pork slaughter, in million lbs of carcass weight, quarterly. Pork production has historically been more stable than beef because hog inventories cycle on roughly 3-4 year intervals vs. cattle's 8-12 years.",
+    "exogenous_regressors": [],
+    "forecastable": true
+  },
+  {
+    "series_id": "cattle_lc_deferred_1mo",
+    "series_name": "Live Cattle futures, 1-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 1 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_lc_deferred_2mo",
+    "series_name": "Live Cattle futures, 2-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 2 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_lc_deferred_3mo",
+    "series_name": "Live Cattle futures, 3-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 3 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_lc_deferred_4mo",
+    "series_name": "Live Cattle futures, 4-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 4 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_lc_deferred_5mo",
+    "series_name": "Live Cattle futures, 5-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 5 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_lc_deferred_6mo",
+    "series_name": "Live Cattle futures, 6-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 6 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_lc_deferred_7mo",
+    "series_name": "Live Cattle futures, 7-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 7 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_lc_deferred_8mo",
+    "series_name": "Live Cattle futures, 8-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 8 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_lc_deferred_9mo",
+    "series_name": "Live Cattle futures, 9-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 9 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_lc_deferred_10mo",
+    "series_name": "Live Cattle futures, 10-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 10 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_lc_deferred_11mo",
+    "series_name": "Live Cattle futures, 11-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 11 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_lc_deferred_12mo",
+    "series_name": "Live Cattle futures, 12-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:LE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the LE contract maturing 12 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_1mo",
+    "series_name": "Lean Hogs futures, 1-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 1 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_2mo",
+    "series_name": "Lean Hogs futures, 2-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 2 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_3mo",
+    "series_name": "Lean Hogs futures, 3-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 3 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_4mo",
+    "series_name": "Lean Hogs futures, 4-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 4 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_5mo",
+    "series_name": "Lean Hogs futures, 5-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 5 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_6mo",
+    "series_name": "Lean Hogs futures, 6-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 6 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_7mo",
+    "series_name": "Lean Hogs futures, 7-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 7 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_8mo",
+    "series_name": "Lean Hogs futures, 8-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 8 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_9mo",
+    "series_name": "Lean Hogs futures, 9-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 9 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_10mo",
+    "series_name": "Lean Hogs futures, 10-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 10 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_11mo",
+    "series_name": "Lean Hogs futures, 11-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 11 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "hogs_he_deferred_12mo",
+    "series_name": "Lean Hogs futures, 12-month deferred (continuous)",
+    "commodity": "hogs",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:HE",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the HE contract maturing 12 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
   }
 ]
