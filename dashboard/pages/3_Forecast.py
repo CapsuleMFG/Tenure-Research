@@ -20,7 +20,7 @@ from components.sidebar import (
 
 from usda_sandbox.calibration import (
     apply_conformal_scaling,
-    conformal_scale_factor,
+    conformal_scale_factors_per_horizon,
 )
 from usda_sandbox.catalog import load_catalog as _load_catalog
 from usda_sandbox.forecast import (
@@ -316,20 +316,31 @@ with st.spinner(f"Refitting {winner} on full history..."):
     forward = fcst.predict(horizon=12)
 
 # Calibrate the forward forecast's PI against CV residuals so the
-# "80% PI" actually means 80% empirical coverage on this series.
-_scale = conformal_scale_factor(result.cv_details, model_name=winner)
-forward = apply_conformal_scaling(forward, scale=_scale)
+# "80% PI" actually means 80% empirical coverage on this series. A
+# per-horizon scale (one factor per step) tracks how miscoverage grows
+# with the forecast horizon; if CV used a shorter horizon than the
+# forward forecast, the last calibrated step's scale carries forward.
+_per_h_scales = conformal_scale_factors_per_horizon(
+    result.cv_details, model_name=winner, horizon=result.horizon
+)
+_forward_scales = _per_h_scales + [_per_h_scales[-1]] * max(
+    0, forward.height - len(_per_h_scales)
+)
+_forward_scales = _forward_scales[: forward.height]
+forward = apply_conformal_scaling(forward, scale=_forward_scales)
 
 st.plotly_chart(
     build_forward_forecast(history, forward, model_name=winner, label=series_label),
     use_container_width=True,
 )
 st.caption(
-    f"Prediction interval has been **conformally calibrated** against the "
-    f"{result.n_windows} CV windows above. The model's native band was scaled "
-    f"by **{_scale:.2f}x** to land at 80% empirical coverage on the calibration "
-    f"set. A factor above 1.0 means the raw model was overconfident; below 1.0 "
-    f"means it was overconservative."
+    f"Prediction interval has been **conformally calibrated per horizon** "
+    f"against the {result.n_windows} CV windows above. The model's native "
+    f"band was scaled by **{_forward_scales[0]:.2f}x at h=1** and "
+    f"**{_forward_scales[-1]:.2f}x at h={forward.height}** to land at 80% "
+    f"empirical coverage on the calibration set. Factors above 1.0 mean the "
+    f"raw model was overconfident at that horizon; below 1.0 means "
+    f"overconservative."
 )
 
 with st.expander("Numeric forecast table"):
