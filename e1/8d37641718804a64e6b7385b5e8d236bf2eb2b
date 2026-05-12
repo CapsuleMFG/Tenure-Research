@@ -1,0 +1,27 @@
+tests/test_calibration.py
+  s_100f2d45f51cb7::t_9ec4a3891d0a3a 15-18
+  s_100f2d45f51cb7::t_03e7114f7d8069 9
+  s_100f2d45f51cb7::t_22f1d936afd63b 123
+  s_100f2d45f51cb7::t_2b8fdf2753e54d 92-122,124-278
+src/usda_sandbox/calibration.py
+  s_100f2d45f51cb7::t_4afa4fbbd2271e 16
+  s_100f2d45f51cb7::t_e3e21deabdcc38 116-117,119-122
+  s_100f2d45f51cb7::t_3395e0194f9175 44-115
+  s_100f2d45f51cb7::t_8b9654d551109c 118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "e18d37641718804a64e6b7385b5e8d236bf2eb2b",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
