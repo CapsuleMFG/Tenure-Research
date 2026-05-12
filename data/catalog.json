@@ -77,18 +77,18 @@
     "date_column": "A",
     "notes": "Feeder cattle \u2014 lighter-weight calves (500-550 lbs) at Oklahoma City auction. These animals are just leaving the cow-calf operation, on their way to a stocker/grower phase. Prices here lead the fed-cattle cycle by 12-18 months \u2014 the beef on the shelf in 2026 was bought as a 500-lb calf in 2025.",
     "exogenous_regressors": [
-      "cattle_lc_deferred_1mo",
-      "cattle_lc_deferred_2mo",
-      "cattle_lc_deferred_3mo",
-      "cattle_lc_deferred_4mo",
-      "cattle_lc_deferred_5mo",
-      "cattle_lc_deferred_6mo",
-      "cattle_lc_deferred_7mo",
-      "cattle_lc_deferred_8mo",
-      "cattle_lc_deferred_9mo",
-      "cattle_lc_deferred_10mo",
-      "cattle_lc_deferred_11mo",
-      "cattle_lc_deferred_12mo"
+      "cattle_feeder_deferred_1mo",
+      "cattle_feeder_deferred_2mo",
+      "cattle_feeder_deferred_3mo",
+      "cattle_feeder_deferred_4mo",
+      "cattle_feeder_deferred_5mo",
+      "cattle_feeder_deferred_6mo",
+      "cattle_feeder_deferred_7mo",
+      "cattle_feeder_deferred_8mo",
+      "cattle_feeder_deferred_9mo",
+      "cattle_feeder_deferred_10mo",
+      "cattle_feeder_deferred_11mo",
+      "cattle_feeder_deferred_12mo"
     ],
     "forecastable": true
   },
@@ -108,18 +108,18 @@
     "date_column": "A",
     "notes": "Feeder cattle \u2014 heavier-weight steers (750-800 lbs) at Oklahoma City auction, near typical feedlot placement weight. These animals will be slaughter-ready in 4-6 months \u2014 closer to the fed-cattle cycle in time than the lighter feeders, but still a leading indicator for the boxed-beef cutout.",
     "exogenous_regressors": [
-      "cattle_lc_deferred_1mo",
-      "cattle_lc_deferred_2mo",
-      "cattle_lc_deferred_3mo",
-      "cattle_lc_deferred_4mo",
-      "cattle_lc_deferred_5mo",
-      "cattle_lc_deferred_6mo",
-      "cattle_lc_deferred_7mo",
-      "cattle_lc_deferred_8mo",
-      "cattle_lc_deferred_9mo",
-      "cattle_lc_deferred_10mo",
-      "cattle_lc_deferred_11mo",
-      "cattle_lc_deferred_12mo"
+      "cattle_feeder_deferred_1mo",
+      "cattle_feeder_deferred_2mo",
+      "cattle_feeder_deferred_3mo",
+      "cattle_feeder_deferred_4mo",
+      "cattle_feeder_deferred_5mo",
+      "cattle_feeder_deferred_6mo",
+      "cattle_feeder_deferred_7mo",
+      "cattle_feeder_deferred_8mo",
+      "cattle_feeder_deferred_9mo",
+      "cattle_feeder_deferred_10mo",
+      "cattle_feeder_deferred_11mo",
+      "cattle_feeder_deferred_12mo"
     ],
     "forecastable": true
   },
@@ -748,6 +748,222 @@
     ],
     "date_column": "X",
     "notes": "Continuous series: at each month-end, the price of the HE contract maturing 12 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_1mo",
+    "series_name": "Feeder Cattle futures, 1-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 1 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_2mo",
+    "series_name": "Feeder Cattle futures, 2-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 2 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_3mo",
+    "series_name": "Feeder Cattle futures, 3-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 3 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_4mo",
+    "series_name": "Feeder Cattle futures, 4-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 4 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_5mo",
+    "series_name": "Feeder Cattle futures, 5-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 5 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_6mo",
+    "series_name": "Feeder Cattle futures, 6-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 6 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_7mo",
+    "series_name": "Feeder Cattle futures, 7-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 7 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_8mo",
+    "series_name": "Feeder Cattle futures, 8-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 8 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_9mo",
+    "series_name": "Feeder Cattle futures, 9-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 9 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_10mo",
+    "series_name": "Feeder Cattle futures, 10-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 10 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_11mo",
+    "series_name": "Feeder Cattle futures, 11-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 11 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
+    "exogenous_regressors": [],
+    "forecastable": false
+  },
+  {
+    "series_id": "cattle_feeder_deferred_12mo",
+    "series_name": "Feeder Cattle futures, 12-month deferred (continuous)",
+    "commodity": "cattle",
+    "metric": "futures_price",
+    "unit": "USD/cwt",
+    "frequency": "monthly",
+    "source_file": "futures:GF",
+    "source_sheet": "X",
+    "header_rows_to_skip": 0,
+    "value_columns": [
+      "X"
+    ],
+    "date_column": "X",
+    "notes": "Continuous series: at each month-end, the price of the GF contract maturing 12 months ahead. Linear interpolation between adjacent contracts when no contract matches exactly. Built from per-contract data pulled via yfinance. XLSX-shaped fields are placeholders (the clean_all dispatcher short-circuits on the futures: prefix).",
     "exogenous_regressors": [],
     "forecastable": false
   }

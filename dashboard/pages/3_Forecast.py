@@ -224,7 +224,17 @@ _target_def = next(
     None,
 )
 if _target_def is not None and _target_def.exogenous_regressors:
-    _commodity_label = "Live Cattle" if _target_def.commodity == "cattle" else "Lean Hogs"
+    # Pick the label from the regressor prefix so feeder-cattle (GF)
+    # vs. fed-cattle (LE) cases aren't both labeled "Live Cattle".
+    _first_reg = _target_def.exogenous_regressors[0]
+    if _first_reg.startswith("cattle_lc_"):
+        _commodity_label = "Live Cattle"
+    elif _first_reg.startswith("cattle_feeder_"):
+        _commodity_label = "Feeder Cattle"
+    elif _first_reg.startswith("hogs_he_"):
+        _commodity_label = "Lean Hogs"
+    else:
+        _commodity_label = "futures"
     st.caption(
         f"This series was forecast with **{len(_target_def.exogenous_regressors)} "
         f"exogenous regressors**: deferred {_commodity_label} futures (1-12 months "

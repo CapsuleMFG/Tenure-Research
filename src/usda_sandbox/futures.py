@@ -52,11 +52,27 @@ _CONTRACT_MONTHS: dict[str, tuple[str, ...]] = {
     "LE": ("G", "J", "M", "Q", "V", "Z"),
     # Lean hogs: Feb, Apr, May, Jun, Jul, Aug, Oct, Dec (eight contracts/year)
     "HE": ("G", "J", "K", "M", "N", "Q", "V", "Z"),
+    # Feeder cattle: Jan, Mar, Apr, May, Aug, Sep, Oct, Nov (eight contracts/year)
+    "GF": ("F", "H", "J", "K", "Q", "U", "V", "X"),
 }
 
 _COMMODITY_NAME: dict[str, str] = {
     "LE": "cattle_lc",
     "HE": "hogs_he",
+    "GF": "cattle_feeder",
+}
+
+# Human-readable label per commodity (for series_name) and the
+# observations.parquet `commodity` column.
+_COMMODITY_PRETTY_LABEL: dict[str, str] = {
+    "LE": "Live Cattle",
+    "HE": "Lean Hogs",
+    "GF": "Feeder Cattle",
+}
+_COMMODITY_TAXONOMY_LABEL: dict[str, str] = {
+    "LE": "cattle",
+    "HE": "hogs",
+    "GF": "cattle",
 }
 
 
@@ -149,11 +165,13 @@ def build_deferred_series(
 
     pretty = _commodity_display_name(commodity)
     series_id = f"{pretty}_deferred_{horizon_months}mo"
+    if commodity not in _COMMODITY_PRETTY_LABEL:
+        raise ValueError(f"no pretty label for commodity {commodity!r}")
     series_name = (
-        f"{'Live Cattle' if commodity == 'LE' else 'Lean Hogs'} futures, "
+        f"{_COMMODITY_PRETTY_LABEL[commodity]} futures, "
         f"{horizon_months}-month deferred (continuous)"
     )
-    commodity_label = "cattle" if commodity == "LE" else "hogs"
+    commodity_label = _COMMODITY_TAXONOMY_LABEL[commodity]
 
     # Parse each contract_ticker once -> (commodity, code, year) -> delivery_date
     contract_meta: dict[str, date] = {}
@@ -300,7 +318,7 @@ def _default_fetcher(ticker: str) -> pl.DataFrame:
 
 def sync_futures(
     *,
-    commodities: Iterable[str] = ("LE", "HE"),
+    commodities: Iterable[str] = ("LE", "HE", "GF"),
     start_year: int = 1999,
     end_year: int | None = None,
     raw_dir: Path = Path("data/raw/futures"),
@@ -409,7 +427,7 @@ def append_futures_to_observations(
     *,
     obs_path: Path = Path("data/clean/observations.parquet"),
     raw_dir: Path = Path("data/raw/futures"),
-    commodities: Iterable[str] = ("LE", "HE"),
+    commodities: Iterable[str] = ("LE", "HE", "GF"),
     horizons: range = range(1, 13),
 ) -> None:
     """Build all (commodity x horizon) deferred series and merge into
