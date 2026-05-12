@@ -313,7 +313,14 @@ def clean_all(
     combined.write_parquet(out)
 
     if has_futures:
-        append_futures_to_observations(obs_path=out)
+        # raw_dir is for XLSX files; futures live under data/raw/futures/ by default.
+        # If a non-default raw_dir is passed, forward its sibling 'futures' subdir
+        # so test/CI environments can use isolated paths.
+        futures_raw = raw_dir / "futures"
+        if futures_raw.exists():
+            append_futures_to_observations(obs_path=out, raw_dir=futures_raw)
+        else:
+            append_futures_to_observations(obs_path=out)
         combined = pl.read_parquet(out)
 
     return combined

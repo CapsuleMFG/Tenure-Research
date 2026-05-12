@@ -259,7 +259,12 @@ def _interpolate_at_target(
 
 @dataclass(frozen=True)
 class FuturesManifestEntry:
-    """One row of the futures manifest, keyed externally on ticker."""
+    """One row of the futures manifest, keyed externally on ticker.
+
+    ``missing=True`` (with ``sha256=""``) records that we attempted to fetch
+    this contract but yfinance returned no data — useful for an audit trail
+    of which historical contracts are simply unavailable (e.g. delisted).
+    """
 
     ticker: str
     commodity: str
@@ -268,6 +273,7 @@ class FuturesManifestEntry:
     delivery_date: str   # ISO date — easier JSON round-trip than ``date``
     sha256: str
     downloaded_at: str   # ISO-8601
+    missing: bool = False
 
 
 _MANIFEST_FILENAME = "manifest.json"
@@ -324,6 +330,10 @@ def sync_futures(
                 ticker = contract_ticker(commodity, code, year)
                 file_path = raw_dir / f"{commodity}_{code}_{year}.parquet"
 
+                # Already-known-missing contracts: don't re-attempt every run.
+                # If you want to retry, delete the manifest entry manually.
+                if ticker in manifest and manifest[ticker].missing:
+                    continue
                 if (
                     ticker in manifest
                     and file_path.exists()
@@ -333,6 +343,22 @@ def sync_futures(
 
                 df = fetcher(ticker)
                 if df.is_empty():
+                    # Record a "missing" manifest entry so the audit trail shows
+                    # which contracts were attempted but unavailable (e.g. delisted
+                    # pre-2020 contracts that yfinance no longer serves).
+                    if ticker not in manifest or not manifest[ticker].missing:
+                        manifest[ticker] = FuturesManifestEntry(
+                            ticker=ticker,
+                            commodity=commodity,
+                            month_code=code,
+                            year=year,
+                            delivery_date=contract_delivery_date(
+                                commodity, code, year
+                            ).isoformat(),
+                            sha256="",
+                            downloaded_at=datetime.now(UTC).isoformat(),
+                            missing=True,
+                        )
                     continue
 
                 df.write_parquet(file_path)

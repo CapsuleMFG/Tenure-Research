@@ -646,44 +646,34 @@ def run_backtest(
     *,
     obs_path: Path | str | None = None,
     seed: int = DEFAULT_SEED,
+    models: Sequence[str] | None = None,
+    catalog_path: Path | str | None = "data/catalog.json",
 ) -> BacktestResult:
-    """Run all three forecasters with rolling-origin CV on one series.
+    """Run a backtest for ``series_id`` with all three forecasters.
 
-    Returns a :class:`BacktestResult` containing both the per-fold predictions
-    (for plotting) and per-model accuracy metrics. Deterministic given the
-    same series data and seed.
+    Synchronous wrapper around :func:`iter_run_backtest` that collects all
+    progress events and returns the final :class:`BacktestResult`.
+
+    ``catalog_path`` (default ``"data/catalog.json"``) is used to look up the
+    target series's ``exogenous_regressors``. If the catalog file exists and
+    the target has non-empty regressors, those series are loaded as exog and
+    passed to each forecaster. If ``catalog_path=None`` or the file doesn't
+    exist, the v0.2a path (no exog) runs unchanged.
     """
-    series = read_series(series_id, obs_path)
-    if series.is_empty():
-        raise ValueError(f"No observations found for series_id={series_id!r}")
-    series = series.filter(pl.col("value").is_not_null()).select(
-        ["period_start", "value"]
-    )
-
-    forecasters: list[tuple[str, BaseForecaster]] = [
-        ("AutoARIMA", StatsForecastAutoARIMA(seed=seed)),
-        ("Prophet", ProphetForecaster(seed=seed)),
-        ("LightGBM", LightGBMForecaster(seed=seed)),
-    ]
-
-    detail_frames: list[pl.DataFrame] = []
-    for name, fcst in forecasters:
-        cv = fcst.cross_validate(series, horizon=horizon, n_windows=n_windows)
-        cv = cv.with_columns(model=pl.lit(name))
-        detail_frames.append(cv)
-
-    cv_details = pl.concat(detail_frames).sort(["model", "window", "period_start"])
-
-    train_values = series["value"].to_numpy().astype(float)
-    metrics = _per_model_metrics(cv_details, train_values)
-
-    return BacktestResult(
-        series_id=series_id,
+    result: BacktestResult | None = None
+    for event in iter_run_backtest(
+        series_id,
         horizon=horizon,
         n_windows=n_windows,
-        cv_details=cv_details,
-        metrics=metrics,
-    )
+        obs_path=obs_path,
+        seed=seed,
+        models=models,
+        catalog_path=catalog_path,
+    ):
+        if isinstance(event, BacktestResult):
+            result = event
+    assert result is not None
+    return result
 
 
 def iter_run_backtest(

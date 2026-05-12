@@ -297,9 +297,12 @@ def test_sync_futures_writes_manifest_and_per_contract_files(
     assert (raw_dir / "LE_G_2024.parquet").exists()
     # Manifest file written
     assert (raw_dir / "manifest.json").exists()
-    # Each entry has a non-empty sha256
+    # Each successfully-fetched entry has a full SHA-256; missing entries have sha256=""
     for entry in manifest.values():
-        assert len(entry.sha256) == 64
+        if entry.missing:
+            assert entry.sha256 == ""
+        else:
+            assert len(entry.sha256) == 64
 
 
 def test_sync_futures_idempotent_on_unchanged_data(tmp_path) -> None:
@@ -331,12 +334,12 @@ def test_sync_futures_idempotent_on_unchanged_data(tmp_path) -> None:
     assert (raw_dir / "LE_Z_2024.parquet").stat().st_mtime_ns == mtime_before
 
 
-def test_sync_futures_skips_unavailable_contracts(tmp_path) -> None:
-    """yfinance returns empty for an ancient or delisted contract — record and skip."""
+def test_sync_futures_records_unavailable_contracts_as_missing(tmp_path) -> None:
+    """yfinance returns empty for an ancient or delisted contract — record
+    as missing in the manifest with sha256='' and missing=True."""
     from usda_sandbox.futures import sync_futures
 
     raw_dir = tmp_path / "futures"
-    # No contracts available
     fetcher = _fake_fetcher_factory(available={})
     manifest = sync_futures(
         commodities=("LE",),
@@ -345,8 +348,12 @@ def test_sync_futures_skips_unavailable_contracts(tmp_path) -> None:
         raw_dir=raw_dir,
         fetcher=fetcher,
     )
-    # Manifest is empty (nothing fetched), no parquet files written, no exception
-    assert manifest == {}
+    # All 6 LE contract months for 2024 attempted and recorded as missing
+    assert len(manifest) == 6
+    for entry in manifest.values():
+        assert entry.missing is True
+        assert entry.sha256 == ""
+    # No parquet files written for missing contracts
     assert not list(raw_dir.glob("LE_*.parquet"))
 
 
