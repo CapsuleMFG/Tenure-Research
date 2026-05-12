@@ -1,0 +1,21 @@
+tests/test_catalog.py
+  s_100f2d45f51cb7::t_10e8f65d547014 1-98
+src/usda_sandbox/catalog.py
+  s_100f2d45f51cb7::t_7e3b0bb9b69302 44-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "26c87517bf9188387cd67a88f06f8f4ccc57f253",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
