@@ -1,0 +1,32 @@
+tests/test_forecast.py
+  s_100f2d45f51cb7::t_9589143275fc16 467-544,546-568
+  s_100f2d45f51cb7::t_dd082fab3270b9 545
+dashboard/pages/2_Visualize.py
+  s_100f2d45f51cb7::t_5a9e4ccfa7fb94 28
+dashboard/pages/3_Forecast.py
+  s_100f2d45f51cb7::t_9c76d682490585 39
+  s_100f2d45f51cb7::t_e6098963fed9cf 221-234
+  s_100f2d45f51cb7::t_674fd93285ac28 25
+dashboard/components/sidebar.py
+  s_100f2d45f51cb7::t_da3655a146fd0d 71,81-83
+  s_100f2d45f51cb7::t_36e2e646df4652 107-115
+  s_100f2d45f51cb7::t_544136a7229497 37-43
+src/usda_sandbox/forecast.py
+  s_100f2d45f51cb7::t_389aa240b6cf41 697,706-713,722-727,749-751,762,782-817
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "047b590da93cb29a651c1d7dcbe71447feeb7aab",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
