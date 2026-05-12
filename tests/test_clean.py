@@ -250,3 +250,102 @@ def test_clean_all_skips_missing_source_files(
 
     assert "missing_file_series" not in df["series_id"].to_list()
     assert "missing_file_series" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------- #
+# clean_all dispatcher for futures (v0.2b)
+# --------------------------------------------------------------------------- #
+
+
+def test_clean_all_dispatcher_routes_futures_to_futures_path(
+    tmp_path: Path,
+    fixture_paths: dict[str, Path],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When a SeriesDefinition's source_file starts with 'futures:', clean_all
+    skips the XLSX path and the futures append path handles it instead."""
+    from usda_sandbox.catalog import SeriesDefinition, save_catalog
+
+    # NOTE: value_columns and date_column have alphabetic-only validators,
+    # so use placeholder "X" / ["X"] for futures entries instead of "_".
+    catalog = [
+        SeriesDefinition(
+            series_id="test_wide_b",
+            series_name="Wide fixture col B",
+            commodity="cattle",
+            metric="price",
+            unit="USD/cwt",
+            frequency="monthly",
+            source_file="wide_format.xlsx",
+            source_sheet="Historical",
+            header_rows_to_skip=4,
+            value_columns=["B"],
+            date_column="A",
+            notes="",
+        ),
+        SeriesDefinition(
+            series_id="cattle_lc_deferred_1mo",
+            series_name="LE deferred 1mo",
+            commodity="cattle",
+            metric="futures_price",
+            unit="USD/cwt",
+            frequency="monthly",
+            source_file="futures:LE",
+            source_sheet="X",
+            header_rows_to_skip=0,
+            value_columns=["X"],
+            date_column="X",
+            notes="",
+            forecastable=False,
+        ),
+    ]
+    catalog_path = tmp_path / "catalog.json"
+    save_catalog(catalog_path, catalog)
+
+    called_with: list[Path] = []
+
+    def fake_append(*, obs_path: Path, **kwargs: object) -> None:
+        called_with.append(obs_path)
+
+    monkeypatch.setattr(
+        "usda_sandbox.clean.append_futures_to_observations",
+        fake_append,
+    )
+
+    out_path = tmp_path / "obs.parquet"
+    raw_dir = fixture_paths["wide_format"].parent
+    df = clean_all(catalog_path, raw_dir, out_path)
+
+    assert "cattle_lc_deferred_1mo" not in df["series_id"].to_list()
+    assert "test_wide_b" in df["series_id"].to_list()
+    assert called_with == [out_path]
+
+
+def test_clean_all_xlsx_path_unchanged_for_existing_series(
+    fixture_paths: dict[str, Path], tmp_path: Path
+) -> None:
+    """The 12 existing catalog entries (all XLSX) still work end-to-end."""
+    from usda_sandbox.catalog import SeriesDefinition, save_catalog
+
+    catalog = [
+        SeriesDefinition(
+            series_id="test_wide_b",
+            series_name="Wide fixture col B",
+            commodity="cattle",
+            metric="price",
+            unit="USD/cwt",
+            frequency="monthly",
+            source_file="wide_format.xlsx",
+            source_sheet="Historical",
+            header_rows_to_skip=4,
+            value_columns=["B"],
+            date_column="A",
+            notes="",
+        ),
+    ]
+    catalog_path = tmp_path / "catalog.json"
+    save_catalog(catalog_path, catalog)
+    raw_dir = fixture_paths["wide_format"].parent
+    df = clean_all(catalog_path, raw_dir, tmp_path / "obs.parquet")
+    assert "test_wide_b" in df["series_id"].to_list()
+    assert df.height > 0

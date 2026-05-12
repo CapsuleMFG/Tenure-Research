@@ -51,7 +51,7 @@ files = ["src/usda_sandbox"]
 strict = true
 
 [[tool.mypy.overrides]]
-module = ["statsforecast.*", "prophet.*", "lightgbm.*", "duckdb.*", "plotly.*", "openpyxl.*", "pandas.*"]
+module = ["statsforecast.*", "prophet.*", "lightgbm.*", "duckdb.*", "plotly.*", "openpyxl.*", "pandas.*", "yfinance.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

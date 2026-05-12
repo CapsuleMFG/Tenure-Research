@@ -19,18 +19,26 @@ This module has four responsibilities:
 from __future__ import annotations
 
 import calendar
-from collections.abc import Iterable
+import hashlib
+import json
+from collections.abc import Callable, Iterable
+from dataclasses import asdict, dataclass
 from datetime import UTC, date, datetime
+from pathlib import Path
 from typing import Any
 
 import polars as pl
+import yfinance as yf
 
 __all__ = [
+    "FuturesManifestEntry",
+    "append_futures_to_observations",
     "build_deferred_series",
     "contract_delivery_date",
     "contract_months",
     "contract_ticker",
     "parse_contract_ticker",
+    "sync_futures",
 ]
 
 # CME month codes: F G H J K M N Q U V X Z = Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
@@ -247,3 +255,209 @@ def _interpolate_at_target(
             w = (target - d0).days / span
             return p0 + w * (p1 - p0)
     return None  # unreachable if pairs is sorted
+
+
+@dataclass(frozen=True)
+class FuturesManifestEntry:
+    """One row of the futures manifest, keyed externally on ticker."""
+
+    ticker: str
+    commodity: str
+    month_code: str
+    year: int
+    delivery_date: str   # ISO date — easier JSON round-trip than ``date``
+    sha256: str
+    downloaded_at: str   # ISO-8601
+
+
+_MANIFEST_FILENAME = "manifest.json"
+
+
+def _default_fetcher(ticker: str) -> pl.DataFrame:
+    """Real yfinance fetch — returns month-end closing prices for a contract."""
+    hist = yf.Ticker(ticker).history(period="max", auto_adjust=False)
+    if hist.empty:
+        return pl.DataFrame(schema={"period_start": pl.Date, "close": pl.Float64})
+    monthly = (
+        hist["Close"]
+        .resample("ME")
+        .last()
+        .dropna()
+        .reset_index()
+        .rename(columns={"Date": "period_start", "Close": "close"})
+    )
+    return pl.from_pandas(monthly).with_columns(
+        pl.col("period_start").cast(pl.Date),
+        pl.col("close").cast(pl.Float64),
+    )
+
+
+def sync_futures(
+    *,
+    commodities: Iterable[str] = ("LE", "HE"),
+    start_year: int = 1999,
+    end_year: int | None = None,
+    raw_dir: Path = Path("data/raw/futures"),
+    fetcher: Callable[[str], pl.DataFrame] | None = None,
+) -> dict[str, FuturesManifestEntry]:
+    """Download per-contract historical price data via yfinance.
+
+    Idempotent: contracts whose on-disk SHA matches the manifest are not
+    re-downloaded. Contracts that yfinance has no data for are silently
+    skipped (no entry in the returned manifest).
+
+    ``fetcher`` is injectable for testing — defaults to a real yfinance call
+    that returns month-end closing prices for the given ticker.
+    """
+    end_year = end_year if end_year is not None else datetime.now(UTC).year + 2
+    raw_dir = Path(raw_dir)
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    fetcher = fetcher if fetcher is not None else _default_fetcher
+
+    manifest_path = raw_dir / _MANIFEST_FILENAME
+    manifest = _load_manifest(manifest_path)
+
+    for commodity in commodities:
+        codes = contract_months(commodity)
+        for year in range(start_year, end_year + 1):
+            for code in codes:
+                ticker = contract_ticker(commodity, code, year)
+                file_path = raw_dir / f"{commodity}_{code}_{year}.parquet"
+
+                if (
+                    ticker in manifest
+                    and file_path.exists()
+                    and _sha256_of(file_path) == manifest[ticker].sha256
+                ):
+                    continue
+
+                df = fetcher(ticker)
+                if df.is_empty():
+                    continue
+
+                df.write_parquet(file_path)
+                sha = _sha256_of(file_path)
+                manifest[ticker] = FuturesManifestEntry(
+                    ticker=ticker,
+                    commodity=commodity,
+                    month_code=code,
+                    year=year,
+                    delivery_date=contract_delivery_date(
+                        commodity, code, year
+                    ).isoformat(),
+                    sha256=sha,
+                    downloaded_at=datetime.now(UTC).isoformat(),
+                )
+
+    _save_manifest(manifest_path, manifest)
+    return manifest
+
+
+def _sha256_of(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _load_manifest(path: Path) -> dict[str, FuturesManifestEntry]:
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    return {t: FuturesManifestEntry(**entry) for t, entry in raw.items()}
+
+
+def _save_manifest(
+    path: Path, manifest: dict[str, FuturesManifestEntry]
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    serializable = {t: asdict(e) for t, e in manifest.items()}
+    path.write_text(
+        json.dumps(serializable, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def append_futures_to_observations(
+    *,
+    obs_path: Path = Path("data/clean/observations.parquet"),
+    raw_dir: Path = Path("data/raw/futures"),
+    commodities: Iterable[str] = ("LE", "HE"),
+    horizons: range = range(1, 13),
+) -> None:
+    """Build all (commodity x horizon) deferred series and merge into
+    observations.parquet. Idempotent: replaces existing rows for the
+    affected series_ids (keyed on series_id + period_start)."""
+    obs_path = Path(obs_path)
+    raw_dir = Path(raw_dir)
+    if not raw_dir.exists():
+        raise FileNotFoundError(
+            f"{raw_dir!s} does not exist. Run sync_futures() before "
+            "append_futures_to_observations()."
+        )
+
+    per_contract_by_commodity: dict[str, pl.DataFrame] = {}
+    for commodity in commodities:
+        contract_dfs: list[pl.DataFrame] = []
+        for parquet_path in sorted(raw_dir.glob(f"{commodity}_*.parquet")):
+            ticker_body = parquet_path.stem  # e.g., "LE_Z_2024"
+            parts = ticker_body.split("_")
+            if len(parts) != 3:
+                continue
+            c, code, yr = parts[0], parts[1], int(parts[2])
+            df = pl.read_parquet(parquet_path).with_columns(
+                contract_ticker=pl.lit(contract_ticker(c, code, yr)),
+            )
+            contract_dfs.append(
+                df.select(["contract_ticker", "period_start", "close"])
+            )
+        per_contract_by_commodity[commodity] = (
+            pl.concat(contract_dfs)
+            if contract_dfs
+            else pl.DataFrame(
+                schema={
+                    "contract_ticker": pl.Utf8,
+                    "period_start": pl.Date,
+                    "close": pl.Float64,
+                }
+            )
+        )
+
+    all_months: set[date] = set()
+    for df in per_contract_by_commodity.values():
+        all_months.update(df["period_start"].to_list())
+    months_sorted = sorted(all_months)
+
+    new_rows: list[pl.DataFrame] = []
+    for commodity in commodities:
+        contracts = per_contract_by_commodity[commodity]
+        for h in horizons:
+            new_rows.append(
+                build_deferred_series(
+                    commodity=commodity,
+                    horizon_months=h,
+                    per_contract=contracts,
+                    months=months_sorted,
+                )
+            )
+
+    if not new_rows:
+        return
+
+    futures_obs = pl.concat(new_rows, how="vertical_relaxed")
+    futures_ids = set(futures_obs["series_id"].to_list())
+
+    if obs_path.exists():
+        existing = pl.read_parquet(obs_path).filter(
+            ~pl.col("series_id").is_in(futures_ids)
+        )
+        combined = pl.concat([existing, futures_obs], how="vertical_relaxed")
+    else:
+        combined = futures_obs
+
+    combined = combined.unique(
+        subset=["series_id", "period_start", "source_file"], keep="last"
+    ).sort(["series_id", "period_start"])
+    obs_path.parent.mkdir(parents=True, exist_ok=True)
+    combined.write_parquet(obs_path)

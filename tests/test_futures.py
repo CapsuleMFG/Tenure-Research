@@ -229,3 +229,254 @@ def test_deferred_series_series_id_format() -> None:
         months=[date(2024, 1, 31)],
     )
     assert result_he["series_id"][0] == "hogs_he_deferred_3mo"
+
+
+# --------------------------------------------------------------------------- #
+# Sync & manifest
+# --------------------------------------------------------------------------- #
+
+
+def _fake_fetcher_factory(
+    *,
+    available: dict[str, list[tuple[date, float]]],
+):
+    """Build a fake yfinance fetcher: takes a ticker, returns OHLCV-like data
+    for the requested ticker, or empty if not in ``available``.
+
+    Each value in ``available`` is a list of (date, close) pairs.
+    """
+
+    def fetch(ticker: str) -> pl.DataFrame:
+        if ticker not in available:
+            return pl.DataFrame(
+                schema={"period_start": pl.Date, "close": pl.Float64}
+            )
+        rows = available[ticker]
+        return pl.DataFrame(
+            {
+                "period_start": [d for d, _ in rows],
+                "close": [p for _, p in rows],
+            }
+        ).with_columns(
+            pl.col("period_start").cast(pl.Date),
+            pl.col("close").cast(pl.Float64),
+        )
+
+    return fetch
+
+
+def test_sync_futures_writes_manifest_and_per_contract_files(
+    tmp_path,
+) -> None:
+    from usda_sandbox.futures import sync_futures
+
+    raw_dir = tmp_path / "futures"
+    fetcher = _fake_fetcher_factory(
+        available={
+            "LEZ24.CME": [
+                (date(2024, 1, 31), 175.0),
+                (date(2024, 2, 29), 178.0),
+            ],
+            "LEG24.CME": [
+                (date(2024, 1, 31), 173.0),
+            ],
+        }
+    )
+    manifest = sync_futures(
+        commodities=("LE",),
+        start_year=2024,
+        end_year=2024,
+        raw_dir=raw_dir,
+        fetcher=fetcher,
+    )
+    # Two contracts in the available dict were fetched
+    assert "LEZ24.CME" in manifest
+    assert "LEG24.CME" in manifest
+    # Files written to disk
+    assert (raw_dir / "LE_Z_2024.parquet").exists()
+    assert (raw_dir / "LE_G_2024.parquet").exists()
+    # Manifest file written
+    assert (raw_dir / "manifest.json").exists()
+    # Each entry has a non-empty sha256
+    for entry in manifest.values():
+        assert len(entry.sha256) == 64
+
+
+def test_sync_futures_idempotent_on_unchanged_data(tmp_path) -> None:
+    from usda_sandbox.futures import sync_futures
+
+    raw_dir = tmp_path / "futures"
+    fetcher = _fake_fetcher_factory(
+        available={"LEZ24.CME": [(date(2024, 1, 31), 175.0)]}
+    )
+    first = sync_futures(
+        commodities=("LE",),
+        start_year=2024,
+        end_year=2024,
+        raw_dir=raw_dir,
+        fetcher=fetcher,
+    )
+    sha_before = first["LEZ24.CME"].sha256
+    mtime_before = (raw_dir / "LE_Z_2024.parquet").stat().st_mtime_ns
+
+    second = sync_futures(
+        commodities=("LE",),
+        start_year=2024,
+        end_year=2024,
+        raw_dir=raw_dir,
+        fetcher=fetcher,
+    )
+    # SHA unchanged, file not rewritten
+    assert second["LEZ24.CME"].sha256 == sha_before
+    assert (raw_dir / "LE_Z_2024.parquet").stat().st_mtime_ns == mtime_before
+
+
+def test_sync_futures_skips_unavailable_contracts(tmp_path) -> None:
+    """yfinance returns empty for an ancient or delisted contract — record and skip."""
+    from usda_sandbox.futures import sync_futures
+
+    raw_dir = tmp_path / "futures"
+    # No contracts available
+    fetcher = _fake_fetcher_factory(available={})
+    manifest = sync_futures(
+        commodities=("LE",),
+        start_year=2024,
+        end_year=2024,
+        raw_dir=raw_dir,
+        fetcher=fetcher,
+    )
+    # Manifest is empty (nothing fetched), no parquet files written, no exception
+    assert manifest == {}
+    assert not list(raw_dir.glob("LE_*.parquet"))
+
+
+# --------------------------------------------------------------------------- #
+# Append to observations
+# --------------------------------------------------------------------------- #
+
+
+def test_append_futures_to_observations_writes_24_series(tmp_path) -> None:
+    from usda_sandbox.futures import (
+        append_futures_to_observations,
+        sync_futures,
+    )
+
+    raw_dir = tmp_path / "futures"
+    # Build a tiny fetcher with one LE and one HE contract, two months each
+    fetcher = _fake_fetcher_factory(
+        available={
+            "LEZ24.CME": [
+                (date(2024, 1, 31), 175.0),
+                (date(2024, 2, 29), 178.0),
+            ],
+            "HEZ24.CME": [
+                (date(2024, 1, 31), 90.0),
+                (date(2024, 2, 29), 91.0),
+            ],
+        }
+    )
+    sync_futures(
+        commodities=("LE", "HE"),
+        start_year=2024,
+        end_year=2024,
+        raw_dir=raw_dir,
+        fetcher=fetcher,
+    )
+    obs_path = tmp_path / "observations.parquet"
+    # Seed observations.parquet with a placeholder cash row so the
+    # function exercises its merge path. Use the canonical schema.
+    seed = pl.DataFrame(
+        {
+            "series_id": ["existing_cash"],
+            "series_name": ["Existing cash series"],
+            "commodity": ["cattle"],
+            "metric": ["price"],
+            "unit": ["USD/cwt"],
+            "frequency": ["monthly"],
+            "period_start": [date(2024, 1, 1)],
+            "period_end": [date(2024, 1, 31)],
+            "value": [200.0],
+            "source_file": ["x.xlsx"],
+            "source_sheet": ["Sheet1"],
+            "ingested_at": [None],
+        }
+    ).with_columns(
+        pl.col("period_start").cast(pl.Date),
+        pl.col("period_end").cast(pl.Date),
+        pl.col("value").cast(pl.Float64),
+        pl.col("ingested_at").cast(pl.Datetime("us", "UTC")),
+    )
+    seed.write_parquet(obs_path)
+
+    append_futures_to_observations(
+        obs_path=obs_path,
+        raw_dir=raw_dir,
+        commodities=("LE", "HE"),
+        horizons=range(1, 13),
+    )
+
+    final = pl.read_parquet(obs_path)
+    series_ids = set(final["series_id"].to_list())
+    # 12 LE deferred + 12 HE deferred + 1 existing cash row preserved
+    expected = {f"cattle_lc_deferred_{h}mo" for h in range(1, 13)}
+    expected |= {f"hogs_he_deferred_{h}mo" for h in range(1, 13)}
+    expected |= {"existing_cash"}
+    assert series_ids == expected
+
+
+def test_append_futures_to_observations_is_idempotent(tmp_path) -> None:
+    """Running it twice produces the same parquet content."""
+    from usda_sandbox.futures import (
+        append_futures_to_observations,
+        sync_futures,
+    )
+
+    raw_dir = tmp_path / "futures"
+    fetcher = _fake_fetcher_factory(
+        available={
+            "LEZ24.CME": [(date(2024, 1, 31), 175.0)],
+        }
+    )
+    sync_futures(
+        commodities=("LE",),
+        start_year=2024,
+        end_year=2024,
+        raw_dir=raw_dir,
+        fetcher=fetcher,
+    )
+    obs_path = tmp_path / "observations.parquet"
+    # Empty seed
+    pl.DataFrame(
+        schema={
+            "series_id": pl.Utf8,
+            "series_name": pl.Utf8,
+            "commodity": pl.Utf8,
+            "metric": pl.Utf8,
+            "unit": pl.Utf8,
+            "frequency": pl.Utf8,
+            "period_start": pl.Date,
+            "period_end": pl.Date,
+            "value": pl.Float64,
+            "source_file": pl.Utf8,
+            "source_sheet": pl.Utf8,
+            "ingested_at": pl.Datetime("us", "UTC"),
+        }
+    ).write_parquet(obs_path)
+
+    append_futures_to_observations(
+        obs_path=obs_path,
+        raw_dir=raw_dir,
+        commodities=("LE",),
+        horizons=range(1, 4),  # just 3 horizons for speed
+    )
+    height_after_first = pl.read_parquet(obs_path).height
+
+    append_futures_to_observations(
+        obs_path=obs_path,
+        raw_dir=raw_dir,
+        commodities=("LE",),
+        horizons=range(1, 4),
+    )
+    height_after_second = pl.read_parquet(obs_path).height
+
+    assert height_after_second == height_after_first

@@ -27,6 +27,7 @@ from openpyxl import load_workbook
 from openpyxl.utils import column_index_from_string
 
 from .catalog import SeriesDefinition, load_catalog
+from .futures import append_futures_to_observations
 
 OBSERVATIONS_SCHEMA: dict[str, Any] = {
     "series_id": pl.Utf8,
@@ -277,14 +278,19 @@ def clean_all(
 ) -> pl.DataFrame:
     """Process every catalog entry and write a single tidy parquet file.
 
-    The output is deduplicated on
-    ``(series_id, period_start, source_file)`` per the CLAUDE.md idempotency
-    contract. Returns the combined DataFrame.
+    XLSX-derived entries are parsed inline. Futures-derived entries
+    (``source_file.startswith("futures:")``) are skipped here; the futures
+    module's :func:`append_futures_to_observations` handles them after
+    the XLSX pass completes.
     """
     catalog = load_catalog(catalog_path)
     raw_dir = Path(raw_dir)
     frames: list[pl.DataFrame] = []
+    has_futures = False
     for series_def in catalog:
+        if series_def.source_file.startswith("futures:"):
+            has_futures = True
+            continue
         raw_path = raw_dir / series_def.source_file
         if not raw_path.exists():
             print(
@@ -305,4 +311,9 @@ def clean_all(
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     combined.write_parquet(out)
+
+    if has_futures:
+        append_futures_to_observations(obs_path=out)
+        combined = pl.read_parquet(out)
+
     return combined
