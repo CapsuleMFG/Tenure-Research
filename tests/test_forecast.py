@@ -370,3 +370,97 @@ def test_iter_run_backtest_unknown_model_raises(
                 models=["NotARealModel"],
             )
         )
+
+
+# --------------------------------------------------------------------------- #
+# Exog regressor support (v0.2b)
+# --------------------------------------------------------------------------- #
+
+
+def _exog_series(monthly: pl.DataFrame, *, jitter: float = 0.5) -> pl.DataFrame:
+    """Build a synthetic exog DataFrame aligned with the monthly series."""
+    rng = np.random.default_rng(1)
+    n = monthly.height
+    return pl.DataFrame(
+        {
+            "period_start": monthly["period_start"].to_list(),
+            "reg_a": (monthly["value"].to_numpy() * 0.9 + rng.normal(0, jitter, n)).tolist(),
+            "reg_b": (monthly["value"].to_numpy() * 0.5 + 20 + rng.normal(0, jitter, n)).tolist(),
+        }
+    ).with_columns(
+        pl.col("period_start").cast(pl.Date),
+        pl.col("reg_a").cast(pl.Float64),
+        pl.col("reg_b").cast(pl.Float64),
+    )
+
+
+@pytest.mark.parametrize(
+    "forecaster_cls",
+    [StatsForecastAutoARIMA, ProphetForecaster, LightGBMForecaster],
+)
+def test_fit_predict_with_exog_returns_correct_shape(
+    forecaster_cls: type[BaseForecaster], synthetic_series: pl.DataFrame
+) -> None:
+    exog = _exog_series(synthetic_series)
+    exog_train = exog.head(synthetic_series.height - 4)
+    exog_future = exog.tail(4).drop("period_start").select(["reg_a", "reg_b"])
+
+    m = forecaster_cls(seed=42)
+    m.fit(synthetic_series.head(synthetic_series.height - 4), exog=exog_train)
+    pred = m.predict(horizon=4, exog_future=exog_future)
+
+    assert pred.columns == _PREDICT_COLS
+    assert pred.height == 4
+    assert (pred["lower_80"] <= pred["point"]).all()
+    assert (pred["point"] <= pred["upper_80"]).all()
+
+
+@pytest.mark.parametrize(
+    "forecaster_cls",
+    [StatsForecastAutoARIMA, ProphetForecaster, LightGBMForecaster],
+)
+def test_fit_without_exog_unchanged_from_v02a(
+    forecaster_cls: type[BaseForecaster], synthetic_series: pl.DataFrame
+) -> None:
+    """Calling fit(df) with no exog must produce the same result as before."""
+    m = forecaster_cls(seed=42)
+    m.fit(synthetic_series)
+    pred = m.predict(horizon=4)
+    assert pred.height == 4
+    assert pred.columns == _PREDICT_COLS
+
+
+def test_cross_validate_with_exog_threads_through(synthetic_series: pl.DataFrame) -> None:
+    exog = _exog_series(synthetic_series)
+    m = StatsForecastAutoARIMA(seed=42)
+    cv = m.cross_validate(synthetic_series, horizon=3, n_windows=2, exog=exog)
+    assert cv.height == 6
+    assert cv.columns == _CV_COLS
+
+
+def test_predict_raises_when_exog_future_length_mismatches_horizon(
+    synthetic_series: pl.DataFrame,
+) -> None:
+    exog = _exog_series(synthetic_series)
+    m = StatsForecastAutoARIMA(seed=42)
+    m.fit(synthetic_series.head(50), exog=exog.head(50))
+    bad_future = exog.tail(3).drop("period_start")
+    with pytest.raises(ValueError, match="exog_future"):
+        m.predict(horizon=5, exog_future=bad_future)
+
+
+def test_fit_drops_rows_where_any_exog_column_is_null(
+    synthetic_series: pl.DataFrame,
+) -> None:
+    exog = _exog_series(synthetic_series).with_columns(
+        reg_a=pl.when(pl.int_range(synthetic_series.height) == 5)
+        .then(None)
+        .otherwise(pl.col("reg_a"))
+    )
+    m = StatsForecastAutoARIMA(seed=42)
+    m.fit(synthetic_series, exog=exog)
+    pred = m.predict(
+        horizon=2,
+        exog_future=exog.tail(2).drop("period_start").select(["reg_a", "reg_b"]),
+    )
+    assert pred.height == 2

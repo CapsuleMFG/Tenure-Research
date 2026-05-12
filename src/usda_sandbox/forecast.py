@@ -76,6 +76,31 @@ def _validate_input(df: pl.DataFrame) -> pl.DataFrame:
     return out
 
 
+def _align_exog(
+    df: pl.DataFrame, exog: pl.DataFrame
+) -> tuple[pl.DataFrame, pl.DataFrame]:
+    """Align df and exog on period_start, dropping rows where any exog column
+    is null."""
+    if "period_start" not in exog.columns:
+        raise ValueError("exog must have a 'period_start' column")
+    reg_cols = [c for c in exog.columns if c != "period_start"]
+    if not reg_cols:
+        raise ValueError("exog must have at least one regressor column")
+    merged = df.join(exog, on="period_start", how="inner")
+    merged = merged.drop_nulls(subset=reg_cols)
+    aligned_df = merged.select(df.columns).sort("period_start")
+    aligned_exog = merged.select(["period_start", *reg_cols]).sort("period_start")
+    return aligned_df, aligned_exog
+
+
+def _check_exog_future(exog_future: pl.DataFrame, horizon: int) -> None:
+    if exog_future.height != horizon:
+        raise ValueError(
+            f"exog_future must have exactly horizon ({horizon}) rows; "
+            f"got {exog_future.height}"
+        )
+
+
 def _next_n_months(start: pd.Timestamp, n: int) -> list[pd.Timestamp]:
     return list(pd.date_range(start=start, periods=n, freq="MS"))
 
@@ -91,13 +116,21 @@ class BaseForecaster(ABC):
     seed: int
 
     @abstractmethod
-    def fit(self, df: pl.DataFrame) -> None: ...
+    def fit(
+        self, df: pl.DataFrame, exog: pl.DataFrame | None = None
+    ) -> None: ...
 
     @abstractmethod
-    def predict(self, horizon: int) -> pl.DataFrame: ...
+    def predict(
+        self, horizon: int, exog_future: pl.DataFrame | None = None
+    ) -> pl.DataFrame: ...
 
     def cross_validate_iter(
-        self, df: pl.DataFrame, horizon: int, n_windows: int
+        self,
+        df: pl.DataFrame,
+        horizon: int,
+        n_windows: int,
+        exog: pl.DataFrame | None = None,
     ) -> Iterator[tuple[int, pl.DataFrame]]:
         """Yield ``(window_index, window_results_df)`` as each window completes.
 
@@ -119,8 +152,23 @@ class BaseForecaster(ABC):
             cutoff_idx = n - (n_windows - w) * horizon
             train = df.slice(0, cutoff_idx)
             target = df.slice(cutoff_idx, horizon)
-            self.fit(train)
-            pred = self.predict(horizon)
+            if exog is not None:
+                train_dates = train["period_start"].to_list()
+                target_dates = target["period_start"].to_list()
+                exog_train = exog.filter(
+                    pl.col("period_start").is_in(train_dates)
+                )
+                exog_future = (
+                    exog.filter(
+                        pl.col("period_start").is_in(target_dates)
+                    )
+                    .drop("period_start")
+                )
+                self.fit(train, exog=exog_train)
+                pred = self.predict(horizon, exog_future=exog_future)
+            else:
+                self.fit(train)
+                pred = self.predict(horizon)
             merged = (
                 pred.join(
                     target.select(
@@ -137,7 +185,11 @@ class BaseForecaster(ABC):
             yield w, merged
 
     def cross_validate(
-        self, df: pl.DataFrame, horizon: int, n_windows: int
+        self,
+        df: pl.DataFrame,
+        horizon: int,
+        n_windows: int,
+        exog: pl.DataFrame | None = None,
     ) -> pl.DataFrame:
         """Rolling-origin CV with ``n_windows`` non-overlapping forecast blocks.
 
@@ -147,7 +199,8 @@ class BaseForecaster(ABC):
         :meth:`cross_validate_iter`.
         """
         frames = [
-            merged for _, merged in self.cross_validate_iter(df, horizon, n_windows)
+            merged
+            for _, merged in self.cross_validate_iter(df, horizon, n_windows, exog=exog)
         ]
         return pl.concat(frames).sort(["window", "period_start"])
 
@@ -164,9 +217,16 @@ class StatsForecastAutoARIMA(BaseForecaster):
         self.seed = seed
         self.season_length = season_length
         self._sf: StatsForecast | None = None
+        self._exog_cols: list[str] = []
+        self._last_train_date: pd.Timestamp | None = None
 
-    def fit(self, df: pl.DataFrame) -> None:
+    def fit(self, df: pl.DataFrame, exog: pl.DataFrame | None = None) -> None:
         clean = _validate_input(df)
+        if exog is not None:
+            clean, aligned_exog = _align_exog(clean, exog)
+            self._exog_cols = [c for c in aligned_exog.columns if c != "period_start"]
+        else:
+            self._exog_cols = []
         pdf = clean.to_pandas()
         train = pd.DataFrame(
             {
@@ -175,6 +235,11 @@ class StatsForecastAutoARIMA(BaseForecaster):
                 "y": pdf["value"].astype(float),
             }
         )
+        if self._exog_cols:
+            exog_pdf = aligned_exog.to_pandas()
+            for col in self._exog_cols:
+                train[col] = exog_pdf[col].astype(float).values
+        self._last_train_date = train["ds"].max()
         with _seeded(self.seed), warnings.catch_warnings():
             warnings.simplefilter("ignore")
             sf = StatsForecast(
@@ -185,12 +250,30 @@ class StatsForecastAutoARIMA(BaseForecaster):
             sf.fit(train)
         self._sf = sf
 
-    def predict(self, horizon: int) -> pl.DataFrame:
-        if self._sf is None:
+    def predict(self, horizon: int, exog_future: pl.DataFrame | None = None) -> pl.DataFrame:
+        if self._sf is None or self._last_train_date is None:
             raise RuntimeError("Call fit() before predict().")
+        x_df: pd.DataFrame | None = None
+        if self._exog_cols:
+            if exog_future is None:
+                raise ValueError(
+                    "model was fit with exog; exog_future must be provided"
+                )
+            _check_exog_future(exog_future, horizon)
+            future_dates = pd.date_range(
+                start=self._last_train_date + pd.offsets.MonthBegin(1),
+                periods=horizon,
+                freq="MS",
+            )
+            x_df = pd.DataFrame({"unique_id": "series_0", "ds": future_dates})
+            for col in self._exog_cols:
+                x_df[col] = exog_future[col].to_pandas().astype(float).values
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            forecast = self._sf.predict(h=horizon, level=[80])
+            if x_df is not None:
+                forecast = self._sf.predict(h=horizon, level=[80], X_df=x_df)
+            else:
+                forecast = self._sf.predict(h=horizon, level=[80])
         if hasattr(forecast, "to_pandas"):
             forecast = forecast.to_pandas()
         if not isinstance(forecast, pd.DataFrame):
@@ -224,9 +307,15 @@ class ProphetForecaster(BaseForecaster):
         self.seed = seed
         self._model: Prophet | None = None
         self._last_period: pd.Timestamp | None = None
+        self._exog_cols: list[str] = []
 
-    def fit(self, df: pl.DataFrame) -> None:
+    def fit(self, df: pl.DataFrame, exog: pl.DataFrame | None = None) -> None:
         clean = _validate_input(df)
+        if exog is not None:
+            clean, aligned_exog = _align_exog(clean, exog)
+            self._exog_cols = [c for c in aligned_exog.columns if c != "period_start"]
+        else:
+            self._exog_cols = []
         pdf = clean.to_pandas()
         train = pd.DataFrame(
             {
@@ -234,6 +323,10 @@ class ProphetForecaster(BaseForecaster):
                 "y": pdf["value"].astype(float),
             }
         )
+        if self._exog_cols:
+            exog_pdf = aligned_exog.to_pandas()
+            for col in self._exog_cols:
+                train[col] = exog_pdf[col].astype(float).values
         with _seeded(self.seed), warnings.catch_warnings():
             warnings.simplefilter("ignore")
             # Suppress cmdstanpy stdout chatter
@@ -246,6 +339,8 @@ class ProphetForecaster(BaseForecaster):
                     weekly_seasonality=False,
                     daily_seasonality=False,
                 )
+                for col in self._exog_cols:
+                    model.add_regressor(col)
                 model.fit(train)
             finally:
                 if prev:
@@ -255,9 +350,15 @@ class ProphetForecaster(BaseForecaster):
         self._model = model
         self._last_period = train["ds"].iloc[-1]
 
-    def predict(self, horizon: int) -> pl.DataFrame:
+    def predict(self, horizon: int, exog_future: pl.DataFrame | None = None) -> pl.DataFrame:
         if self._model is None or self._last_period is None:
             raise RuntimeError("Call fit() before predict().")
+        if self._exog_cols:
+            if exog_future is None:
+                raise ValueError(
+                    "model was fit with exog; exog_future must be provided"
+                )
+            _check_exog_future(exog_future, horizon)
         future = pd.DataFrame(
             {
                 "ds": _next_n_months(
@@ -265,6 +366,9 @@ class ProphetForecaster(BaseForecaster):
                 )
             }
         )
+        if self._exog_cols and exog_future is not None:
+            for col in self._exog_cols:
+                future[col] = exog_future[col].to_pandas().astype(float).values
         with _seeded(self.seed), warnings.catch_warnings():
             warnings.simplefilter("ignore")
             forecast = self._model.predict(future)
@@ -316,6 +420,7 @@ class LightGBMForecaster(BaseForecaster):
         self._residual_halfwidth_80: float = 0.0
         self._feature_columns: list[str] | None = None
         self._history: pd.DataFrame | None = None  # ds, value (most recent last)
+        self._exog_cols: list[str] = []
 
     @classmethod
     def _build_features(cls, history: pd.DataFrame) -> pd.DataFrame:
@@ -336,11 +441,24 @@ class LightGBMForecaster(BaseForecaster):
     ) -> pd.DataFrame:
         return df[list(feature_cols)]
 
-    def fit(self, df: pl.DataFrame) -> None:
+    def fit(self, df: pl.DataFrame, exog: pl.DataFrame | None = None) -> None:
         clean = _validate_input(df)
+        if exog is not None:
+            clean, aligned_exog = _align_exog(clean, exog)
+            self._exog_cols = [c for c in aligned_exog.columns if c != "period_start"]
+        else:
+            self._exog_cols = []
         pdf = clean.to_pandas().rename(columns={"period_start": "ds"})
         pdf["ds"] = pd.to_datetime(pdf["ds"])
         feats = self._build_features(pdf).dropna().reset_index(drop=True)
+        if self._exog_cols:
+            exog_pdf = aligned_exog.to_pandas()
+            exog_pdf = exog_pdf.rename(columns={"period_start": "ds"})
+            exog_pdf["ds"] = pd.to_datetime(exog_pdf["ds"])
+            # Merge exog onto the feature frame (inner join on ds, after dropna)
+            feats = feats.merge(
+                exog_pdf[["ds", *self._exog_cols]], on="ds", how="inner"
+            ).reset_index(drop=True)
         if feats.empty:
             raise ValueError(
                 f"Not enough history to build features (need at least "
@@ -352,6 +470,7 @@ class LightGBMForecaster(BaseForecaster):
             "month",
             "quarter",
             "year_trend",
+            *self._exog_cols,
         ]
         X = feats[feature_cols]  # noqa: N806 — sklearn convention
         y = feats["value"]
@@ -379,13 +498,25 @@ class LightGBMForecaster(BaseForecaster):
         self._feature_columns = feature_cols
         self._history = pdf[["ds", "value"]].copy()
 
-    def predict(self, horizon: int) -> pl.DataFrame:
+    def predict(self, horizon: int, exog_future: pl.DataFrame | None = None) -> pl.DataFrame:
         if (
             self._model_point is None
             or self._history is None
             or self._feature_columns is None
         ):
             raise RuntimeError("Call fit() before predict().")
+        if self._exog_cols:
+            if exog_future is None:
+                raise ValueError(
+                    "model was fit with exog; exog_future must be provided"
+                )
+            _check_exog_future(exog_future, horizon)
+            # Pre-extract exog values as dict of lists for fast step-indexed access
+            exog_arrays: dict[str, list[float]] = {
+                col: exog_future[col].to_list() for col in self._exog_cols
+            }
+        else:
+            exog_arrays = {}
 
         history = self._history.copy()
         last_ds = history["ds"].iloc[-1]
@@ -393,12 +524,15 @@ class LightGBMForecaster(BaseForecaster):
         rows: list[dict[str, Any]] = []
         halfwidth = self._residual_halfwidth_80
 
-        for ds in future_dates:
+        for step, ds in enumerate(future_dates):
             extended = pd.concat(
                 [history, pd.DataFrame({"ds": [ds], "value": [np.nan]})],
                 ignore_index=True,
             )
-            feats = self._build_features(extended).iloc[[-1]]
+            feats = self._build_features(extended).iloc[[-1]].copy()
+            # Inject exog columns for this step
+            for col, vals in exog_arrays.items():
+                feats[col] = vals[step]
             X = feats[self._feature_columns]  # noqa: N806 — sklearn convention
             point = float(self._model_point.predict(X)[0])
             rows.append(
