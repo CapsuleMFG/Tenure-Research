@@ -464,3 +464,105 @@ def test_fit_drops_rows_where_any_exog_column_is_null(
         exog_future=exog.tail(2).drop("period_start").select(["reg_a", "reg_b"]),
     )
     assert pred.height == 2
+
+
+# --------------------------------------------------------------------------- #
+# Catalog-driven exog lookup (Task 7)
+# --------------------------------------------------------------------------- #
+
+
+def test_iter_run_backtest_loads_catalog_exog(
+    synthetic_obs_parquet: Path, tmp_path: Path
+) -> None:
+    """When the target's SeriesDefinition has exogenous_regressors,
+    iter_run_backtest fetches them and passes them through."""
+    from usda_sandbox.catalog import SeriesDefinition, save_catalog
+    from usda_sandbox.forecast import (
+        BacktestResult,
+        iter_run_backtest,
+    )
+
+    # Use the existing synthetic obs parquet's series_id and add a synthetic
+    # exog series to the same parquet
+    obs = pl.read_parquet(synthetic_obs_parquet)
+    exog_rows = obs.with_columns(
+        series_id=pl.lit("test_exog_1"),
+        series_name=pl.lit("Test exog series"),
+        value=pl.col("value") * 0.9,
+    )
+    obs_with_exog = pl.concat([obs, exog_rows], how="vertical_relaxed")
+    obs_path = tmp_path / "obs_with_exog.parquet"
+    obs_with_exog.write_parquet(obs_path)
+
+    # Build a catalog with the target pointing at the exog series
+    catalog = [
+        SeriesDefinition(
+            series_id="synthetic_test",
+            series_name="Synthetic test series",
+            commodity="test",
+            metric="price",
+            unit="USD/cwt",
+            frequency="monthly",
+            source_file="synthetic.xlsx",
+            source_sheet="Sheet1",
+            header_rows_to_skip=0,
+            value_columns=["B"],
+            date_column="A",
+            notes="",
+            exogenous_regressors=["test_exog_1"],
+        ),
+        SeriesDefinition(
+            series_id="test_exog_1",
+            series_name="Test exog 1",
+            commodity="test",
+            metric="exog",
+            unit="USD/cwt",
+            frequency="monthly",
+            source_file="x.xlsx",
+            source_sheet="Sheet1",
+            header_rows_to_skip=0,
+            value_columns=["B"],
+            date_column="A",
+            notes="",
+            forecastable=False,
+        ),
+    ]
+    catalog_path = tmp_path / "catalog.json"
+    save_catalog(catalog_path, catalog)
+
+    items = list(
+        iter_run_backtest(
+            "synthetic_test",
+            horizon=3,
+            n_windows=2,
+            obs_path=obs_path,
+            catalog_path=catalog_path,
+            models=["AutoARIMA"],  # one model for speed
+        )
+    )
+    final = items[-1]
+    assert isinstance(final, BacktestResult)
+    # The CV still produced the expected number of rows (1 model x 2 windows x 3 horizon)
+    assert final.cv_details.height == 6
+
+
+def test_iter_run_backtest_no_catalog_path_uses_v02a_behavior(
+    synthetic_obs_parquet: Path,
+) -> None:
+    """If catalog_path is None and the catalog file doesn't exist at the
+    default path, the backtest runs without exog (v0.2a behavior)."""
+    from usda_sandbox.forecast import BacktestResult, iter_run_backtest
+
+    items = list(
+        iter_run_backtest(
+            "synthetic_test",
+            horizon=3,
+            n_windows=2,
+            obs_path=synthetic_obs_parquet,
+            catalog_path=None,
+            models=["AutoARIMA"],
+        )
+    )
+    final = items[-1]
+    assert isinstance(final, BacktestResult)
+    assert final.cv_details.height == 6

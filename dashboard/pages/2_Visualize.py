@@ -25,7 +25,7 @@ from usda_sandbox.store import read_series
 st.set_page_config(
     page_title="Visualize — USDA Livestock", page_icon="🐂", layout="wide"
 )
-series_id = render_sidebar()
+series_id = render_sidebar(forecastable_only=True)
 
 st.title("Visualize a series")
 

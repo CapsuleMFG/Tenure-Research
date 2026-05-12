@@ -22,6 +22,7 @@ from usda_sandbox.calibration import (
     apply_conformal_scaling,
     conformal_scale_factor,
 )
+from usda_sandbox.catalog import load_catalog as _load_catalog
 from usda_sandbox.forecast import (
     BacktestProgress,
     BacktestResult,
@@ -35,7 +36,7 @@ from usda_sandbox.store import read_series
 st.set_page_config(
     page_title="Forecast -- USDA Livestock", page_icon="🐂", layout="wide"
 )
-series_id = render_sidebar(frequencies=["monthly"])
+series_id = render_sidebar(frequencies=["monthly"], forecastable_only=True)
 
 st.title("Forecast")
 
@@ -216,6 +217,20 @@ st.dataframe(
     hide_index=True,
     use_container_width=True,
 )
+
+# Surface exogenous regressors used (if any) — catalog-driven, set in data/catalog.json
+_target_def = next(
+    (sd for sd in _load_catalog("data/catalog.json") if sd.series_id == series_id),
+    None,
+)
+if _target_def is not None and _target_def.exogenous_regressors:
+    _commodity_label = "Live Cattle" if _target_def.commodity == "cattle" else "Lean Hogs"
+    st.caption(
+        f"This series was forecast with **{len(_target_def.exogenous_regressors)} "
+        f"exogenous regressors**: deferred {_commodity_label} futures (1-12 months "
+        f"ahead). Each forecaster (AutoARIMA, Prophet, LightGBM) sees these alongside "
+        f"the cash history."
+    )
 
 # Pick the winner from the filtered set
 winner = filtered_metrics.sort("mape")["model"][0]

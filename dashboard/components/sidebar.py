@@ -35,6 +35,13 @@ def cached_series_notes(catalog_path_str: str = str(DEFAULT_CATALOG_PATH)) -> di
 
 
 @st.cache_data(ttl=300)
+def cached_forecastable_ids(catalog_path_str: str = str(DEFAULT_CATALOG_PATH)) -> set[str]:
+    """Set of series_ids that should appear in forecast/visualize pickers
+    (catalog's `forecastable=True`). Futures series get forecastable=False."""
+    return {sd.series_id for sd in load_catalog(catalog_path_str) if sd.forecastable}
+
+
+@st.cache_data(ttl=300)
 def cached_dataset_overview(obs_path_str: str) -> dict[str, object]:
     obs = read_observations(Path(obs_path_str)).collect()
     return {
@@ -61,6 +68,7 @@ def render_sidebar(
     *,
     obs_path: Path = DEFAULT_OBS_PATH,
     frequencies: Sequence[str] | None = None,
+    forecastable_only: bool = False,
 ) -> str | None:
     """Render the sidebar and return the currently-selected series_id (or None).
 
@@ -70,6 +78,9 @@ def render_sidebar(
     ``frequencies`` optionally restricts the picker to series of the given
     frequencies (e.g. ``["monthly"]`` on the Forecast page so quarterly
     series are hidden). When ``None``, all series are shown.
+
+    ``forecastable_only`` filters out series whose catalog ``forecastable``
+    field is ``False`` (e.g. CME futures series used only as regressors).
     """
     st.sidebar.title("USDA Livestock")
 
@@ -90,6 +101,15 @@ def render_sidebar(
         if series_df.is_empty():
             st.sidebar.warning(
                 f"No series match the requested frequencies: {sorted(wanted)}"
+            )
+            return None
+
+    if forecastable_only:
+        forecastable = cached_forecastable_ids()
+        series_df = series_df.filter(pl.col("series_id").is_in(forecastable))
+        if series_df.is_empty():
+            st.sidebar.warning(
+                "No forecastable series available with the current filter."
             )
             return None
 

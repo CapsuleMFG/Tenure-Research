@@ -694,6 +694,7 @@ def iter_run_backtest(
     obs_path: Path | str | None = None,
     seed: int = DEFAULT_SEED,
     models: Sequence[str] | None = None,
+    catalog_path: Path | str | None = "data/catalog.json",
 ) -> Iterator[BacktestProgress | BacktestResult]:
     """Generator variant of :func:`run_backtest`.
 
@@ -702,15 +703,26 @@ def iter_run_backtest(
     :class:`BacktestResult` with the same content :func:`run_backtest` would
     return for the same inputs.
 
-    ``models`` optionally restricts which forecasters are run. When ``None``
-    (the default), all three forecasters run. When provided, only the named
-    forecasters are constructed and iterated; an empty intersection raises.
+    ``models`` optionally restricts which forecasters are run.
+
+    ``catalog_path`` (default ``data/catalog.json``) is used to look up the
+    target series's ``exogenous_regressors`` field. If the catalog file
+    exists and the target's regressors are non-empty, those series are
+    fetched from ``obs_path`` and passed through to each forecaster's
+    ``cross_validate_iter`` as ``exog``. If the catalog file does not exist
+    or ``catalog_path=None``, the v0.2a path (no exog) runs unchanged.
     """
     series = read_series(series_id, obs_path)
     if series.is_empty():
         raise ValueError(f"No observations found for series_id={series_id!r}")
     series = series.filter(pl.col("value").is_not_null()).select(
         ["period_start", "value"]
+    )
+
+    exog = _load_exog_for_target(
+        series_id=series_id,
+        obs_path=obs_path,
+        catalog_path=catalog_path,
     )
 
     all_forecasters: list[tuple[str, BaseForecaster]] = [
@@ -734,7 +746,9 @@ def iter_run_backtest(
 
     for name, fcst in forecasters:
         per_model_frames: list[pl.DataFrame] = []
-        for w, window_df in fcst.cross_validate_iter(series, horizon, n_windows):
+        for w, window_df in fcst.cross_validate_iter(
+            series, horizon, n_windows, exog=exog
+        ):
             per_model_frames.append(window_df)
             so_far = pl.concat(per_model_frames)
             actual = so_far["actual"].to_numpy().astype(float)
@@ -745,7 +759,7 @@ def iter_run_backtest(
                 window=w,
                 n_windows=n_windows,
                 elapsed_s=time.time() - started,
-                running_mape=None if running != running else running,  # NaN guard
+                running_mape=None if running != running else running,
             )
         cv = (
             pl.concat(per_model_frames)
@@ -765,3 +779,39 @@ def iter_run_backtest(
         cv_details=cv_details,
         metrics=metrics,
     )
+
+
+def _load_exog_for_target(
+    *,
+    series_id: str,
+    obs_path: Path | str | None,
+    catalog_path: Path | str | None,
+) -> pl.DataFrame | None:
+    """If the catalog says the target has exogenous_regressors, load and
+    pivot them. Returns None if no exog is configured or the catalog is
+    unavailable."""
+    if catalog_path is None:
+        return None
+    catalog_path = Path(catalog_path)
+    if not catalog_path.exists():
+        return None
+    from .catalog import load_catalog
+    from .store import read_observations
+
+    catalog = load_catalog(catalog_path)
+    by_id = {sd.series_id: sd for sd in catalog}
+    target = by_id.get(series_id)
+    if target is None or not target.exogenous_regressors:
+        return None
+
+    obs = read_observations(obs_path).collect()
+    long = (
+        obs.filter(pl.col("series_id").is_in(target.exogenous_regressors))
+        .select(["series_id", "period_start", "value"])
+    )
+    if long.is_empty():
+        return None
+    wide = long.pivot(values="value", index="period_start", on="series_id").sort(
+        "period_start"
+    )
+    return wide
