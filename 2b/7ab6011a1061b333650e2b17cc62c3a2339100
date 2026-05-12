@@ -1,0 +1,30 @@
+src/usda_sandbox/forecast.py
+  s_100f2d45f51cb7::t_3213662ec45f3f 79-103
+  s_100f2d45f51cb7::t_2f7677dd0ff5b0 119-121,124-126,129-133,155,158,160-162,164-171,188-192,202-203
+  s_100f2d45f51cb7::t_ceb0ba0480f809 327-328
+  s_100f2d45f51cb7::t_43b2f34be149da 220-221,223,225-229,238,241-242,253-254,256-270,273-276
+  s_100f2d45f51cb7::t_f8405157c88dd2 310,312,314-318,326,329,342-343,353,356-361,369-371
+  s_100f2d45f51cb7::t_8540a97357e828 423
+  s_100f2d45f51cb7::t_e98cff6b22722d 444,446-450,454,457-461,473,501,508-519,527,532-535
+  s_100f2d45f51cb7::t_b32ba073e6e53c 156-157,159,163
+  s_100f2d45f51cb7::t_26702b2ef0036b 239-240
+  s_100f2d45f51cb7::t_485a55ee1119a3 455-456
+tests/test_forecast.py
+  s_100f2d45f51cb7::t_564d93496fbf72 373-466
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "2b7ab6011a1061b333650e2b17cc62c3a2339100",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
