@@ -1,0 +1,27 @@
+src/usda_sandbox/calibration.py
+  s_c2a6433657391f::t_ef46ba18e8acff 30,39-43,51-61,63-64
+  s_c2a6433657391f::t_5059ddab3a504a 14-15,18-22
+  s_c2a6433657391f::t_80a2878d4a24ab 145-228
+tests/test_calibration.py
+  s_c2a6433657391f::t_b1de94ffbc08c0 18
+  s_c2a6433657391f::t_f6f11b6357cdf6 258-511
+dashboard/pages/3_Forecast.py
+  s_c2a6433657391f::t_a73d525975c646 23
+  s_c2a6433657391f::t_ce8c13e1e86fc1 319-330,337-343
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "11ef1193c5f3e337ebcdbc1af71dca79bfe0eb23",
+  "prompts": {},
+  "sessions": {
+    "s_c2a6433657391f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e3eb26d2-aff8-438f-8101-21659277da70",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
