@@ -1,0 +1,30 @@
+tests/test_futures.py
+  s_100f2d45f51cb7::t_0e3c7bed8fc57a 232-482
+src/usda_sandbox/clean.py
+  s_100f2d45f51cb7::t_cc12a7b8bc44c6 30
+  s_100f2d45f51cb7::t_d88a7def365c97 281-284,289,291-293,314-318
+pyproject.toml
+  s_100f2d45f51cb7::t_9c83eb83d4ed8e 54
+src/usda_sandbox/futures.py
+  s_100f2d45f51cb7::t_5e418e35c868cd 258-326,333-463
+  s_100f2d45f51cb7::t_80ac32f195518d 327-332
+  s_100f2d45f51cb7::t_e9ee04798b86ff 22-25,27,31,34-35,41
+tests/test_clean.py
+  s_100f2d45f51cb7::t_31f7ff2d07f683 253-351
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "ca35f84ba9b072dd04475f71e71994a679b46a80",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
