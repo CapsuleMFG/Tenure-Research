@@ -1,0 +1,30 @@
+tests/test_futures.py
+  s_100f2d45f51cb7::t_ee7700868d6a49 14,18
+  s_100f2d45f51cb7::t_dca7a7dc991dc6 118-120
+  s_100f2d45f51cb7::t_c5a6204d582cc1 185-190
+  s_100f2d45f51cb7::t_5cd3228eae7a2a 72-117,121-184,191-231
+src/usda_sandbox/futures.py
+  s_100f2d45f51cb7::t_96bf8b1de7992b 182
+  s_100f2d45f51cb7::t_b32c62da96cbad 49-59
+  s_100f2d45f51cb7::t_752a7bb59f19a2 191
+  s_100f2d45f51cb7::t_69a7995d93044a 23
+  s_100f2d45f51cb7::t_7ae0ee70128318 22,24-26,29
+  s_100f2d45f51cb7::t_f4b02516e61700 115-181,183-190,192-208,215-218,220-249
+  s_100f2d45f51cb7::t_6a4591ac0b7d1f 209-214,219
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "16c666e9dfeaad47bfb56108695468b151b33765",
+  "prompts": {},
+  "sessions": {
+    "s_100f2d45f51cb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f2f36e0-ca3c-4b34-b599-9cb79a33cd9a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": null
+    }
+  }
+}
