@@ -41,6 +41,8 @@ class SeriesDefinition(BaseModel):
     value_columns: list[str] = Field(..., min_length=1)
     date_column: str = Field(..., min_length=1)
     notes: str = ""
+    exogenous_regressors: list[str] = Field(default_factory=list)
+    forecastable: bool = True
 
     @field_validator("frequency")
     @classmethod
