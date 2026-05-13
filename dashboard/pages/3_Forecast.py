@@ -269,10 +269,16 @@ _target_def = next(
     None,
 )
 if _target_def is not None and _target_def.exogenous_regressors:
-    # Pick the label from the regressor prefix so feeder-cattle (GF)
-    # vs. fed-cattle (LE) cases aren't both labeled "Live Cattle".
+    # Map the first regressor's id to a human-readable commodity label.
+    _front_labels = {
+        "cattle_lc_front": "Live Cattle",
+        "cattle_feeder_front": "Feeder Cattle",
+        "hogs_he_front": "Lean Hogs",
+    }
     _first_reg = _target_def.exogenous_regressors[0]
-    if _first_reg.startswith("cattle_lc_"):
+    if _first_reg in _front_labels:
+        _commodity_label = _front_labels[_first_reg]
+    elif _first_reg.startswith("cattle_lc_"):
         _commodity_label = "Live Cattle"
     elif _first_reg.startswith("cattle_feeder_"):
         _commodity_label = "Feeder Cattle"
@@ -280,12 +286,21 @@ if _target_def is not None and _target_def.exogenous_regressors:
         _commodity_label = "Lean Hogs"
     else:
         _commodity_label = "futures"
-    st.caption(
-        f"This series was forecast with **{len(_target_def.exogenous_regressors)} "
-        f"exogenous regressors**: deferred {_commodity_label} futures (1-12 months "
-        f"ahead). Each forecaster (AutoARIMA, Prophet, LightGBM) sees these alongside "
-        f"the cash history."
-    )
+
+    if len(_target_def.exogenous_regressors) == 1:
+        st.caption(
+            f"This series was forecast with a single exogenous regressor: "
+            f"the continuous front-month **{_commodity_label}** futures price. "
+            f"Each forecaster (AutoARIMA, Prophet, LightGBM) sees it alongside "
+            f"the cash history."
+        )
+    else:
+        st.caption(
+            f"This series was forecast with **{len(_target_def.exogenous_regressors)} "
+            f"exogenous regressors**: deferred {_commodity_label} futures "
+            f"(1-12 months ahead). Each forecaster (AutoARIMA, Prophet, LightGBM) "
+            f"sees these alongside the cash history."
+        )
 
 # Pick the winner from the filtered set
 winner = filtered_metrics.sort("mape")["model"][0]
