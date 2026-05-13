@@ -28,6 +28,7 @@ from openpyxl.utils import column_index_from_string
 
 from .catalog import SeriesDefinition, load_catalog
 from .futures import append_futures_to_observations
+from .futures_continuous import append_continuous_to_observations
 
 OBSERVATIONS_SCHEMA: dict[str, Any] = {
     "series_id": pl.Utf8,
@@ -287,9 +288,13 @@ def clean_all(
     raw_dir = Path(raw_dir)
     frames: list[pl.DataFrame] = []
     has_futures = False
+    has_futures_continuous = False
     for series_def in catalog:
         if series_def.source_file.startswith("futures:"):
             has_futures = True
+            continue
+        if series_def.source_file.startswith("futures_continuous:"):
+            has_futures_continuous = True
             continue
         raw_path = raw_dir / series_def.source_file
         if not raw_path.exists():
@@ -321,6 +326,14 @@ def clean_all(
             append_futures_to_observations(obs_path=out, raw_dir=futures_raw)
         else:
             append_futures_to_observations(obs_path=out)
+        combined = pl.read_parquet(out)
+
+    if has_futures_continuous:
+        fc_raw = raw_dir / "futures_continuous"
+        if fc_raw.exists():
+            append_continuous_to_observations(obs_path=out, raw_dir=fc_raw)
+        else:
+            append_continuous_to_observations(obs_path=out)
         combined = pl.read_parquet(out)
 
     return combined

@@ -37,6 +37,35 @@ def test_contract_months_lean_hogs() -> None:
     assert contract_months("HE") == ("G", "J", "K", "M", "N", "Q", "V", "Z")
 
 
+def test_contract_months_feeder_cattle() -> None:
+    """Feeder cattle trades Jan/Mar/Apr/May/Aug/Sep/Oct/Nov → F/H/J/K/Q/U/V/X."""
+    assert contract_months("GF") == ("F", "H", "J", "K", "Q", "U", "V", "X")
+
+
+def test_contract_ticker_feeder_cattle() -> None:
+    """Feeder cattle ticker format matches LE/HE convention."""
+    assert contract_ticker("GF", "V", 2024) == "GFV24.CME"
+    assert contract_ticker("GF", "F", 2009) == "GFF09.CME"
+
+
+def test_parse_contract_ticker_round_trips_feeder() -> None:
+    assert parse_contract_ticker("GFV24.CME") == ("GF", "V", 2024)
+
+
+def test_contract_delivery_date_feeder() -> None:
+    # F = Jan, X = Nov
+    assert contract_delivery_date("GF", "F", 2024) == date(2024, 1, 31)
+    assert contract_delivery_date("GF", "X", 2024) == date(2024, 11, 30)
+
+
+def test_contract_delivery_date_rejects_invalid_feeder_month() -> None:
+    # Feeder cattle doesn't have G (Feb) or M (Jun)
+    with pytest.raises(ValueError, match="not a valid GF contract month"):
+        contract_delivery_date("GF", "G", 2024)
+    with pytest.raises(ValueError, match="not a valid GF contract month"):
+        contract_delivery_date("GF", "M", 2024)
+
+
 def test_contract_months_unknown_commodity_raises() -> None:
     with pytest.raises(ValueError, match="unknown commodity"):
         contract_months("XX")
