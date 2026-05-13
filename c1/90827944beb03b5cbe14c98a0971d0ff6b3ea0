@@ -1,0 +1,21 @@
+tests/test_futures_continuous.py
+  s_c2a6433657391f::t_cc18027d983f71 113-182
+src/usda_sandbox/futures_continuous.py
+  s_c2a6433657391f::t_a8755c50f32471 151-155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "c190827944beb03b5cbe14c98a0971d0ff6b3ea0",
+  "prompts": {},
+  "sessions": {
+    "s_c2a6433657391f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e3eb26d2-aff8-438f-8101-21659277da70",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
