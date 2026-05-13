@@ -1,8 +1,44 @@
 # Continuous Front-Month Futures as Single Regressor (v0.2c)
 
-**Status:** Approved
+**Status:** Shipped (see post-implementation note below)
 **Date:** 2026-05-13
 **Author:** Tyler + Claude (brainstormed)
+
+## Post-implementation note (2026-05-13, after implementation)
+
+Two empirical surprises landed during implementation; both were
+patched in-branch.
+
+1. **Stooq closed its free CSV endpoint.** The original plan called for
+   `https://stooq.com/q/d/l/?s={symbol}&i=m`; this URL now returns an
+   instruction to register for an API key (captcha-gated). The pivot:
+   use yfinance's continuous-front-month symbols (`LE=F`, `HE=F`,
+   `GF=F`) instead. yfinance returns ~25 years of monthly closes per
+   symbol — enough for our purposes. The architecture, catalog wiring,
+   and dispatcher path are unchanged; only the symbol naming
+   (`le.c` → `LE=F`), on-disk filename pattern (`=` → `_`), and fetcher
+   implementation differ from what's described below.
+
+2. **yfinance drops random months in its monthly resampling.** Verified
+   empirically: e.g., `LE=F` returns no row for 2001-04, 2026-02, and
+   2026-03, even though those months had full trading activity. The
+   fix is a forward-fill pass at append-time (`_fill_monthly_gaps`):
+   reindex to a contiguous month-start range and carry forward the
+   most recent close. The on-disk cache stays a faithful record of
+   yfinance's response.
+
+End-to-end results (horizon=6, n_windows=8) confirm the v0.2c design
+delivers the spec's promise:
+- `cattle_steer_choice_nebraska`: Prophet, MAPE 2.38%
+- `cattle_feeder_steer_500_550`: LightGBM, MAPE 7.48%
+- `pork_cutout_composite`: Prophet, MAPE 4.46%
+
+Nebraska steers comes in below the spec's promised 3-5% range.
+
+The rest of this document describes the original design. Mentions of
+Stooq, `le.c`/`he.c`/`gf.c` symbols, `_default_stooq_fetcher`, and
+`_parse_stooq_csv` should be read as their yfinance equivalents
+(`LE=F`/`HE=F`/`GF=F`, `_default_fetcher`, no parser needed).
 
 ## Goal
 

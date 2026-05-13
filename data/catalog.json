@@ -893,7 +893,7 @@
       "X"
     ],
     "date_column": "X",
-    "notes": "Stooq's back-adjusted continuous front-month series. Used as a single exogenous regressor for the matching cash series. The deferred-h elaboration from v0.2b lives in the catalog (*_deferred_*mo) for diagnostic viewing on Explore but is no longer fed to forecasters.",
+    "notes": "yfinance's continuous front-month series (back-adjusted). Used as a single exogenous regressor for the matching cash series. The deferred-h elaboration from v0.2b lives in the catalog (*_deferred_*mo) for diagnostic viewing on Explore but is no longer fed to forecasters.",
     "exogenous_regressors": [],
     "forecastable": false
   },
@@ -911,7 +911,7 @@
       "X"
     ],
     "date_column": "X",
-    "notes": "Stooq's back-adjusted continuous front-month series. Used as a single exogenous regressor for the matching cash series. The deferred-h elaboration from v0.2b lives in the catalog (*_deferred_*mo) for diagnostic viewing on Explore but is no longer fed to forecasters.",
+    "notes": "yfinance's continuous front-month series (back-adjusted). Used as a single exogenous regressor for the matching cash series. The deferred-h elaboration from v0.2b lives in the catalog (*_deferred_*mo) for diagnostic viewing on Explore but is no longer fed to forecasters.",
     "exogenous_regressors": [],
     "forecastable": false
   },
@@ -929,7 +929,7 @@
       "X"
     ],
     "date_column": "X",
-    "notes": "Stooq's back-adjusted continuous front-month series. Used as a single exogenous regressor for the matching cash series. The deferred-h elaboration from v0.2b lives in the catalog (*_deferred_*mo) for diagnostic viewing on Explore but is no longer fed to forecasters.",
+    "notes": "yfinance's continuous front-month series (back-adjusted). Used as a single exogenous regressor for the matching cash series. The deferred-h elaboration from v0.2b lives in the catalog (*_deferred_*mo) for diagnostic viewing on Explore but is no longer fed to forecasters.",
     "exogenous_regressors": [],
     "forecastable": false
   }

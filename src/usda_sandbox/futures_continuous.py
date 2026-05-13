@@ -268,7 +268,7 @@ def append_continuous_to_observations(
             unit=pl.lit("USD/cwt"),
             frequency=pl.lit("monthly"),
             period_start=pl.col("period_start").dt.month_start(),
-            period_end=pl.col("period_start"),
+            period_end=pl.col("period_start").dt.month_end(),
             value=pl.col("close"),
             source_file=pl.lit(f"futures_continuous:{symbol}"),
             source_sheet=pl.lit(""),

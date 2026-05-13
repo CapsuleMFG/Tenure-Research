@@ -175,7 +175,7 @@ def _render_refresh_button(obs_path: Path) -> None:
         except Exception as exc:
             status.update(label=f"Download failed: {exc}", state="error")
             return
-        status.write("Syncing continuous front-month futures from Stooq...")
+        status.write("Syncing continuous front-month futures via yfinance...")
         try:
             sync_continuous_futures(
                 raw_dir=DEFAULT_RAW_DIR / "futures_continuous"

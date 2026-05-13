@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 import polars as pl
@@ -382,8 +383,56 @@ forecaster_registry = {
 }
 with st.spinner(f"Refitting {winner} on full history..."):
     fcst = forecaster_registry[winner](seed=42)
-    fcst.fit(history.select(["period_start", "value"]))
-    forward = fcst.predict(horizon=12)
+
+    # If the series has exogenous regressors, align history with them and
+    # fit/predict with exog. Otherwise fall back to the univariate path so
+    # series like lamb (no regressor) still work.
+    if _regressor_ids:
+        _exog_history_long = (
+            read_observations(obs_path)
+            .filter(pl.col("series_id").is_in(_regressor_ids))
+            .select(["series_id", "period_start", "value"])
+            .collect()
+        )
+        _exog_history_wide = (
+            _exog_history_long.pivot(
+                values="value", index="period_start", on="series_id"
+            )
+            .sort("period_start")
+        )
+        _aligned = history.select(["period_start", "value"]).join(
+            _exog_history_wide, on="period_start", how="inner"
+        )
+        _exog_cols = _regressor_ids
+        _history_for_fit = _aligned.select(["period_start", "value"])
+        _exog_for_fit = _aligned.select(["period_start", *_exog_cols])
+
+        # Build exog_future: carry the latest observed regressor value
+        # forward for all 12 horizons. Continuous front-month doesn't tell
+        # us future spot prices, so the most defensible "no-new-info"
+        # assumption is to hold the current market view constant.
+        _last_exog_row = _exog_history_wide.tail(1)
+        _last_history_date = _history_for_fit["period_start"].max()
+        _future_dates = []
+        _yr, _mo = _last_history_date.year, _last_history_date.month
+        for _ in range(12):
+            _mo += 1
+            if _mo == 13:
+                _mo = 1
+                _yr += 1
+            _future_dates.append(date(_yr, _mo, 1))
+        _exog_future = pl.DataFrame(
+            {
+                "period_start": _future_dates,
+                **{col: [_last_exog_row[col][0]] * 12 for col in _exog_cols},
+            }
+        ).with_columns(pl.col("period_start").cast(pl.Date))
+
+        fcst.fit(_history_for_fit, exog=_exog_for_fit)
+        forward = fcst.predict(horizon=12, exog_future=_exog_future)
+    else:
+        fcst.fit(history.select(["period_start", "value"]))
+        forward = fcst.predict(horizon=12)
 
 # Calibrate the forward forecast's PI against CV residuals so the
 # "80% PI" actually means 80% empirical coverage on this series. A
