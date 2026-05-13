@@ -1,0 +1,19 @@
+data/catalog.json
+  s_c2a6433657391f::t_3e7ab28398bf05 17-19,37-39,57-59,77-79,97-99,135-137,155-157,175-177,881-934
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "064eec10f103a0ca07af6ae3f776c29f09e8f376",
+  "prompts": {},
+  "sessions": {
+    "s_c2a6433657391f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e3eb26d2-aff8-438f-8101-21659277da70",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
