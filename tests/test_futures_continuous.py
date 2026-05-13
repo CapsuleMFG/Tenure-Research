@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import asdict
 from datetime import date
 from pathlib import Path
@@ -56,3 +57,56 @@ def test_parse_stooq_csv_returns_empty_on_empty_input() -> None:
     df = _parse_stooq_csv("")
     assert df.is_empty()
     assert df.columns == ["period_start", "close"]
+
+
+def _synthetic_continuous_frame(
+    *, start: date, n: int, base: float = 170.0
+) -> pl.DataFrame:
+    """Build a monthly continuous frame: month-ends from ``start`` over ``n`` months."""
+    rows = []
+    y, m = start.year, start.month
+    for i in range(n):
+        # Use day=28 to dodge calendar edge cases in tests.
+        rows.append({"period_start": date(y, m, 28), "close": base + i})
+        m += 1
+        if m == 13:
+            m = 1
+            y += 1
+    return pl.DataFrame(rows).with_columns(
+        pl.col("period_start").cast(pl.Date),
+        pl.col("close").cast(pl.Float64),
+    )
+
+
+def test_sync_writes_one_parquet_per_symbol(tmp_path: Path) -> None:
+    raw_dir = tmp_path / "futures_continuous"
+    df = _synthetic_continuous_frame(start=date(2020, 1, 1), n=12)
+
+    def fake_fetcher(symbol: str) -> pl.DataFrame:
+        return df
+
+    manifest = sync_continuous_futures(
+        symbols=("le.c",),
+        raw_dir=raw_dir,
+        fetcher=fake_fetcher,
+    )
+    assert "le.c" in manifest
+    assert manifest["le.c"].missing is False
+    assert manifest["le.c"].sha256
+    assert (raw_dir / "le.c.parquet").exists()
+    on_disk = pl.read_parquet(raw_dir / "le.c.parquet")
+    assert on_disk.equals(df)
+
+
+def test_sync_writes_manifest_json(tmp_path: Path) -> None:
+    raw_dir = tmp_path / "futures_continuous"
+    df = _synthetic_continuous_frame(start=date(2020, 1, 1), n=6)
+    sync_continuous_futures(
+        symbols=("le.c",),
+        raw_dir=raw_dir,
+        fetcher=lambda s: df,
+    )
+    payload = json.loads((raw_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert "le.c" in payload
+    assert payload["le.c"]["missing"] is False
+    assert payload["le.c"]["sha256"]
