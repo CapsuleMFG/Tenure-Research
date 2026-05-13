@@ -1,0 +1,29 @@
+docs/superpowers/specs/2026-05-13-continuous-futures-regressor-design.md
+  s_c2a6433657391f::t_04b4acfd484af9 3,7-41
+data/catalog.json
+  s_c2a6433657391f::t_a91e6bfaa2a38b 896,914,932
+dashboard/pages/3_Forecast.py
+  s_c2a6433657391f::t_d9bcd8eeaa932a 5
+  s_c2a6433657391f::t_47b8e58b830312 423
+  s_c2a6433657391f::t_bc7645cf8d6251 386-422,424-435
+src/usda_sandbox/futures_continuous.py
+  s_c2a6433657391f::t_97acc04309522c 271
+dashboard/components/sidebar.py
+  s_c2a6433657391f::t_b5da5f787e0b2a 178
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "507b8aed1b747a57082e2bd7fd7b26049929c686",
+  "prompts": {},
+  "sessions": {
+    "s_c2a6433657391f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e3eb26d2-aff8-438f-8101-21659277da70",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
