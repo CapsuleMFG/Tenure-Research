@@ -54,6 +54,26 @@ _STOOQ_CSV_URL = "https://stooq.com/q/d/l/?s={symbol}&i=m"
 _MANIFEST_FILENAME = "manifest.json"
 
 
+# Symbol → (series_id, series_name, commodity) — single source of truth.
+_SYMBOL_META: dict[str, tuple[str, str, str]] = {
+    "le.c": (
+        "cattle_lc_front",
+        "Live Cattle front-month futures (continuous)",
+        "cattle",
+    ),
+    "he.c": (
+        "hogs_he_front",
+        "Lean Hogs front-month futures (continuous)",
+        "hogs",
+    ),
+    "gf.c": (
+        "cattle_feeder_front",
+        "Feeder Cattle front-month futures (continuous)",
+        "cattle",
+    ),
+}
+
+
 _EMPTY_CONTINUOUS_SCHEMA: dict[str, Any] = {
     "period_start": pl.Date,
     "close": pl.Float64,
@@ -191,4 +211,62 @@ def append_continuous_to_observations(
     raw_dir: Path = Path("data/raw/futures_continuous"),
     symbols: Iterable[str] = ("le.c", "he.c", "gf.c"),
 ) -> None:
-    raise NotImplementedError("filled in Task 5")
+    """Build observations rows from cached continuous-futures parquets
+    and merge them into ``observations.parquet``. Idempotent on
+    ``(series_id, period_start, source_file)``."""
+    raw_dir = Path(raw_dir)
+    if not raw_dir.exists():
+        raise FileNotFoundError(
+            f"{raw_dir!s} does not exist. Run sync_continuous_futures() "
+            "before append_continuous_to_observations()."
+        )
+
+    obs_path = Path(obs_path)
+    ingested_at = datetime.now(UTC)
+
+    new_frames: list[pl.DataFrame] = []
+    for symbol in symbols:
+        if symbol not in _SYMBOL_META:
+            continue
+        file_path = raw_dir / f"{symbol}.parquet"
+        if not file_path.exists():
+            continue  # missing symbol — sync recorded it; nothing to append
+        series_id, series_name, commodity = _SYMBOL_META[symbol]
+        cached = pl.read_parquet(file_path)
+        if cached.is_empty():
+            continue
+        frame = cached.select(
+            series_id=pl.lit(series_id),
+            series_name=pl.lit(series_name),
+            commodity=pl.lit(commodity),
+            metric=pl.lit("futures_price"),
+            unit=pl.lit("USD/cwt"),
+            frequency=pl.lit("monthly"),
+            period_start=pl.col("period_start").dt.month_start(),
+            period_end=pl.col("period_start"),
+            value=pl.col("close"),
+            source_file=pl.lit(f"futures_continuous:{symbol}"),
+            source_sheet=pl.lit(""),
+            ingested_at=pl.lit(ingested_at).cast(pl.Datetime("us", "UTC")),
+        )
+        new_frames.append(frame)
+
+    if not new_frames:
+        return
+
+    new_obs = pl.concat(new_frames, how="vertical_relaxed")
+    new_ids = set(new_obs["series_id"].to_list())
+
+    if obs_path.exists():
+        existing = pl.read_parquet(obs_path).filter(
+            ~pl.col("series_id").is_in(new_ids)
+        )
+        combined = pl.concat([existing, new_obs], how="vertical_relaxed")
+    else:
+        combined = new_obs
+
+    combined = combined.unique(
+        subset=["series_id", "period_start", "source_file"], keep="last"
+    ).sort(["series_id", "period_start"])
+    obs_path.parent.mkdir(parents=True, exist_ok=True)
+    combined.write_parquet(obs_path)

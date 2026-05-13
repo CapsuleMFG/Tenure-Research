@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import polars as pl
@@ -186,3 +186,121 @@ def test_sync_replaces_changed_data(tmp_path: Path) -> None:
     )
     on_disk = pl.read_parquet(raw_dir / "le.c.parquet")
     assert on_disk["close"].to_list() == df_v2["close"].to_list()
+
+
+def _empty_observations() -> pl.DataFrame:
+    """Minimal observations.parquet schema for round-trip tests."""
+    return pl.DataFrame(
+        schema={
+            "series_id": pl.Utf8,
+            "series_name": pl.Utf8,
+            "commodity": pl.Utf8,
+            "metric": pl.Utf8,
+            "unit": pl.Utf8,
+            "frequency": pl.Utf8,
+            "period_start": pl.Date,
+            "period_end": pl.Date,
+            "value": pl.Float64,
+            "source_file": pl.Utf8,
+            "source_sheet": pl.Utf8,
+            "ingested_at": pl.Datetime("us", "UTC"),
+        }
+    )
+
+
+def test_append_writes_one_row_per_symbol_per_month(tmp_path: Path) -> None:
+    raw_dir = tmp_path / "futures_continuous"
+    obs_path = tmp_path / "observations.parquet"
+    _empty_observations().write_parquet(obs_path)
+
+    df_le = _synthetic_continuous_frame(start=date(2020, 1, 1), n=3, base=170.0)
+    sync_continuous_futures(
+        symbols=("le.c",), raw_dir=raw_dir, fetcher=lambda s: df_le
+    )
+
+    append_continuous_to_observations(
+        obs_path=obs_path, raw_dir=raw_dir, symbols=("le.c",)
+    )
+
+    obs = pl.read_parquet(obs_path)
+    le_rows = obs.filter(pl.col("series_id") == "cattle_lc_front")
+    assert le_rows.height == 3
+    first = le_rows.sort("period_start").row(0, named=True)
+    assert first["series_name"] == "Live Cattle front-month futures (continuous)"
+    assert first["commodity"] == "cattle"
+    assert first["metric"] == "futures_price"
+    assert first["unit"] == "USD/cwt"
+    assert first["frequency"] == "monthly"
+    assert first["value"] == pytest.approx(170.0)
+    assert first["source_file"] == "futures_continuous:le.c"
+
+
+def test_append_preserves_existing_observations(tmp_path: Path) -> None:
+    raw_dir = tmp_path / "futures_continuous"
+    obs_path = tmp_path / "observations.parquet"
+
+    # Seed observations with one unrelated cash row
+    seed = pl.DataFrame(
+        {
+            "series_id": ["cattle_steer_choice_nebraska"],
+            "series_name": ["seed"],
+            "commodity": ["cattle"],
+            "metric": ["price"],
+            "unit": ["USD/cwt"],
+            "frequency": ["monthly"],
+            "period_start": [date(2024, 1, 1)],
+            "period_end": [date(2024, 1, 31)],
+            "value": [180.0],
+            "source_file": ["livestock-prices.xlsx"],
+            "source_sheet": ["Historical"],
+            "ingested_at": [datetime(2024, 1, 1, tzinfo=UTC)],
+        }
+    ).with_columns(
+        pl.col("period_start").cast(pl.Date),
+        pl.col("period_end").cast(pl.Date),
+        pl.col("value").cast(pl.Float64),
+        pl.col("ingested_at").cast(pl.Datetime("us", "UTC")),
+    )
+    seed.write_parquet(obs_path)
+
+    df = _synthetic_continuous_frame(start=date(2020, 1, 1), n=2)
+    sync_continuous_futures(
+        symbols=("le.c",), raw_dir=raw_dir, fetcher=lambda s: df
+    )
+    append_continuous_to_observations(
+        obs_path=obs_path, raw_dir=raw_dir, symbols=("le.c",)
+    )
+
+    obs = pl.read_parquet(obs_path)
+    cash = obs.filter(pl.col("series_id") == "cattle_steer_choice_nebraska")
+    assert cash.height == 1
+    assert obs.filter(pl.col("series_id") == "cattle_lc_front").height == 2
+
+
+def test_append_idempotent_on_rerun(tmp_path: Path) -> None:
+    raw_dir = tmp_path / "futures_continuous"
+    obs_path = tmp_path / "observations.parquet"
+    _empty_observations().write_parquet(obs_path)
+    df = _synthetic_continuous_frame(start=date(2020, 1, 1), n=4)
+    sync_continuous_futures(
+        symbols=("le.c",), raw_dir=raw_dir, fetcher=lambda s: df
+    )
+    append_continuous_to_observations(
+        obs_path=obs_path, raw_dir=raw_dir, symbols=("le.c",)
+    )
+    append_continuous_to_observations(
+        obs_path=obs_path, raw_dir=raw_dir, symbols=("le.c",)
+    )
+    obs = pl.read_parquet(obs_path)
+    le_rows = obs.filter(pl.col("series_id") == "cattle_lc_front")
+    assert le_rows.height == 4  # unchanged on second run
+
+
+def test_append_raises_if_raw_dir_missing(tmp_path: Path) -> None:
+    obs_path = tmp_path / "observations.parquet"
+    _empty_observations().write_parquet(obs_path)
+    missing_dir = tmp_path / "nope"
+    with pytest.raises(FileNotFoundError, match="does not exist"):
+        append_continuous_to_observations(
+            obs_path=obs_path, raw_dir=missing_dir
+        )
