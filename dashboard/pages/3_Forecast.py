@@ -31,7 +31,7 @@ from usda_sandbox.forecast import (
     StatsForecastAutoARIMA,
     iter_run_backtest,
 )
-from usda_sandbox.store import read_series
+from usda_sandbox.store import read_observations, read_series
 
 st.set_page_config(
     page_title="Forecast -- USDA Livestock", page_icon="🐂", layout="wide"
@@ -78,10 +78,41 @@ _series_full = (
 )
 n_obs = _series_full.height
 
+# When the series has exogenous regressors, the lockstep null-drop on
+# exog rows reduces the effective row count to the overlap window —
+# yfinance's contract history is much shorter than ERS cash history, so
+# the cash count overstates what CV actually sees. Compute the real
+# effective count and use it for slider bounds.
+_catalog_full = _load_catalog("data/catalog.json")
+_target_def_full = next(
+    (sd for sd in _catalog_full if sd.series_id == series_id), None
+)
+_regressor_ids = (
+    list(_target_def_full.exogenous_regressors) if _target_def_full else []
+)
+effective_n_obs = n_obs
+overlap_n_obs = n_obs
+if _regressor_ids:
+    _exog_long = (
+        read_observations(obs_path)
+        .filter(pl.col("series_id").is_in(_regressor_ids))
+        .select(["series_id", "period_start", "value"])
+        .collect()
+    )
+    _exog_wide = _exog_long.pivot(values="value", index="period_start", on="series_id")
+    _reg_cols = [c for c in _exog_wide.columns if c != "period_start"]
+    _exog_full = _exog_wide.filter(
+        pl.all_horizontal([pl.col(c).is_not_null() for c in _reg_cols])
+    )
+    _cash_dates = set(_series_full["period_start"].to_list())
+    _exog_dates = set(_exog_full["period_start"].to_list())
+    overlap_n_obs = len(_cash_dates & _exog_dates)
+    effective_n_obs = min(n_obs, overlap_n_obs)
+
 # Adaptive slider bounds: the cross-validator needs horizon * (n_windows + 1) <= n_obs.
 # Cap horizon so at least 2 CV windows are achievable; cap n_windows from the chosen
 # horizon. If a series is too short for any meaningful backtest, surface that early.
-max_horizon = max(1, min(12, n_obs // 3 - 1))
+max_horizon = max(1, min(12, effective_n_obs // 3 - 1))
 default_horizon = min(6, max_horizon)
 
 # ---------------- Inputs -----------------------------------------------------
@@ -90,7 +121,7 @@ cfg_a, cfg_b, cfg_c, cfg_d = st.columns([1, 1, 2, 1])
 horizon = cfg_a.slider(
     "Horizon (months)", min_value=1, max_value=max_horizon, value=default_horizon
 )
-max_n_windows = max(2, min(24, n_obs // horizon - 1))
+max_n_windows = max(2, min(24, effective_n_obs // horizon - 1))
 default_n_windows = min(12, max_n_windows)
 n_windows = cfg_b.slider(
     "CV windows",
@@ -104,10 +135,18 @@ selected_models = cfg_c.multiselect(
 )
 run_clicked = cfg_d.button("> Run backtest", type="primary", use_container_width=True)
 
-st.caption(
-    f"Series has **{n_obs}** non-null observations. Sliders are bounded so "
-    f"any combination produces a valid backtest."
-)
+if _regressor_ids and overlap_n_obs < n_obs:
+    st.caption(
+        f"Series has **{n_obs}** non-null cash observations, but only "
+        f"**{overlap_n_obs}** align with all {len(_regressor_ids)} futures "
+        f"regressors (yfinance's per-contract history is short). Sliders are "
+        f"bounded by the smaller number so CV always has enough rows."
+    )
+else:
+    st.caption(
+        f"Series has **{n_obs}** non-null observations. Sliders are bounded so "
+        f"any combination produces a valid backtest."
+    )
 
 cache_key = f"backtest:{series_id}:{horizon}:{n_windows}:{','.join(sorted(selected_models))}"
 
@@ -123,11 +162,17 @@ if run_clicked:
         .filter(pl.col("value").is_not_null())
         .select(["period_start", "value"])
     )
-    if series.height < horizon * (n_windows + 1):
+    _required_rows = horizon * (n_windows + 1)
+    if effective_n_obs < _required_rows:
+        _suffix = (
+            f" (after aligning with {len(_regressor_ids)} futures regressors)"
+            if _regressor_ids and overlap_n_obs < n_obs
+            else ""
+        )
         st.error(
-            f"Series has {series.height} non-null observations; need at least "
-            f"{horizon * (n_windows + 1)} for {n_windows} windows of horizon "
-            f"{horizon}."
+            f"Series has {effective_n_obs} effective observations{_suffix}; "
+            f"need at least {_required_rows} for {n_windows} windows of "
+            f"horizon {horizon}."
         )
         st.stop()
 

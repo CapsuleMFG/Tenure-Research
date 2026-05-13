@@ -14,20 +14,7 @@
     ],
     "date_column": "A",
     "notes": "Live (slaughter-ready) Choice-grade steers sold in the TX/OK/NM fed-cattle reporting region. This is the price the packer pays the feedlot for finished animals. The 35-65% Choice mix reflects regional carcass quality (lower than Nebraska's). Watch this and the Nebraska series together \u2014 the spread between them tracks regional supply/demand imbalances.",
-    "exogenous_regressors": [
-      "cattle_lc_deferred_1mo",
-      "cattle_lc_deferred_2mo",
-      "cattle_lc_deferred_3mo",
-      "cattle_lc_deferred_4mo",
-      "cattle_lc_deferred_5mo",
-      "cattle_lc_deferred_6mo",
-      "cattle_lc_deferred_7mo",
-      "cattle_lc_deferred_8mo",
-      "cattle_lc_deferred_9mo",
-      "cattle_lc_deferred_10mo",
-      "cattle_lc_deferred_11mo",
-      "cattle_lc_deferred_12mo"
-    ],
+    "exogenous_regressors": [],
     "forecastable": true
   },
   {
@@ -45,20 +32,7 @@
     ],
     "date_column": "A",
     "notes": "Live Choice-grade steers sold direct (negotiated, not via auction) in Nebraska, with a higher-quality grade mix (65-80% Choice). Nebraska is the highest-grading fed-cattle region in the US \u2014 prices typically run a few dollars/cwt above southern regions. Cleanest fed-cattle benchmark for forecasting due to consistent reporting and grade mix.",
-    "exogenous_regressors": [
-      "cattle_lc_deferred_1mo",
-      "cattle_lc_deferred_2mo",
-      "cattle_lc_deferred_3mo",
-      "cattle_lc_deferred_4mo",
-      "cattle_lc_deferred_5mo",
-      "cattle_lc_deferred_6mo",
-      "cattle_lc_deferred_7mo",
-      "cattle_lc_deferred_8mo",
-      "cattle_lc_deferred_9mo",
-      "cattle_lc_deferred_10mo",
-      "cattle_lc_deferred_11mo",
-      "cattle_lc_deferred_12mo"
-    ],
+    "exogenous_regressors": [],
     "forecastable": true
   },
   {
@@ -76,20 +50,7 @@
     ],
     "date_column": "A",
     "notes": "Feeder cattle \u2014 lighter-weight calves (500-550 lbs) at Oklahoma City auction. These animals are just leaving the cow-calf operation, on their way to a stocker/grower phase. Prices here lead the fed-cattle cycle by 12-18 months \u2014 the beef on the shelf in 2026 was bought as a 500-lb calf in 2025.",
-    "exogenous_regressors": [
-      "cattle_feeder_deferred_1mo",
-      "cattle_feeder_deferred_2mo",
-      "cattle_feeder_deferred_3mo",
-      "cattle_feeder_deferred_4mo",
-      "cattle_feeder_deferred_5mo",
-      "cattle_feeder_deferred_6mo",
-      "cattle_feeder_deferred_7mo",
-      "cattle_feeder_deferred_8mo",
-      "cattle_feeder_deferred_9mo",
-      "cattle_feeder_deferred_10mo",
-      "cattle_feeder_deferred_11mo",
-      "cattle_feeder_deferred_12mo"
-    ],
+    "exogenous_regressors": [],
     "forecastable": true
   },
   {
@@ -107,20 +68,7 @@
     ],
     "date_column": "A",
     "notes": "Feeder cattle \u2014 heavier-weight steers (750-800 lbs) at Oklahoma City auction, near typical feedlot placement weight. These animals will be slaughter-ready in 4-6 months \u2014 closer to the fed-cattle cycle in time than the lighter feeders, but still a leading indicator for the boxed-beef cutout.",
-    "exogenous_regressors": [
-      "cattle_feeder_deferred_1mo",
-      "cattle_feeder_deferred_2mo",
-      "cattle_feeder_deferred_3mo",
-      "cattle_feeder_deferred_4mo",
-      "cattle_feeder_deferred_5mo",
-      "cattle_feeder_deferred_6mo",
-      "cattle_feeder_deferred_7mo",
-      "cattle_feeder_deferred_8mo",
-      "cattle_feeder_deferred_9mo",
-      "cattle_feeder_deferred_10mo",
-      "cattle_feeder_deferred_11mo",
-      "cattle_feeder_deferred_12mo"
-    ],
+    "exogenous_regressors": [],
     "forecastable": true
   },
   {
@@ -138,20 +86,7 @@
     ],
     "date_column": "A",
     "notes": "Live hogs (barrows and gilts \u2014 castrated males and unbred females, the typical slaughter cohort) priced on the National Base lean-percentage formula at 51-52% lean carcass. This became the headline US hog price after USDA's 2013 mandatory price reporting redefinition; pre-2013 values are NA because the series didn't exist in this form.",
-    "exogenous_regressors": [
-      "hogs_he_deferred_1mo",
-      "hogs_he_deferred_2mo",
-      "hogs_he_deferred_3mo",
-      "hogs_he_deferred_4mo",
-      "hogs_he_deferred_5mo",
-      "hogs_he_deferred_6mo",
-      "hogs_he_deferred_7mo",
-      "hogs_he_deferred_8mo",
-      "hogs_he_deferred_9mo",
-      "hogs_he_deferred_10mo",
-      "hogs_he_deferred_11mo",
-      "hogs_he_deferred_12mo"
-    ],
+    "exogenous_regressors": [],
     "forecastable": true
   },
   {
@@ -187,20 +122,7 @@
     ],
     "date_column": "A",
     "notes": "Wholesale beef benchmark. The 'cutout' is a weighted-average value of all the boxed primals (chuck, rib, loin, round, brisket, etc.) cut from a Choice-grade carcass in the 600-900 lb weight band. Expressed as $/cwt of carcass-equivalent weight \u2014 effectively 'what the wholesale value of a slaughtered animal adds up to.' Packers' gross margin = cutout \u2212 fed cattle price; a widening spread means packers are profitable.",
-    "exogenous_regressors": [
-      "cattle_lc_deferred_1mo",
-      "cattle_lc_deferred_2mo",
-      "cattle_lc_deferred_3mo",
-      "cattle_lc_deferred_4mo",
-      "cattle_lc_deferred_5mo",
-      "cattle_lc_deferred_6mo",
-      "cattle_lc_deferred_7mo",
-      "cattle_lc_deferred_8mo",
-      "cattle_lc_deferred_9mo",
-      "cattle_lc_deferred_10mo",
-      "cattle_lc_deferred_11mo",
-      "cattle_lc_deferred_12mo"
-    ],
+    "exogenous_regressors": [],
     "forecastable": true
   },
   {
@@ -218,20 +140,7 @@
     ],
     "date_column": "A",
     "notes": "Same idea as the Choice cutout but for Select-grade carcasses \u2014 one quality tier below Choice. Select beef is leaner with less marbling, used mostly for ground beef, supermarket private-label, and casual restaurants. The Choice-Select spread is one of the cleanest cattle-cycle indicators: wide spread = strong demand for high-quality beef and tight Choice supply; narrow spread = the opposite.",
-    "exogenous_regressors": [
-      "cattle_lc_deferred_1mo",
-      "cattle_lc_deferred_2mo",
-      "cattle_lc_deferred_3mo",
-      "cattle_lc_deferred_4mo",
-      "cattle_lc_deferred_5mo",
-      "cattle_lc_deferred_6mo",
-      "cattle_lc_deferred_7mo",
-      "cattle_lc_deferred_8mo",
-      "cattle_lc_deferred_9mo",
-      "cattle_lc_deferred_10mo",
-      "cattle_lc_deferred_11mo",
-      "cattle_lc_deferred_12mo"
-    ],
+    "exogenous_regressors": [],
     "forecastable": true
   },
   {
@@ -249,20 +158,7 @@
     ],
     "date_column": "A",
     "notes": "Wholesale pork benchmark. Like the boxed beef cutout but for pork primals (loin, ham, belly, butt, picnic, rib, trim). Composite weighting reflects the typical sale mix to retailers and processors. Belly prices (bacon) drive most of the cyclical movement \u2014 pork demand is famously seasonal around grilling season.",
-    "exogenous_regressors": [
-      "hogs_he_deferred_1mo",
-      "hogs_he_deferred_2mo",
-      "hogs_he_deferred_3mo",
-      "hogs_he_deferred_4mo",
-      "hogs_he_deferred_5mo",
-      "hogs_he_deferred_6mo",
-      "hogs_he_deferred_7mo",
-      "hogs_he_deferred_8mo",
-      "hogs_he_deferred_9mo",
-      "hogs_he_deferred_10mo",
-      "hogs_he_deferred_11mo",
-      "hogs_he_deferred_12mo"
-    ],
+    "exogenous_regressors": [],
     "forecastable": true
   },
   {
