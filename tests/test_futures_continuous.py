@@ -12,7 +12,8 @@ import pytest
 
 from usda_sandbox.futures_continuous import (
     ContinuousManifestEntry,
-    _default_stooq_fetcher,
+    _default_fetcher,
+    _safe_filename,
     append_continuous_to_observations,
     sync_continuous_futures,
 )
@@ -20,7 +21,7 @@ from usda_sandbox.futures_continuous import (
 
 def test_manifest_entry_round_trips_through_dict() -> None:
     entry = ContinuousManifestEntry(
-        symbol="le.c",
+        symbol="LE=F",
         sha256="abc",
         downloaded_at="2026-05-13T10:00:00+00:00",
         missing=False,
@@ -28,35 +29,11 @@ def test_manifest_entry_round_trips_through_dict() -> None:
     assert ContinuousManifestEntry(**asdict(entry)) == entry
 
 
-def test_parse_stooq_csv_returns_period_start_and_close() -> None:
-    from usda_sandbox.futures_continuous import _parse_stooq_csv
-    csv_text = (
-        "Date,Open,High,Low,Close,Volume\n"
-        "2024-01-31,170.0,175.0,168.0,172.5,1000\n"
-        "2024-02-29,172.0,178.0,170.0,176.0,1200\n"
-    )
-    df = _parse_stooq_csv(csv_text)
-    assert df.columns == ["period_start", "close"]
-    assert df["period_start"].to_list() == [date(2024, 1, 31), date(2024, 2, 29)]
-    assert df["close"].to_list() == [172.5, 176.0]
-    assert df["period_start"].dtype == pl.Date
-    assert df["close"].dtype == pl.Float64
-
-
-def test_parse_stooq_csv_returns_empty_on_no_data_marker() -> None:
-    from usda_sandbox.futures_continuous import _parse_stooq_csv
-    df = _parse_stooq_csv("No data")
-    assert df.is_empty()
-    assert df.columns == ["period_start", "close"]
-    assert df["period_start"].dtype == pl.Date
-    assert df["close"].dtype == pl.Float64
-
-
-def test_parse_stooq_csv_returns_empty_on_empty_input() -> None:
-    from usda_sandbox.futures_continuous import _parse_stooq_csv
-    df = _parse_stooq_csv("")
-    assert df.is_empty()
-    assert df.columns == ["period_start", "close"]
+def test_safe_filename_replaces_equals() -> None:
+    """yfinance symbols contain ``=`` which we sanitize for on-disk filenames."""
+    assert _safe_filename("LE=F") == "LE_F"
+    assert _safe_filename("HE=F") == "HE_F"
+    assert _safe_filename("plain") == "plain"
 
 
 def _synthetic_continuous_frame(
@@ -86,15 +63,15 @@ def test_sync_writes_one_parquet_per_symbol(tmp_path: Path) -> None:
         return df
 
     manifest = sync_continuous_futures(
-        symbols=("le.c",),
+        symbols=("LE=F",),
         raw_dir=raw_dir,
         fetcher=fake_fetcher,
     )
-    assert "le.c" in manifest
-    assert manifest["le.c"].missing is False
-    assert manifest["le.c"].sha256
-    assert (raw_dir / "le.c.parquet").exists()
-    on_disk = pl.read_parquet(raw_dir / "le.c.parquet")
+    assert "LE=F" in manifest
+    assert manifest["LE=F"].missing is False
+    assert manifest["LE=F"].sha256
+    assert (raw_dir / "LE_F.parquet").exists()
+    on_disk = pl.read_parquet(raw_dir / "LE_F.parquet")
     assert on_disk.equals(df)
 
 
@@ -102,14 +79,14 @@ def test_sync_writes_manifest_json(tmp_path: Path) -> None:
     raw_dir = tmp_path / "futures_continuous"
     df = _synthetic_continuous_frame(start=date(2020, 1, 1), n=6)
     sync_continuous_futures(
-        symbols=("le.c",),
+        symbols=("LE=F",),
         raw_dir=raw_dir,
         fetcher=lambda s: df,
     )
     payload = json.loads((raw_dir / "manifest.json").read_text(encoding="utf-8"))
-    assert "le.c" in payload
-    assert payload["le.c"]["missing"] is False
-    assert payload["le.c"]["sha256"]
+    assert "LE=F" in payload
+    assert payload["LE=F"]["missing"] is False
+    assert payload["LE=F"]["sha256"]
 
 
 def test_sync_idempotent_when_data_unchanged(tmp_path: Path) -> None:
@@ -122,14 +99,14 @@ def test_sync_idempotent_when_data_unchanged(tmp_path: Path) -> None:
         return df
 
     sync_continuous_futures(
-        symbols=("le.c",), raw_dir=raw_dir, fetcher=counting_fetcher
+        symbols=("LE=F",), raw_dir=raw_dir, fetcher=counting_fetcher
     )
     sync_continuous_futures(
-        symbols=("le.c",), raw_dir=raw_dir, fetcher=counting_fetcher
+        symbols=("LE=F",), raw_dir=raw_dir, fetcher=counting_fetcher
     )
     # First sync: 1 fetcher call. Second sync: skipped because SHA matches.
-    assert calls == ["le.c"]
-    on_disk = pl.read_parquet(raw_dir / "le.c.parquet")
+    assert calls == ["LE=F"]
+    on_disk = pl.read_parquet(raw_dir / "LE_F.parquet")
     assert on_disk.equals(df)
 
 
@@ -142,11 +119,11 @@ def test_sync_records_missing_symbol_without_raising(tmp_path: Path) -> None:
         )
 
     manifest = sync_continuous_futures(
-        symbols=("gf.c",), raw_dir=raw_dir, fetcher=empty_fetcher
+        symbols=("GF=F",), raw_dir=raw_dir, fetcher=empty_fetcher
     )
-    assert manifest["gf.c"].missing is True
-    assert manifest["gf.c"].sha256 == ""
-    assert not (raw_dir / "gf.c.parquet").exists()
+    assert manifest["GF=F"].missing is True
+    assert manifest["GF=F"].sha256 == ""
+    assert not (raw_dir / "GF_F.parquet").exists()
 
 
 def test_sync_skips_known_missing_symbols_on_rerun(tmp_path: Path) -> None:
@@ -160,13 +137,13 @@ def test_sync_skips_known_missing_symbols_on_rerun(tmp_path: Path) -> None:
         )
 
     sync_continuous_futures(
-        symbols=("gf.c",), raw_dir=raw_dir, fetcher=empty_fetcher
+        symbols=("GF=F",), raw_dir=raw_dir, fetcher=empty_fetcher
     )
     sync_continuous_futures(
-        symbols=("gf.c",), raw_dir=raw_dir, fetcher=empty_fetcher
+        symbols=("GF=F",), raw_dir=raw_dir, fetcher=empty_fetcher
     )
     # First call: 1 attempt. Second call: skip because known-missing.
-    assert calls == ["gf.c"]
+    assert calls == ["GF=F"]
 
 
 def test_sync_replaces_changed_data(tmp_path: Path) -> None:
@@ -176,15 +153,15 @@ def test_sync_replaces_changed_data(tmp_path: Path) -> None:
     df_v2 = _synthetic_continuous_frame(start=date(2020, 1, 1), n=4, base=200.0)
 
     sync_continuous_futures(
-        symbols=("le.c",), raw_dir=raw_dir, fetcher=lambda s: df_v1
+        symbols=("LE=F",), raw_dir=raw_dir, fetcher=lambda s: df_v1
     )
     # Simulate the user forcing a refresh (delete cached parquet; manifest
     # entry stays, but Guard 2 won't fire because file_path.exists() is False).
-    (raw_dir / "le.c.parquet").unlink()
+    (raw_dir / "LE_F.parquet").unlink()
     sync_continuous_futures(
-        symbols=("le.c",), raw_dir=raw_dir, fetcher=lambda s: df_v2
+        symbols=("LE=F",), raw_dir=raw_dir, fetcher=lambda s: df_v2
     )
-    on_disk = pl.read_parquet(raw_dir / "le.c.parquet")
+    on_disk = pl.read_parquet(raw_dir / "LE_F.parquet")
     assert on_disk["close"].to_list() == df_v2["close"].to_list()
 
 
@@ -215,11 +192,11 @@ def test_append_writes_one_row_per_symbol_per_month(tmp_path: Path) -> None:
 
     df_le = _synthetic_continuous_frame(start=date(2020, 1, 1), n=3, base=170.0)
     sync_continuous_futures(
-        symbols=("le.c",), raw_dir=raw_dir, fetcher=lambda s: df_le
+        symbols=("LE=F",), raw_dir=raw_dir, fetcher=lambda s: df_le
     )
 
     append_continuous_to_observations(
-        obs_path=obs_path, raw_dir=raw_dir, symbols=("le.c",)
+        obs_path=obs_path, raw_dir=raw_dir, symbols=("LE=F",)
     )
 
     obs = pl.read_parquet(obs_path)
@@ -232,7 +209,7 @@ def test_append_writes_one_row_per_symbol_per_month(tmp_path: Path) -> None:
     assert first["unit"] == "USD/cwt"
     assert first["frequency"] == "monthly"
     assert first["value"] == pytest.approx(170.0)
-    assert first["source_file"] == "futures_continuous:le.c"
+    assert first["source_file"] == "futures_continuous:LE=F"
 
 
 def test_append_preserves_existing_observations(tmp_path: Path) -> None:
@@ -265,10 +242,10 @@ def test_append_preserves_existing_observations(tmp_path: Path) -> None:
 
     df = _synthetic_continuous_frame(start=date(2020, 1, 1), n=2)
     sync_continuous_futures(
-        symbols=("le.c",), raw_dir=raw_dir, fetcher=lambda s: df
+        symbols=("LE=F",), raw_dir=raw_dir, fetcher=lambda s: df
     )
     append_continuous_to_observations(
-        obs_path=obs_path, raw_dir=raw_dir, symbols=("le.c",)
+        obs_path=obs_path, raw_dir=raw_dir, symbols=("LE=F",)
     )
 
     obs = pl.read_parquet(obs_path)
@@ -283,13 +260,13 @@ def test_append_idempotent_on_rerun(tmp_path: Path) -> None:
     _empty_observations().write_parquet(obs_path)
     df = _synthetic_continuous_frame(start=date(2020, 1, 1), n=4)
     sync_continuous_futures(
-        symbols=("le.c",), raw_dir=raw_dir, fetcher=lambda s: df
+        symbols=("LE=F",), raw_dir=raw_dir, fetcher=lambda s: df
     )
     append_continuous_to_observations(
-        obs_path=obs_path, raw_dir=raw_dir, symbols=("le.c",)
+        obs_path=obs_path, raw_dir=raw_dir, symbols=("LE=F",)
     )
     append_continuous_to_observations(
-        obs_path=obs_path, raw_dir=raw_dir, symbols=("le.c",)
+        obs_path=obs_path, raw_dir=raw_dir, symbols=("LE=F",)
     )
     obs = pl.read_parquet(obs_path)
     le_rows = obs.filter(pl.col("series_id") == "cattle_lc_front")
@@ -325,7 +302,7 @@ def test_clean_all_dispatcher_routes_futures_continuous_prefix(
                     "metric": "futures_price",
                     "unit": "USD/cwt",
                     "frequency": "monthly",
-                    "source_file": "futures_continuous:le.c",
+                    "source_file": "futures_continuous:LE=F",
                     "source_sheet": "",
                     "header_rows_to_skip": 0,
                     "value_columns": ["X"],
@@ -345,7 +322,7 @@ def test_clean_all_dispatcher_routes_futures_continuous_prefix(
     fc_dir = raw_dir / "futures_continuous"
     df = _synthetic_continuous_frame(start=date(2020, 1, 1), n=3)
     sync_continuous_futures(
-        symbols=("le.c",), raw_dir=fc_dir, fetcher=lambda s: df
+        symbols=("LE=F",), raw_dir=fc_dir, fetcher=lambda s: df
     )
 
     out_path = tmp_path / "observations.parquet"

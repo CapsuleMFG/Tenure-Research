@@ -886,7 +886,7 @@
     "metric": "futures_price",
     "unit": "USD/cwt",
     "frequency": "monthly",
-    "source_file": "futures_continuous:le.c",
+    "source_file": "futures_continuous:LE=F",
     "source_sheet": "",
     "header_rows_to_skip": 0,
     "value_columns": [
@@ -904,7 +904,7 @@
     "metric": "futures_price",
     "unit": "USD/cwt",
     "frequency": "monthly",
-    "source_file": "futures_continuous:he.c",
+    "source_file": "futures_continuous:HE=F",
     "source_sheet": "",
     "header_rows_to_skip": 0,
     "value_columns": [
@@ -922,7 +922,7 @@
     "metric": "futures_price",
     "unit": "USD/cwt",
     "frequency": "monthly",
-    "source_file": "futures_continuous:gf.c",
+    "source_file": "futures_continuous:GF=F",
     "source_sheet": "",
     "header_rows_to_skip": 0,
     "value_columns": [

@@ -1,10 +1,12 @@
-"""Continuous front-month CME futures ingest from Stooq.
+"""Continuous front-month CME futures ingest via yfinance.
 
 This module is the v0.2c replacement for the per-contract / deferred-h
-exog regressor design in ``futures.py``. Stooq's monthly CSV endpoint
-returns ~30 years of back-adjusted continuous front-month closes per
-commodity, which gives enough cash-overlap to actually run CV with the
-forecasters' rank requirements satisfied.
+exog regressor design in ``futures.py``. yfinance's continuous front-month
+symbols (``LE=F``, ``HE=F``, ``GF=F``) return ~25 years of monthly closes
+each, which gives enough cash-overlap to actually run CV with the
+forecasters' rank requirements satisfied. (We originally planned to use
+Stooq's free CSV endpoint, but Stooq has since moved CSV downloads behind
+a captcha-gated API key.)
 
 The design and rationale live in
 ``docs/superpowers/specs/2026-05-13-continuous-futures-regressor-design.md``.
@@ -13,10 +15,7 @@ The design and rationale live in
 from __future__ import annotations
 
 import hashlib
-import io
 import json
-import urllib.error
-import urllib.request
 from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
@@ -24,10 +23,11 @@ from pathlib import Path
 from typing import Any
 
 import polars as pl
+import yfinance as yf
 
 __all__ = [
     "ContinuousManifestEntry",
-    "_default_stooq_fetcher",
+    "_default_fetcher",
     "append_continuous_to_observations",
     "sync_continuous_futures",
 ]
@@ -38,8 +38,8 @@ class ContinuousManifestEntry:
     """One row of the continuous-futures manifest, keyed externally on symbol.
 
     ``missing=True`` (with ``sha256=""``) records that we attempted to fetch
-    this symbol but Stooq returned no data — useful for an audit trail of
-    which symbols are unavailable (e.g., ``gf.c`` if Stooq doesn't carry it).
+    this symbol but yfinance returned no data — useful for an audit trail
+    of which symbols are unavailable.
     """
 
     symbol: str
@@ -48,25 +48,23 @@ class ContinuousManifestEntry:
     missing: bool = False
 
 
-_STOOQ_CSV_URL = "https://stooq.com/q/d/l/?s={symbol}&i=m"
-
-
 _MANIFEST_FILENAME = "manifest.json"
 
 
 # Symbol → (series_id, series_name, commodity) — single source of truth.
+# Keys are yfinance continuous-front-month symbols.
 _SYMBOL_META: dict[str, tuple[str, str, str]] = {
-    "le.c": (
+    "LE=F": (
         "cattle_lc_front",
         "Live Cattle front-month futures (continuous)",
         "cattle",
     ),
-    "he.c": (
+    "HE=F": (
         "hogs_he_front",
         "Lean Hogs front-month futures (continuous)",
         "hogs",
     ),
-    "gf.c": (
+    "GF=F": (
         "cattle_feeder_front",
         "Feeder Cattle front-month futures (continuous)",
         "cattle",
@@ -78,6 +76,13 @@ _EMPTY_CONTINUOUS_SCHEMA: dict[str, Any] = {
     "period_start": pl.Date,
     "close": pl.Float64,
 }
+
+
+def _safe_filename(symbol: str) -> str:
+    """yfinance continuous symbols contain ``=`` (e.g. ``LE=F``). Replace it
+    with ``_`` for filesystem safety; the original symbol is preserved in
+    the manifest and used everywhere else."""
+    return symbol.replace("=", "_")
 
 
 def _sha256_of(path: Path) -> str:
@@ -106,67 +111,58 @@ def _save_manifest(
     )
 
 
-def _parse_stooq_csv(text: str) -> pl.DataFrame:
-    """Parse Stooq's monthly OHLCV CSV into (period_start, close) rows.
+def _default_fetcher(symbol: str) -> pl.DataFrame:
+    """Real yfinance fetch — month-end closes for one continuous symbol.
 
-    Stooq returns the literal string ``"No data"`` (no header) when it has
-    nothing for a symbol; that and the empty string both yield an empty
-    DataFrame with the canonical schema.
+    Returns an empty DataFrame (canonical schema ``period_start: Date``,
+    ``close: Float64``) on any network / API error so the rest of the sync
+    proceeds. Never raises for fetch failures.
     """
-    text = text.strip()
-    if not text or text.lower().startswith("no data"):
-        return pl.DataFrame(schema=_EMPTY_CONTINUOUS_SCHEMA)
-    raw = pl.read_csv(io.StringIO(text), try_parse_dates=True)
-    if "Date" not in raw.columns or "Close" not in raw.columns:
-        return pl.DataFrame(schema=_EMPTY_CONTINUOUS_SCHEMA)
-    return (
-        raw.select(
-            period_start=pl.col("Date").cast(pl.Date),
-            close=pl.col("Close").cast(pl.Float64),
-        )
-        .drop_nulls()
-    )
-
-
-def _default_stooq_fetcher(symbol: str) -> pl.DataFrame:
-    """Real Stooq fetch — month-end closes for one continuous symbol.
-
-    Returns an empty DataFrame (canonical schema) on HTTP error or
-    "No data" response. Never raises for network issues.
-    """
-    url = _STOOQ_CSV_URL.format(symbol=symbol)
     try:
-        with urllib.request.urlopen(url, timeout=30) as resp:
-            body = resp.read().decode("utf-8", errors="replace")
-    except (urllib.error.URLError, TimeoutError, OSError):
+        hist = yf.Ticker(symbol).history(
+            period="max", auto_adjust=False, interval="1mo"
+        )
+    except Exception:  # yfinance raises various exception types; catch all.
         return pl.DataFrame(schema=_EMPTY_CONTINUOUS_SCHEMA)
-    return _parse_stooq_csv(body)
+    if hist is None or hist.empty:
+        return pl.DataFrame(schema=_EMPTY_CONTINUOUS_SCHEMA)
+    # yfinance returns a pandas DataFrame indexed by Timestamp. Build a
+    # polars frame with our canonical schema.
+    monthly = (
+        hist["Close"]
+        .dropna()
+        .reset_index()
+        .rename(columns={"Date": "period_start", "Close": "close"})
+    )
+    return pl.from_pandas(monthly).select(
+        period_start=pl.col("period_start").cast(pl.Date),
+        close=pl.col("close").cast(pl.Float64),
+    )
 
 
 def sync_continuous_futures(
     *,
-    symbols: Iterable[str] = ("le.c", "he.c", "gf.c"),
+    symbols: Iterable[str] = ("LE=F", "HE=F", "GF=F"),
     raw_dir: Path = Path("data/raw/futures_continuous"),
     fetcher: Callable[[str], pl.DataFrame] | None = None,
 ) -> dict[str, ContinuousManifestEntry]:
-    """Download monthly continuous front-month closes from Stooq.
+    """Download monthly continuous front-month closes via yfinance.
 
-    Idempotent: SHA-keyed manifest. Symbols that Stooq returns no data for
-    are recorded as ``missing=True`` and not re-attempted on subsequent
+    Idempotent: SHA-keyed manifest. Symbols that yfinance returns no data
+    for are recorded as ``missing=True`` and not re-attempted on subsequent
     runs (delete the manifest entry to force a retry).
 
-    ``fetcher`` is injectable for tests — defaults to
-    :func:`_default_stooq_fetcher`.
+    ``fetcher`` is injectable for tests — defaults to :func:`_default_fetcher`.
     """
     raw_dir = Path(raw_dir)
     raw_dir.mkdir(parents=True, exist_ok=True)
-    fetcher = fetcher if fetcher is not None else _default_stooq_fetcher
+    fetcher = fetcher if fetcher is not None else _default_fetcher
 
     manifest_path = raw_dir / _MANIFEST_FILENAME
     manifest = _load_manifest(manifest_path)
 
     for symbol in symbols:
-        file_path = raw_dir / f"{symbol}.parquet"
+        file_path = raw_dir / f"{_safe_filename(symbol)}.parquet"
 
         # Already-known-missing symbols: don't re-attempt every run.
         # Delete the manifest entry manually to force a retry.
@@ -209,7 +205,7 @@ def append_continuous_to_observations(
     *,
     obs_path: Path = Path("data/clean/observations.parquet"),
     raw_dir: Path = Path("data/raw/futures_continuous"),
-    symbols: Iterable[str] = ("le.c", "he.c", "gf.c"),
+    symbols: Iterable[str] = ("LE=F", "HE=F", "GF=F"),
 ) -> None:
     """Build observations rows from cached continuous-futures parquets
     and merge them into ``observations.parquet``. Idempotent on
@@ -228,7 +224,7 @@ def append_continuous_to_observations(
     for symbol in symbols:
         if symbol not in _SYMBOL_META:
             continue
-        file_path = raw_dir / f"{symbol}.parquet"
+        file_path = raw_dir / f"{_safe_filename(symbol)}.parquet"
         if not file_path.exists():
             continue  # missing symbol — sync recorded it; nothing to append
         series_id, series_name, commodity = _SYMBOL_META[symbol]
