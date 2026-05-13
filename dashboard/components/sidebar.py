@@ -15,7 +15,7 @@ import streamlit as st
 
 from usda_sandbox.catalog import load_catalog
 from usda_sandbox.clean import clean_all
-from usda_sandbox.futures import sync_futures
+from usda_sandbox.futures_continuous import sync_continuous_futures
 from usda_sandbox.ingest import sync_downloads
 from usda_sandbox.store import list_series, read_observations
 
@@ -175,11 +175,15 @@ def _render_refresh_button(obs_path: Path) -> None:
         except Exception as exc:
             status.update(label=f"Download failed: {exc}", state="error")
             return
-        status.write("Syncing CME futures contracts (LE, HE, GF) via yfinance...")
+        status.write("Syncing continuous front-month futures from Stooq...")
         try:
-            sync_futures(raw_dir=DEFAULT_RAW_DIR / "futures")
+            sync_continuous_futures(
+                raw_dir=DEFAULT_RAW_DIR / "futures_continuous"
+            )
         except Exception as exc:
-            status.update(label=f"Futures sync failed: {exc}", state="error")
+            status.update(
+                label=f"Continuous-futures sync failed: {exc}", state="error"
+            )
             return
         status.write("Cleaning all catalog series...")
         try:
