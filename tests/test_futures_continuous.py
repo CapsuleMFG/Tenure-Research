@@ -36,6 +36,43 @@ def test_safe_filename_replaces_equals() -> None:
     assert _safe_filename("plain") == "plain"
 
 
+def test_fill_monthly_gaps_forward_fills_missing_months() -> None:
+    """yfinance's monthly resampling occasionally drops months; the append
+    path forward-fills so the regressor has one row per calendar month."""
+    from usda_sandbox.futures_continuous import _fill_monthly_gaps
+
+    sparse = pl.DataFrame(
+        {
+            "period_start": [date(2024, 1, 1), date(2024, 3, 1), date(2024, 5, 1)],
+            "close": [100.0, 110.0, 120.0],
+        }
+    ).with_columns(
+        pl.col("period_start").cast(pl.Date),
+        pl.col("close").cast(pl.Float64),
+    )
+    filled = _fill_monthly_gaps(sparse)
+    assert filled.height == 5
+    assert filled["period_start"].to_list() == [
+        date(2024, 1, 1),
+        date(2024, 2, 1),
+        date(2024, 3, 1),
+        date(2024, 4, 1),
+        date(2024, 5, 1),
+    ]
+    # Feb gets January's close; April gets March's.
+    assert filled["close"].to_list() == [100.0, 100.0, 110.0, 110.0, 120.0]
+
+
+def test_fill_monthly_gaps_returns_empty_on_empty_input() -> None:
+    from usda_sandbox.futures_continuous import _fill_monthly_gaps
+
+    empty = pl.DataFrame(
+        schema={"period_start": pl.Date, "close": pl.Float64}
+    )
+    out = _fill_monthly_gaps(empty)
+    assert out.is_empty()
+
+
 def _synthetic_continuous_frame(
     *, start: date, n: int, base: float = 170.0
 ) -> pl.DataFrame:

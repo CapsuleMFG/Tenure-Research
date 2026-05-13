@@ -111,6 +111,34 @@ def _save_manifest(
     )
 
 
+def _fill_monthly_gaps(df: pl.DataFrame) -> pl.DataFrame:
+    """Reindex to a contiguous month-start range and forward-fill close.
+
+    yfinance's ``interval="1mo"`` resampling occasionally drops months (we've
+    seen it drop e.g., 2001-04, 2026-02, 2026-03 for ``LE=F`` despite those
+    months having full trading activity). Futures trade continuously, so the
+    most defensible reconstruction is to carry the previous month's close
+    forward — that's also what an analyst would do glancing at the raw
+    series. The cache keeps yfinance's raw output; we only forward-fill at
+    append time so the parquet remains a faithful record of what was
+    served.
+    """
+    if df.is_empty():
+        return df
+    df = df.with_columns(pl.col("period_start").dt.month_start()).sort("period_start")
+    earliest = df["period_start"].min()
+    latest = df["period_start"].max()
+    if earliest is None or latest is None:
+        return df
+    full_range = pl.date_range(earliest, latest, interval="1mo", eager=True)
+    grid = pl.DataFrame({"period_start": full_range})
+    return (
+        grid.join(df, on="period_start", how="left")
+        .with_columns(pl.col("close").forward_fill())
+        .drop_nulls("close")
+    )
+
+
 def _default_fetcher(symbol: str) -> pl.DataFrame:
     """Real yfinance fetch — month-end closes for one continuous symbol.
 
@@ -231,6 +259,7 @@ def append_continuous_to_observations(
         cached = pl.read_parquet(file_path)
         if cached.is_empty():
             continue
+        cached = _fill_monthly_gaps(cached)
         frame = cached.select(
             series_id=pl.lit(series_id),
             series_name=pl.lit(series_name),
