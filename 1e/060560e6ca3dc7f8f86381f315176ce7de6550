@@ -1,0 +1,20 @@
+docs/superpowers/specs/2026-05-13-continuous-futures-regressor-design.md
+  s_c2a6433657391f::t_52e5d853480f5d 153-166
+  s_c2a6433657391f::t_c3c1ab5ea68f36 1-152,167-322
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "1e060560e6ca3dc7f8f86381f315176ce7de6550",
+  "prompts": {},
+  "sessions": {
+    "s_c2a6433657391f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e3eb26d2-aff8-438f-8101-21659277da70",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
