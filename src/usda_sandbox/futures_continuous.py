@@ -48,8 +48,50 @@ class ContinuousManifestEntry:
     missing: bool = False
 
 
+_STOOQ_CSV_URL = "https://stooq.com/q/d/l/?s={symbol}&i=m"
+
+
+_EMPTY_CONTINUOUS_SCHEMA: dict[str, Any] = {
+    "period_start": pl.Date,
+    "close": pl.Float64,
+}
+
+
+def _parse_stooq_csv(text: str) -> pl.DataFrame:
+    """Parse Stooq's monthly OHLCV CSV into (period_start, close) rows.
+
+    Stooq returns the literal string ``"No data"`` (no header) when it has
+    nothing for a symbol; that and the empty string both yield an empty
+    DataFrame with the canonical schema.
+    """
+    text = text.strip()
+    if not text or text.lower().startswith("no data"):
+        return pl.DataFrame(schema=_EMPTY_CONTINUOUS_SCHEMA)
+    raw = pl.read_csv(io.StringIO(text), try_parse_dates=True)
+    if "Date" not in raw.columns or "Close" not in raw.columns:
+        return pl.DataFrame(schema=_EMPTY_CONTINUOUS_SCHEMA)
+    return (
+        raw.select(
+            period_start=pl.col("Date").cast(pl.Date),
+            close=pl.col("Close").cast(pl.Float64),
+        )
+        .drop_nulls()
+    )
+
+
 def _default_stooq_fetcher(symbol: str) -> pl.DataFrame:
-    raise NotImplementedError("filled in Task 2")
+    """Real Stooq fetch — month-end closes for one continuous symbol.
+
+    Returns an empty DataFrame (canonical schema) on HTTP error or
+    "No data" response. Never raises for network issues.
+    """
+    url = _STOOQ_CSV_URL.format(symbol=symbol)
+    try:
+        with urllib.request.urlopen(url, timeout=30) as resp:
+            body = resp.read().decode("utf-8", errors="replace")
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return pl.DataFrame(schema=_EMPTY_CONTINUOUS_SCHEMA)
+    return _parse_stooq_csv(body)
 
 
 def sync_continuous_futures(
