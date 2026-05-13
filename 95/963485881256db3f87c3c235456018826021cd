@@ -1,0 +1,24 @@
+tests/test_futures_continuous.py
+  s_c2a6433657391f::t_d37062500876fa 130-131
+  s_c2a6433657391f::t_cc18027d983f71 113-129,132-172,174-180,184-188
+  s_c2a6433657391f::t_ce43cb883a45f8 173,181-183
+src/usda_sandbox/futures_continuous.py
+  s_c2a6433657391f::t_a8755c50f32471 151-155
+  s_c2a6433657391f::t_4a967c2b8514bb 156-165
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "95963485881256db3f87c3c235456018826021cd",
+  "prompts": {},
+  "sessions": {
+    "s_c2a6433657391f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e3eb26d2-aff8-438f-8101-21659277da70",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": null
+    }
+  }
+}
