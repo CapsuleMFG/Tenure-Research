@@ -110,3 +110,79 @@ def test_sync_writes_manifest_json(tmp_path: Path) -> None:
     assert "le.c" in payload
     assert payload["le.c"]["missing"] is False
     assert payload["le.c"]["sha256"]
+
+
+def test_sync_idempotent_when_data_unchanged(tmp_path: Path) -> None:
+    raw_dir = tmp_path / "futures_continuous"
+    df = _synthetic_continuous_frame(start=date(2020, 1, 1), n=6)
+    calls = []
+
+    def counting_fetcher(symbol: str) -> pl.DataFrame:
+        calls.append(symbol)
+        return df
+
+    sync_continuous_futures(
+        symbols=("le.c",), raw_dir=raw_dir, fetcher=counting_fetcher
+    )
+    sync_continuous_futures(
+        symbols=("le.c",), raw_dir=raw_dir, fetcher=counting_fetcher
+    )
+    # First sync: 1 fetcher call. Second sync: skipped because SHA matches.
+    assert calls == ["le.c"]
+    on_disk = pl.read_parquet(raw_dir / "le.c.parquet")
+    assert on_disk.equals(df)
+
+
+def test_sync_records_missing_symbol_without_raising(tmp_path: Path) -> None:
+    raw_dir = tmp_path / "futures_continuous"
+
+    def empty_fetcher(symbol: str) -> pl.DataFrame:
+        return pl.DataFrame(
+            schema={"period_start": pl.Date, "close": pl.Float64}
+        )
+
+    manifest = sync_continuous_futures(
+        symbols=("gf.c",), raw_dir=raw_dir, fetcher=empty_fetcher
+    )
+    assert manifest["gf.c"].missing is True
+    assert manifest["gf.c"].sha256 == ""
+    assert not (raw_dir / "gf.c.parquet").exists()
+
+
+def test_sync_skips_known_missing_symbols_on_rerun(tmp_path: Path) -> None:
+    raw_dir = tmp_path / "futures_continuous"
+    calls = []
+
+    def empty_fetcher(symbol: str) -> pl.DataFrame:
+        calls.append(symbol)
+        return pl.DataFrame(
+            schema={"period_start": pl.Date, "close": pl.Float64}
+        )
+
+    sync_continuous_futures(
+        symbols=("gf.c",), raw_dir=raw_dir, fetcher=empty_fetcher
+    )
+    sync_continuous_futures(
+        symbols=("gf.c",), raw_dir=raw_dir, fetcher=empty_fetcher
+    )
+    # First call: 1 attempt. Second call: skip because known-missing.
+    assert calls == ["gf.c"]
+
+
+def test_sync_replaces_changed_data(tmp_path: Path) -> None:
+    """When the cached parquet is deleted, a re-sync repopulates from the fetcher."""
+    raw_dir = tmp_path / "futures_continuous"
+    df_v1 = _synthetic_continuous_frame(start=date(2020, 1, 1), n=4, base=100.0)
+    df_v2 = _synthetic_continuous_frame(start=date(2020, 1, 1), n=4, base=200.0)
+
+    sync_continuous_futures(
+        symbols=("le.c",), raw_dir=raw_dir, fetcher=lambda s: df_v1
+    )
+    # Simulate the user forcing a refresh (delete cached parquet; manifest
+    # entry stays, but Guard 2 won't fire because file_path.exists() is False).
+    (raw_dir / "le.c.parquet").unlink()
+    sync_continuous_futures(
+        symbols=("le.c",), raw_dir=raw_dir, fetcher=lambda s: df_v2
+    )
+    on_disk = pl.read_parquet(raw_dir / "le.c.parquet")
+    assert on_disk["close"].to_list() == df_v2["close"].to_list()

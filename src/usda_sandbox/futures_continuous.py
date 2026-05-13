@@ -148,6 +148,21 @@ def sync_continuous_futures(
     for symbol in symbols:
         file_path = raw_dir / f"{symbol}.parquet"
 
+        # Already-known-missing symbols: don't re-attempt every run.
+        # Delete the manifest entry manually to force a retry.
+        if symbol in manifest and manifest[symbol].missing:
+            continue
+
+        # Already-cached symbols whose on-disk SHA still matches: skip the
+        # fetch. This is a per-byte check so any upstream change forces a
+        # refresh.
+        if (
+            symbol in manifest
+            and file_path.exists()
+            and _sha256_of(file_path) == manifest[symbol].sha256
+        ):
+            continue
+
         df = fetcher(symbol)
         if df.is_empty():
             manifest[symbol] = ContinuousManifestEntry(
