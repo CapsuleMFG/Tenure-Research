@@ -1,0 +1,27 @@
+data/catalog.json
+  s_c2a6433657391f::t_45592257e85e7b 889,907,925
+src/usda_sandbox/futures_continuous.py
+  s_c2a6433657391f::t_4905cdf8ea7d15 1,4-9,26,30,41-42,55,57,62,67,81-87,114-115,117-119,121-125,127,129-139,145,149,151-152,155,159,165,208,227
+tests/test_futures_continuous.py
+  s_c2a6433657391f::t_6f1bcf0578a30f 122,124-125,140,143,146
+  s_c2a6433657391f::t_fdf7e9c47345c7 73-74,109,160,164
+  s_c2a6433657391f::t_b777ec81633599 66,70-72,82,87-89,102,105,108,156,162,195,199,212,245,248,263,266,269,305,325
+  s_c2a6433657391f::t_8614f5914243ac 126
+  s_c2a6433657391f::t_66c5413be72567 15-16,24,32-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "7ac7f94437b59f786b7954fab44ab14ed0d7b2c9",
+  "prompts": {},
+  "sessions": {
+    "s_c2a6433657391f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e3eb26d2-aff8-438f-8101-21659277da70",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
