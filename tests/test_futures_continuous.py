@@ -304,3 +304,52 @@ def test_append_raises_if_raw_dir_missing(tmp_path: Path) -> None:
         append_continuous_to_observations(
             obs_path=obs_path, raw_dir=missing_dir
         )
+
+
+def test_clean_all_dispatcher_routes_futures_continuous_prefix(
+    tmp_path: Path,
+) -> None:
+    """clean_all skips futures_continuous: series in the XLSX loop and
+    calls append_continuous_to_observations after."""
+    from usda_sandbox.clean import clean_all
+
+    # Minimal catalog with one futures_continuous entry only
+    catalog_path = tmp_path / "catalog.json"
+    catalog_path.write_text(
+        json.dumps(
+            [
+                {
+                    "series_id": "cattle_lc_front",
+                    "series_name": "Live Cattle front-month futures (continuous)",
+                    "commodity": "cattle",
+                    "metric": "futures_price",
+                    "unit": "USD/cwt",
+                    "frequency": "monthly",
+                    "source_file": "futures_continuous:le.c",
+                    "source_sheet": "",
+                    "header_rows_to_skip": 0,
+                    "value_columns": ["X"],
+                    "date_column": "X",
+                    "notes": "test",
+                    "exogenous_regressors": [],
+                    "forecastable": False,
+                }
+            ],
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    raw_dir = tmp_path / "raw"
+    raw_dir.mkdir()
+    fc_dir = raw_dir / "futures_continuous"
+    df = _synthetic_continuous_frame(start=date(2020, 1, 1), n=3)
+    sync_continuous_futures(
+        symbols=("le.c",), raw_dir=fc_dir, fetcher=lambda s: df
+    )
+
+    out_path = tmp_path / "observations.parquet"
+    clean_all(catalog_path, raw_dir, out_path)
+
+    obs = pl.read_parquet(out_path)
+    assert obs.filter(pl.col("series_id") == "cattle_lc_front").height == 3
