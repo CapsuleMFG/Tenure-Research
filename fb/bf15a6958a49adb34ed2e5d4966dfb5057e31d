@@ -1,0 +1,22 @@
+dashboard/components/scenarios.py
+  s_b98f758bbec157::t_226e5fc7ff1fa3 1-288
+dashboard/pages/6_Plan.py
+  s_b98f758bbec157::t_912d590f29ff7d 22
+  s_b98f758bbec157::t_9463e4cc71dd83 93-111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "fbbf15a6958a49adb34ed2e5d4966dfb5057e31d",
+  "prompts": {},
+  "sessions": {
+    "s_b98f758bbec157": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a24664b-43f2-4f20-b569-28736be51708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
