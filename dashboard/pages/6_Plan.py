@@ -91,47 +91,21 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- Step markers ----------------------------------------------------------
+# --- Workflow steps (flat instruction list, not tiles) --------------------
 
 st.markdown(
     f"""
-    <div style='display:flex;flex-wrap:wrap;gap:0.6rem;margin:0.5rem 0 1.2rem 0;'>
-      <div style='flex:1 1 160px;padding:0.6rem 0.9rem;border-radius:8px;
-                  background:{PARCHMENT_DEEP};
-                  border-left:3px solid {ACCENT};font-size:0.85rem;'>
-        <strong style='color:{ACCENT};letter-spacing:0.08em;
-                       font-size:0.72rem;text-transform:uppercase;'>
-          Step 1
-        </strong><br>
-        <span style='font-size:0.9rem;'>Pick your mode (tab below)</span>
-      </div>
-      <div style='flex:1 1 160px;padding:0.6rem 0.9rem;border-radius:8px;
-                  background:{PARCHMENT_DEEP};
-                  border-left:3px solid {ACCENT};font-size:0.85rem;'>
-        <strong style='color:{ACCENT};letter-spacing:0.08em;
-                       font-size:0.72rem;text-transform:uppercase;'>
-          Step 2
-        </strong><br>
-        <span style='font-size:0.9rem;'>Pick your region (pre-fills costs)</span>
-      </div>
-      <div style='flex:1 1 160px;padding:0.6rem 0.9rem;border-radius:8px;
-                  background:{PARCHMENT_DEEP};
-                  border-left:3px solid {ACCENT};font-size:0.85rem;'>
-        <strong style='color:{ACCENT};letter-spacing:0.08em;
-                       font-size:0.72rem;text-transform:uppercase;'>
-          Step 3
-        </strong><br>
-        <span style='font-size:0.9rem;'>Adjust inputs to your reality</span>
-      </div>
-      <div style='flex:1 1 160px;padding:0.6rem 0.9rem;border-radius:8px;
-                  background:{PARCHMENT_DEEP};
-                  border-left:3px solid {ACCENT};font-size:0.85rem;'>
-        <strong style='color:{ACCENT};letter-spacing:0.08em;
-                       font-size:0.72rem;text-transform:uppercase;'>
-          Step 4
-        </strong><br>
-        <span style='font-size:0.9rem;'>Read the big margin card</span>
-      </div>
+    <div style='border-left:3px solid {ACCENT};padding:0.4rem 0 0.4rem 1rem;
+                margin:0.4rem 0 1.2rem 0;color:#1F1F1F;font-size:0.92rem;
+                line-height:1.7;max-width:780px;'>
+      <strong style='color:{ACCENT};letter-spacing:0.08em;
+                     text-transform:uppercase;font-size:0.7rem;'>
+        Workflow
+      </strong><br>
+      <strong>1.</strong> Pick your mode in the tabs below &nbsp;·&nbsp;
+      <strong>2.</strong> Pick your region (pre-fills costs) &nbsp;·&nbsp;
+      <strong>3.</strong> Adjust inputs to your reality &nbsp;·&nbsp;
+      <strong>4.</strong> Read the margin card at the bottom of the tab.
     </div>
     """,
     unsafe_allow_html=True,
@@ -260,9 +234,9 @@ tab_cc, tab_st, tab_fd = st.tabs([
 
 with tab_cc:
     st.markdown(
-        "<div style='background:#F0EBE1;border-radius:8px;"
-        "padding:0.85rem 1.1rem;margin-bottom:1rem;font-size:0.95rem;"
-        "line-height:1.5;'>"
+        f"<div style='border-left:3px solid {ACCENT};"
+        f"padding:0.3rem 0 0.3rem 1rem;margin-bottom:1rem;"
+        f"font-size:0.95rem;line-height:1.5;max-width:820px;'>"
         "<strong>Cow-calf operation.</strong> You maintain a breeding "
         "herd and sell weaned calves (~500–600 lb) into the feeder "
         "market each fall. This tab computes your annual per-cow cost, "
@@ -456,9 +430,9 @@ with tab_cc:
 
 with tab_st:
     st.markdown(
-        "<div style='background:#F0EBE1;border-radius:8px;"
-        "padding:0.85rem 1.1rem;margin-bottom:1rem;font-size:0.95rem;"
-        "line-height:1.5;'>"
+        f"<div style='border-left:3px solid {ACCENT};"
+        f"padding:0.3rem 0 0.3rem 1rem;margin-bottom:1rem;"
+        f"font-size:0.95rem;line-height:1.5;max-width:820px;'>"
         "<strong>Stocker operation.</strong> You buy weaned calves "
         "(~450–550 lb), graze them up to feedlot placement weight "
         "(~700–800 lb), and sell to a feedlot. The margin lives in the "
@@ -627,9 +601,9 @@ with tab_st:
 
 with tab_fd:
     st.markdown(
-        "<div style='background:#F0EBE1;border-radius:8px;"
-        "padding:0.85rem 1.1rem;margin-bottom:1rem;font-size:0.95rem;"
-        "line-height:1.5;'>"
+        f"<div style='border-left:3px solid {ACCENT};"
+        f"padding:0.3rem 0 0.3rem 1rem;margin-bottom:1rem;"
+        f"font-size:0.95rem;line-height:1.5;max-width:820px;'>"
         "<strong>Finish-and-direct (freezer beef).</strong> You raise "
         "or buy feeders, finish them on the farm, and sell freezer beef "
         "directly to consumers as quarters / halves / wholes. This tab "

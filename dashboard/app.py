@@ -103,23 +103,27 @@ except Exception:
 
 if sample_econ is not None:
     margin_color = "#3E7D5A" if sample_margin >= 0 else ACCENT
+    # Callout treatment — strong left-accent stripe + subtle background,
+    # no full border or button-like rounded corners. Reads as
+    # "featured information" not "click me."
     st.markdown(
         f"""
-        <div style='border:1px solid rgba(180,82,30,0.25);border-radius:14px;
-                    padding:1.4rem 1.6rem;margin:1.4rem 0 1rem 0;
-                    background:linear-gradient(180deg, #FFFBF5 0%, {PARCHMENT_DEEP} 100%);'>
+        <div style='border-left:4px solid {ACCENT};
+                    background:rgba(240,235,225,0.55);
+                    padding:1.3rem 1.5rem 1.2rem 1.5rem;
+                    margin:1.4rem 0 1rem 0;'>
           <div style='font-size:0.78rem;letter-spacing:0.1em;
                       text-transform:uppercase;color:{INK_SOFT};
                       font-weight:600;margin-bottom:0.5rem;'>
-            See it in action — sample run
+            Sample run — what a Plan result looks like
           </div>
           <div style='font-size:1.0rem;color:#1F1F1F;margin-bottom:0.9rem;
                       line-height:1.5;max-width:720px;'>
             A typical <strong>Southeast cow-calf operation</strong> (60 cows,
             year-round fescue/bermuda pasture, ~1 ton hay/cow). Numbers below
-            come straight from the <strong>Plan</strong> tool with the
-            <em>Southeast</em> regional preset. The buttons below this
-            box are the click targets — this card is illustrative only.
+            come from the <strong>Plan</strong> tool with the
+            <em>Southeast</em> regional preset. To run your own operation
+            through the same math, use one of the buttons below.
           </div>
           <div style='display:flex;flex-wrap:wrap;gap:1.6rem;
                       margin-top:0.4rem;'>
@@ -253,44 +257,26 @@ st.markdown("&nbsp;", unsafe_allow_html=True)
 st.markdown("### How to use it")
 st.markdown(
     f"""
-    <div style='display:flex;flex-wrap:wrap;gap:1rem;margin-top:0.4rem;'>
-      <div style='flex:1 1 220px;padding:0.85rem 1.1rem;border-radius:10px;
-                  background:{PARCHMENT_DEEP};border-left:3px solid {ACCENT};'>
-        <div style='font-size:0.72rem;color:{ACCENT};font-weight:700;
-                    letter-spacing:0.1em;'>STEP 1</div>
-        <div style='font-size:0.95rem;line-height:1.45;margin-top:0.25rem;'>
-          Open <strong>Plan</strong>. Pick the tab matching your operation —
-          cow-calf, stocker, or finish-and-direct.
-        </div>
-      </div>
-      <div style='flex:1 1 220px;padding:0.85rem 1.1rem;border-radius:10px;
-                  background:{PARCHMENT_DEEP};border-left:3px solid {ACCENT};'>
-        <div style='font-size:0.72rem;color:{ACCENT};font-weight:700;
-                    letter-spacing:0.1em;'>STEP 2</div>
-        <div style='font-size:0.95rem;line-height:1.45;margin-top:0.25rem;'>
-          Pick your <strong>region</strong>. Pasture, hay, vet, and other
-          costs pre-fill with typical numbers for your geography.
-        </div>
-      </div>
-      <div style='flex:1 1 220px;padding:0.85rem 1.1rem;border-radius:10px;
-                  background:{PARCHMENT_DEEP};border-left:3px solid {ACCENT};'>
-        <div style='font-size:0.72rem;color:{ACCENT};font-weight:700;
-                    letter-spacing:0.1em;'>STEP 3</div>
-        <div style='font-size:0.95rem;line-height:1.45;margin-top:0.25rem;'>
-          Adjust any input to match your real operation. Math updates
-          live — the margin card at the bottom is your answer.
-        </div>
-      </div>
-      <div style='flex:1 1 220px;padding:0.85rem 1.1rem;border-radius:10px;
-                  background:{PARCHMENT_DEEP};border-left:3px solid {ACCENT};'>
-        <div style='font-size:0.72rem;color:{ACCENT};font-weight:700;
-                    letter-spacing:0.1em;'>STEP 4</div>
-        <div style='font-size:0.95rem;line-height:1.45;margin-top:0.25rem;'>
-          <strong>Save scenarios</strong> by name (browser localStorage) or
-          <strong>copy a shareable link</strong> that bundles your inputs.
-        </div>
-      </div>
-    </div>
+    <ol style='padding-left:1.3rem;margin-top:0.5rem;
+               line-height:1.6;color:#1F1F1F;max-width:780px;'>
+      <li style='margin-bottom:0.5rem;'>
+        Open <strong>Plan</strong>. Pick the tab matching your operation —
+        <em>cow-calf</em>, <em>stocker</em>, or <em>finish-and-direct</em>.
+      </li>
+      <li style='margin-bottom:0.5rem;'>
+        Pick your <strong>region</strong>. Pasture, hay, vet, and other
+        costs pre-fill with typical numbers for your geography.
+      </li>
+      <li style='margin-bottom:0.5rem;'>
+        Adjust any input to match your real operation. The math updates
+        live — the margin card at the bottom of the tab is your answer.
+      </li>
+      <li style='margin-bottom:0.5rem;'>
+        <strong>Save scenarios</strong> by name (stored in your browser)
+        or <strong>copy a shareable link</strong> that bundles your inputs
+        into the URL.
+      </li>
+    </ol>
     """,
     unsafe_allow_html=True,
 )

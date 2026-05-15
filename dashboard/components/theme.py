@@ -92,20 +92,27 @@ h3 {{ font-weight: 600; }}
 .lb-brief-headline em {{ color: {ACCENT}; font-style: normal; font-weight: 600; }}
 
 /* Commodity cards ---------------------------------------------------- */
+/* INFORMATION DISPLAY — not a button.
+   Coworker feedback: card-style chrome (white bg + border + shadow +
+   rounded corners) reads as "tile / button" even with hover removed.
+   The fix: drop the white-tile look. Use a subtle parchment-tinted
+   background, no border, small radius, no shadow. Reads as "labeled
+   section" not "click me." */
 .lb-card {{
-  background: #FFFFFF;
-  border: 1px solid rgba(180, 82, 30, 0.18);
-  border-radius: 10px;
-  padding: 1.0rem 1.1rem 0.85rem 1.1rem;
+  background: rgba(240, 235, 225, 0.55);
+  border: none;
+  border-radius: 4px;
+  padding: 0.9rem 1.05rem;
   height: 100%;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: none;
   cursor: default;
 }}
-/* Hover lift is reserved for genuinely-clickable cards. Default
-   .lb-card is informational; signaling "I'm interactive" without
-   being interactive is the worst kind of UX confusion. */
+/* Reserved modifier for genuinely-clickable cards (currently unused);
+   when needed, the wrapping element supplies the click target. */
 .lb-card-clickable {{
   cursor: pointer;
+  background: #FFFFFF;
+  border: 1px solid rgba(180, 82, 30, 0.18);
   transition: box-shadow 0.15s ease, transform 0.15s ease;
 }}
 .lb-card-clickable:hover {{
