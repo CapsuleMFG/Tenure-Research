@@ -21,7 +21,7 @@ from dataclasses import dataclass
 import plotly.graph_objects as go
 import streamlit as st
 
-from .theme import ACCENT, ACCENT_SOFT, DOWN, INK, INK_SOFT, UP
+from .theme import ACCENT, INK_SOFT
 
 _MONTH_LABEL = {
     1: "January", 2: "February", 3: "March", 4: "April",

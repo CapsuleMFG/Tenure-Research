@@ -242,7 +242,7 @@ def build_forecast_cache(
 
     For each catalog entry with ``forecastable=True`` and monthly frequency:
 
-    1. Run :func:`run_backtest` (3 models × ``n_windows`` CV windows).
+    1. Run :func:`run_backtest` (3 models x ``n_windows`` CV windows).
     2. Pick the winner by lowest MAPE.
     3. Refit the winner on full history and forecast ``forward_horizon`` months.
     4. Conformally calibrate the PI per horizon step from CV residuals.
@@ -345,7 +345,7 @@ def build_forecast_cache(
                 "conformal_scale_h1": round(scales[0], 4) if scales else None,
                 "conformal_scale_h_last": round(scales[-1], 4) if scales else None,
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.warning("Precompute failed for %s: %s", sid, exc)
             errors[sid] = f"{type(exc).__name__}: {exc}\n" + traceback.format_exc(limit=2)
 
