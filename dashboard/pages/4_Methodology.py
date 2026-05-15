@@ -57,10 +57,14 @@ st.markdown(
 *Daily (22:00 UTC)* — daily price refresh, no forecast rebake:
 
 1. Pulls **daily** front-month closes for LE / HE / GF via yfinance.
-2. (Optional) If `AMS_API_KEY` is set as a GitHub secret, pulls AMS LMR
-   daily summary reports (national fed cattle, boxed beef cutout, hog
-   summary, pork cutout). Without the key the app uses futures + ERS only.
-3. Commits the updated `observations.parquet` to the `data` branch.
+2. Commits the updated `observations.parquet` to the `data` branch.
+
+Daily AMS LMR cash was considered and rejected: USDA's MARS API requires
+eAuth Level 2 (in-person identity proofing), which is unrealistic for an
+open dashboard. Public-PDF scraping is fragile and fails silently when
+USDA tweaks report layouts. Daily front-month futures cover the
+"what is the market doing today" need defensibly: cash settles to futures
+over the contract month, and basis is what bridges the two.
 
 **Latest forecast snapshot:** `{gen_label}`.
 """

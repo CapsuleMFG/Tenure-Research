@@ -1,9 +1,15 @@
-name: Daily refresh (futures + optional AMS LMR)
+name: Daily refresh (futures)
 
 # Daily at 22:00 UTC + manual trigger. Pulls daily front-month futures
-# via yfinance and (if AMS_API_KEY secret is set) AMS LMR daily reports.
-# Commits the refreshed observations.parquet to the `data` branch so
-# Streamlit Cloud auto-redeploys with today's prices.
+# via yfinance. Commits the refreshed observations.parquet to the `data`
+# branch so Streamlit Cloud auto-redeploys with today's prices.
+#
+# Daily AMS LMR cash was considered but skipped: USDA MARS API requires
+# eAuth Level 2 (in-person identity proofing) which is too much friction
+# for an open-source side project. Public AMS PDF scraping is fragile and
+# breaks silently when USDA changes report formats — also rejected. The
+# daily-futures layer covers the "what is the market doing today" need
+# defensibly: cash settles to futures over the contract month via basis.
 on:
   schedule:
     - cron: "0 22 * * *"
@@ -45,20 +51,6 @@ jobs:
           from usda_sandbox.futures_daily import sync_daily_futures, append_daily_to_observations
           sync_daily_futures()
           append_daily_to_observations()
-          "
-
-      - name: Sync AMS LMR (if AMS_API_KEY is set)
-        env:
-          AMS_API_KEY: ${{ secrets.AMS_API_KEY }}
-        run: |
-          uv run python -c "
-          from usda_sandbox.ams_lmr import is_enabled, sync_ams_daily
-          if is_enabled():
-              print('AMS_API_KEY present — running AMS LMR sync')
-              for slug, status in sync_ams_daily().items():
-                  print(f'  {slug}: {status}')
-          else:
-              print('No AMS_API_KEY — skipping AMS LMR step (futures-only daily refresh)')
           "
 
       - name: Commit refreshed observations to data branch

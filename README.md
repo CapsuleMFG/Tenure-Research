@@ -97,7 +97,6 @@ src/usda_sandbox/
   ingest.py                 ERS XLSX downloader (idempotent, manifest-keyed)
   futures_continuous.py     yfinance MONTHLY continuous front-month
   futures_daily.py          yfinance DAILY continuous front-month (v2.0)
-  ams_lmr.py                AMS LMR optional ingest (needs AMS_API_KEY, v2.0)
   catalog.py                SeriesDefinition (Pydantic)
   clean.py                  Tidy-parquet builder
   store.py                  polars / DuckDB accessors over observations.parquet
@@ -128,7 +127,6 @@ weekly cron (GitHub Actions, Sunday 21:00 UTC) — full refresh + rebake
 daily cron (GitHub Actions, 22:00 UTC) — daily prices only
   ├── sync_daily_futures()               → data/raw/futures_daily/*.parquet
   ├── append_daily_to_observations()     → merge into observations.parquet
-  ├── (optional) ams_lmr.sync_ams_daily  → if AMS_API_KEY secret is set
   └── push observations.parquet          → `data` branch → Cloud redeploys
 ```
 
@@ -180,6 +178,28 @@ uv run pytest        # 67 tests
 uv run ruff check .
 uv run mypy
 ```
+
+## Why daily futures and not daily AMS cash?
+
+A producer might reasonably ask: "where's the daily AMS LMR cash data?"
+We considered it and didn't ship it.
+
+* **USDA MARS API requires eAuth Level 2** (in-person USDA identity
+  proofing). That's too much friction for an open-source side project.
+* **Public AMS PDF scraping is fragile.** USDA tweaks report layouts
+  every few quarters; a scrape breaks silently and the dashboard quietly
+  serves stale numbers. We won't ship infrastructure we can't trust to
+  fail loudly.
+* **Daily futures cover the need.** LE / GF / HE incorporate AMS daily
+  cash via the basis-and-arbitrage relationship that the industry
+  actually uses to read the market. A producer looking at LE=$247 with
+  a historical Nebraska basis of -$5 has a defensible read on cash. The
+  Decide tool's math doesn't depend on AMS cash directly.
+
+If a future contributor (a producer or extension agent) wants to add a
+proper AMS LMR pipeline — regional basis, slaughter weights, dressing
+percent, export volume — that's a real v3.0 project worth doing. It just
+needs an owner who'll maintain it.
 
 ## Version
 

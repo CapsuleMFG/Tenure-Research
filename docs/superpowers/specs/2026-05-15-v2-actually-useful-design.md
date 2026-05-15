@@ -35,14 +35,18 @@ Four new capabilities, in priority order:
    margin, the 6-month forecast margin range, and a recommended action
    (sell / hold / hedge), with the reasoning shown.
 
-### Optional, scaffolded only
+### Considered and explicitly cut
 
-5. **AMS LMR direct integration** via MARS API (mars.ams.usda.gov).
-   Requires free API-key registration. When `AMS_API_KEY` env var is set,
-   pulls daily 5-Area fed cattle, daily boxed-beef cutout, daily national
-   hog summary, and daily pork cutout. When unset, the app degrades to
-   the monthly ERS data already in place. **Not on the critical path** —
-   producers get most of the value from daily futures + monthly cash basis.
+5. ~~**AMS LMR direct integration**~~ — initially scaffolded as an
+   `AMS_API_KEY` opt-in. Removed mid-implementation when we confirmed
+   USDA MARS API requires **eAuth Level 2** (in-person identity proofing
+   at a USDA Service Center), not the casual email registration we'd
+   assumed. The public-PDF scraping alternative was rejected as too
+   fragile (USDA tweaks report layouts every few quarters; scrapes break
+   silently). Daily front-month futures cover the daily-price layer
+   defensibly — see README "Why daily futures and not daily AMS cash?"
+   A future contributor with a producer/extension role and the time to
+   maintain a PDF pipeline could revisit this in v3.0.
 
 ## Architecture
 
@@ -56,7 +60,6 @@ existing:
 
 added:
   data/raw/futures_daily/          NEW: daily yfinance front-month
-  data/raw/ams_lmr/                NEW (optional): cached MARS API JSON
 ```
 
 Schema unchanged — daily futures appear in `observations.parquet` as new
@@ -70,7 +73,6 @@ New modules in `src/usda_sandbox/`:
 | Module | Purpose |
 |---|---|
 | `futures_daily.py` | yfinance daily fetch for LE=F, GF=F, HE=F; same idempotent manifest pattern as `futures_continuous.py` |
-| `ams_lmr.py` | MARS API client; reads `AMS_API_KEY` env var; graceful no-op if absent |
 | `basis.py` | `compute_basis(cash_series_id, futures_series_id, obs_path)` → polars DF of basis values; `latest_basis()`, `basis_stats()` helpers |
 | `breakeven.py` | Pure-functions calc: `breakeven_per_cwt(...)`, `placement_economics(...)` |
 | `decision.py` | Synthesizes price + basis + breakeven + cached forecast → `Recommendation` (action + reasoning) |
@@ -98,7 +100,6 @@ New / changed pages:
 |---|---|
 | New workflow `.github/workflows/refresh-daily.yml` (daily cron, 22:00 UTC) | Pulls daily futures via yfinance; pushes to `data` branch |
 | Existing weekly workflow keeps rebaking monthly forecasts | Forecasts stay monthly; only the daily layer changes |
-| Optional Action secret `AMS_API_KEY` | Activates AMS LMR if present |
 
 ## Decision-tool logic (the v2.0 product)
 
@@ -110,7 +111,7 @@ Inputs (user supplies on the Decide page):
 - **Breakeven $/cwt:** user-entered (or pulled from Breakeven page state)
 
 Computed values:
-- `latest_cash` = today's regional cash (ERS monthly latest, or AMS daily if available)
+- `latest_cash` = today's regional cash (latest non-null value of the ERS monthly series)
 - `latest_futures` = today's nearby futures close
 - `basis` = `latest_cash` − `latest_futures`
 - `forecast_6m_point`, `forecast_6m_pi_lo`, `forecast_6m_pi_hi` (from precompute cache)
@@ -143,7 +144,7 @@ This logic is **deterministic and auditable** — no LLM, no opaque scoring.
 - Multi-tenant: still single-tenant public dashboard
 - Real-time intraday data (we only refresh once daily)
 - Position sizing / hedging math beyond "consider hedging"
-- Custom local cash markets beyond what ERS/AMS publishes
+- Custom local cash markets beyond what ERS publishes
 
 ## Migration / non-breaking guarantees
 
@@ -162,10 +163,9 @@ This logic is **deterministic and auditable** — no LLM, no opaque scoring.
 6. Breakeven page (`dashboard/pages/7_Breakeven.py`)
 7. Brief page update (today's futures)
 8. Series page basis card
-9. `ams_lmr.py` scaffold (optional layer)
-10. `.github/workflows/refresh-daily.yml`
-11. Methodology + About + README updates
-12. Tag v2.0
+9. `.github/workflows/refresh-daily.yml`
+10. Methodology + About + README updates
+11. Tag v2.0
 
 ## Caveats
 
