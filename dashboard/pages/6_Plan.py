@@ -38,7 +38,37 @@ from usda_sandbox.direct_market import (
     default_finish_direct_inputs,
     default_stocker_inputs,
 )
+from usda_sandbox.sources import (
+    COW_CALF_SOURCES,
+    FINISH_DIRECT_SOURCES,
+    STOCKER_SOURCES,
+    Source,
+)
 from usda_sandbox.store import read_series
+
+
+def _render_sources_panel(sources: tuple[Source, ...], header: str) -> None:
+    """Render a 'Where these defaults come from' citations block."""
+    lines = [
+        f"<div style='font-size:0.8rem;color:{INK_SOFT};margin-bottom:0.4rem;"
+        f"text-transform:uppercase;letter-spacing:0.08em;'>{header}</div>"
+    ]
+    for s in sources:
+        lines.append(
+            f"<div style='font-size:0.85rem;line-height:1.5;"
+            f"margin-bottom:0.55rem;'>"
+            f"<a href='{s.url}' target='_blank' rel='noopener'>"
+            f"<strong>{s.title}</strong></a> "
+            f"<span style='color:{INK_SOFT}'>— {s.publisher} ({s.year}).</span><br>"
+            f"<span style='color:{INK_SOFT}'>{s.relevance}</span>"
+            f"</div>"
+        )
+    st.markdown(
+        f"<div style='background:{PARCHMENT_DEEP};border-radius:8px;"
+        f"padding:0.9rem 1.1rem;margin:0.8rem 0;'>"
+        + "".join(lines) + "</div>",
+        unsafe_allow_html=True,
+    )
 
 inject_global_css()
 render_sidebar(persistent_picker=False)
@@ -216,6 +246,9 @@ with tab_cc:
         f"**${inputs.weaned_price_per_cwt - econ.breakeven_weaned_price_per_cwt:+,.2f}/cwt**."
     )
 
+    with st.expander("Where these defaults come from"):
+        _render_sources_panel(COW_CALF_SOURCES, "Cow-calf sources")
+
 # --- Stocker ----------------------------------------------------------------
 
 with tab_st:
@@ -316,6 +349,9 @@ with tab_st:
     m2.metric("Sale revenue/head", f"${econ.sale_revenue_per_head:,.0f}")
     m3.metric("Breakeven sale price",
               f"${econ.breakeven_sale_price_per_cwt:,.2f}/cwt")
+
+    with st.expander("Where these defaults come from"):
+        _render_sources_panel(STOCKER_SOURCES, "Stocker sources")
 
 # --- Finish & direct (freezer beef) ----------------------------------------
 
@@ -465,6 +501,9 @@ with tab_fd:
         f"</p>",
         unsafe_allow_html=True,
     )
+
+    with st.expander("Where these defaults come from"):
+        _render_sources_panel(FINISH_DIRECT_SOURCES, "Finish & direct sources")
 
 st.markdown("---")
 st.caption(

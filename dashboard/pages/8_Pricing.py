@@ -27,6 +27,7 @@ from usda_sandbox.direct_pricing import (
     expected_retail_yield_lbs,
     value_share,
 )
+from usda_sandbox.sources import PRICING_SOURCES
 
 inject_global_css()
 render_sidebar(persistent_picker=False)
@@ -167,8 +168,31 @@ st.markdown(
 )
 
 st.caption(
-    "Numbers are research-derived ranges from late-2020s extension "
-    "surveys (KSU, PSU, U of Idaho, UTK). Always validate against your "
+    "Numbers are anchored to USDA AMS quarterly reports, extension-service "
+    "publications, and a survey of real producer websites — see "
+    "**Where these ranges come from** below. Always validate against your "
     "local market — there's no central index for direct-market beef "
     "pricing, and regional variation is substantial. Not financial advice."
 )
+
+with st.expander("Where these ranges come from"):
+    lines = [
+        f"<div style='font-size:0.8rem;color:{INK_SOFT};margin-bottom:0.4rem;"
+        f"text-transform:uppercase;letter-spacing:0.08em;'>Pricing sources</div>"
+    ]
+    for s in PRICING_SOURCES:
+        lines.append(
+            f"<div style='font-size:0.85rem;line-height:1.5;"
+            f"margin-bottom:0.55rem;'>"
+            f"<a href='{s.url}' target='_blank' rel='noopener'>"
+            f"<strong>{s.title}</strong></a> "
+            f"<span style='color:{INK_SOFT}'>— {s.publisher} ({s.year}).</span><br>"
+            f"<span style='color:{INK_SOFT}'>{s.relevance}</span>"
+            f"</div>"
+        )
+    st.markdown(
+        f"<div style='background:{PARCHMENT_DEEP};border-radius:8px;"
+        f"padding:0.9rem 1.1rem;margin-top:0.4rem;'>"
+        + "".join(lines) + "</div>",
+        unsafe_allow_html=True,
+    )

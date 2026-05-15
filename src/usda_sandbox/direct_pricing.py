@@ -50,32 +50,43 @@ class ShareSize:
 
 # Hanging-weight pricing (what the producer charges per lb of hanging /
 # carcass weight, plus separate cut-and-wrap fees billed by the abattoir).
+#
+# Anchored to: USDA AMS National Grass-Fed Beef Report (April 2024),
+# MSU 2024 Pricing Freezer Beef worksheet, and a 2024-2026 survey of
+# 5 real producer websites (Climbing Stump $4, Deer Run $6.50, Mountain
+# Beef $6.70, Blessing Falls $6.95, Grand View $9). See
+# :data:`usda_sandbox.sources.PRICING_SOURCES`.
 REFERENCE_HANGING_PRICING: dict[str, PriceRange] = {
     "grain_finished": PriceRange(
-        low=5.50, mid=6.50, high=7.75,
+        low=4.50, mid=5.75, high=7.50,
         unit="$/lb hanging",
         note=(
-            "Grain-finished (typical Angus / commercial cross). Customer "
-            "pays the producer this price per pound of hanging weight, plus "
-            "the cut-and-wrap fee charged by the processor (~$0.75-$1.10/lb)."
+            "Grain-finished (typical Angus / commercial cross). MSU 2024 "
+            "reference example is $3.80/lb carcass before processing, "
+            "$7.95/lb retail-equivalent after $125 slaughter + $1/lb cut-"
+            "and-wrap. Producer hanging asking prices commonly cluster "
+            "$5.00-$6.50."
         ),
     ),
     "grass_finished": PriceRange(
-        low=6.50, mid=8.00, high=10.00,
+        low=4.50, mid=6.50, high=9.00,
         unit="$/lb hanging",
         note=(
-            "Grass-finished commands a premium. Buyer is paying for "
-            "longer finishing time, lower yield, and a story. Same cut-and-"
-            "wrap fees apply on top."
+            "Grass-finished. USDA AMS April 2024 average $4.31/lb hanging "
+            "across small producers; published range $3.15-$5.45. Real "
+            "producer sites in 2024-26 cluster around $6.00-$7.00 (Deer "
+            "Run $6.50, Mountain Beef $6.70, Blessing Falls $6.95). High "
+            "end is established direct-market brands."
         ),
     ),
     "premium_branded": PriceRange(
-        low=8.50, mid=11.00, high=14.00,
+        low=7.00, mid=9.00, high=12.00,
         unit="$/lb hanging",
         note=(
             "Premium / branded / heritage-breed / regenerative-certified. "
-            "Upper end common for established direct-market brands with "
-            "wait lists in high-income metro areas."
+            "Grand View Beef (2026) at $9.00/lb hanging; established "
+            "brands in high-income metros can sustain $10-$12. Requires "
+            "a real brand and customer pipeline — not a starting point."
         ),
     ),
 }
