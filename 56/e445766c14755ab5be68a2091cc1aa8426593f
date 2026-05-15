@@ -1,0 +1,19 @@
+docs/superpowers/specs/2026-05-15-v2-actually-useful-design.md
+  s_b98f758bbec157::t_37fbb6bd443b49 1-174
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "56e445766c14755ab5be68a2091cc1aa8426593f",
+  "prompts": {},
+  "sessions": {
+    "s_b98f758bbec157": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a24664b-43f2-4f20-b569-28736be51708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
