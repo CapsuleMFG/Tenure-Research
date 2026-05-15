@@ -184,7 +184,7 @@ footer {{ visibility: hidden; }}
 /* Mobile + narrow tablet: dial back type and pack the cards tighter. */
 @media (max-width: 768px) {{
   .block-container {{ padding-top: 1rem; padding-left: 0.5rem; padding-right: 0.5rem; }}
-  h1 {{ font-size: 1.55rem; }}
+  h1 {{ font-size: 1.55rem; line-height: 1.2; }}
   h2 {{ font-size: 1.25rem; }}
   h3 {{ font-size: 1.1rem; }}
   .lb-brief-headline {{ font-size: 1.0rem; padding: 0.85rem 1.0rem; line-height: 1.45; }}
@@ -195,6 +195,32 @@ footer {{ visibility: hidden; }}
   .lb-card-deltas, .lb-card-fcst {{ font-size: 0.78rem; }}
   .lb-wordmark {{ font-size: 1.2rem; }}
   .lb-wordmark-sub {{ font-size: 0.72rem; }}
+  /* Streamlit's horizontal columns squeeze badly on phones; force them
+     to stack and use full width when the screen is < 768px. */
+  [data-testid="stHorizontalBlock"] {{ flex-wrap: wrap !important; }}
+  [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {{
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    margin-bottom: 0.5rem;
+  }}
+  /* Wide dataframes get a horizontal scroll instead of overflowing. */
+  [data-testid="stDataFrame"] {{ overflow-x: auto; }}
+  /* Tighter metric tiles on phones. */
+  [data-testid="stMetricValue"] {{ font-size: 1.15rem !important; }}
+  [data-testid="stMetricLabel"] {{ font-size: 0.78rem !important; }}
+  [data-testid="stMetricDelta"] {{ font-size: 0.72rem !important; }}
+  /* Sidebar is huge by default — let users collapse it on phones. */
+  [data-testid="stSidebar"] {{ max-width: 85vw; }}
+  /* Trim hero paragraph padding so the home page doesn't feel airy. */
+  p {{ margin-bottom: 0.6rem; }}
+}}
+
+/* Very narrow (phone) viewport: drop type one more notch. */
+@media (max-width: 480px) {{
+  h1 {{ font-size: 1.35rem; }}
+  .lb-card-price {{ font-size: 1.3rem; }}
+  .lb-brief-headline {{ font-size: 0.95rem; padding: 0.7rem 0.85rem; }}
 }}
 </style>
 """

@@ -28,12 +28,14 @@ from components.theme import (
 )
 
 from usda_sandbox.direct_market import (
+    COW_CALF_REGIONS,
     CowCalfInputs,
     FinishDirectInputs,
     StockerInputs,
     compute_cow_calf_economics,
     compute_finish_direct_economics,
     compute_stocker_economics,
+    cow_calf_inputs_for_region,
     default_cow_calf_inputs,
     default_finish_direct_inputs,
     default_stocker_inputs,
@@ -84,6 +86,59 @@ st.markdown(
 )
 
 obs_path = Path(DEFAULT_OBS_PATH)
+
+
+# --- URL-param helpers -----------------------------------------------------
+# Plan inputs survive page navigation via session_state, and survive
+# bookmarks via st.query_params. On page load, query_params override
+# session_state. The "Copy shareable link" buttons below each tab write
+# the current input set back to st.query_params so the URL becomes
+# bookmarkable.
+
+
+def _qp_get_float(key: str, default: float) -> float:
+    try:
+        v = st.query_params.get(key)
+        if v is None:
+            return default
+        return float(v)
+    except (TypeError, ValueError):
+        return default
+
+
+def _qp_get_int(key: str, default: int) -> int:
+    try:
+        v = st.query_params.get(key)
+        if v is None:
+            return default
+        return int(v)
+    except (TypeError, ValueError):
+        return default
+
+
+def _qp_get_str(key: str, default: str) -> str:
+    v = st.query_params.get(key)
+    if v is None:
+        return default
+    return str(v)
+
+
+def _share_link_button(prefix: str, params: dict[str, object]) -> None:
+    """Write a 'Copy shareable link' button that, on click, stuffs the
+    current input set into ``st.query_params`` so the page URL becomes
+    a bookmarkable snapshot of the form state."""
+    if st.button("🔗 Copy shareable link (save my inputs in the URL)",
+                 key=f"share_{prefix}",
+                 use_container_width=True,
+                 type="tertiary"):
+        for k, v in params.items():
+            if v is None:
+                continue
+            st.query_params[k] = str(v)
+        st.toast(
+            "URL updated — bookmark or share this page to keep these "
+            "inputs.", icon="🔗"
+        )
 
 
 def _latest_value(series_id: str) -> tuple[float | None, str | None]:
@@ -150,8 +205,54 @@ with tab_cc:
         "consider retained ownership or stocker through-put."
     )
 
-    defaults = default_cow_calf_inputs()
-    cc_session = st.session_state.get("cc_inputs", defaults)
+    # Region preset picker — pre-fills the cost inputs for the chosen
+    # geography. Defaults to the baseline if URL param ?cc_region= is unset.
+    region_options = list(COW_CALF_REGIONS.keys())
+    default_region = _qp_get_str("cc_region", region_options[0])
+    if default_region not in region_options:
+        default_region = region_options[0]
+    region = st.selectbox(
+        "Pick your region (pre-fills typical costs)",
+        options=region_options,
+        index=region_options.index(default_region),
+        key="cc_region",
+        help=(
+            "Each preset bundles representative pasture/hay/vet costs "
+            "for that geography. You can tweak any field after picking."
+        ),
+    )
+    st.caption(COW_CALF_REGIONS[region]["description"])
+
+    # If the user just switched regions, OR if there's no cached session,
+    # rebuild the inputs from the region preset.
+    prior_region = st.session_state.get("cc_region_prior")
+    region_changed = prior_region != region
+    st.session_state["cc_region_prior"] = region
+
+    if region_changed or "cc_inputs" not in st.session_state:
+        cc_session = cow_calf_inputs_for_region(region)
+    else:
+        cc_session = st.session_state["cc_inputs"]
+
+    # URL-param overrides take precedence over the regional default.
+    cc_session = CowCalfInputs(
+        n_cows=_qp_get_int("cc_n_cows", cc_session.n_cows),
+        calving_rate=_qp_get_float("cc_calving", cc_session.calving_rate),
+        weaning_rate=_qp_get_float("cc_weaning", cc_session.weaning_rate),
+        weaned_weight_lbs=_qp_get_float("cc_ww", cc_session.weaned_weight_lbs),
+        weaned_price_per_cwt=_qp_get_float("cc_wp", cc_session.weaned_price_per_cwt),
+        pasture_acres_per_cow=_qp_get_float("cc_acres", cc_session.pasture_acres_per_cow),
+        pasture_cost_per_acre=_qp_get_float("cc_acre_cost", cc_session.pasture_cost_per_acre),
+        hay_tons_per_cow=_qp_get_float("cc_hay_t", cc_session.hay_tons_per_cow),
+        hay_cost_per_ton=_qp_get_float("cc_hay_c", cc_session.hay_cost_per_ton),
+        supplement_cost_per_cow=_qp_get_float("cc_supp", cc_session.supplement_cost_per_cow),
+        vet_breeding_per_cow=_qp_get_float("cc_vet", cc_session.vet_breeding_per_cow),
+        fixed_per_cow=_qp_get_float("cc_fixed", cc_session.fixed_per_cow),
+        bull_pct=_qp_get_float("cc_bullp", cc_session.bull_pct),
+        bull_annual_cost=_qp_get_float("cc_bullc", cc_session.bull_annual_cost),
+    )
+
+    _ = default_cow_calf_inputs()  # referenced for legacy default; unused
 
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -246,6 +347,24 @@ with tab_cc:
         f"**${inputs.weaned_price_per_cwt - econ.breakeven_weaned_price_per_cwt:+,.2f}/cwt**."
     )
 
+    _share_link_button("cc", {
+        "cc_region": region,
+        "cc_n_cows": n_cows,
+        "cc_calving": calving,
+        "cc_weaning": weaning,
+        "cc_ww": ww,
+        "cc_wp": wp,
+        "cc_acres": acres,
+        "cc_acre_cost": acre_cost,
+        "cc_hay_t": hay_tons,
+        "cc_hay_c": hay_cost,
+        "cc_supp": supp,
+        "cc_vet": vet,
+        "cc_fixed": fixed,
+        "cc_bullp": bull_pct,
+        "cc_bullc": bull_cost,
+    })
+
     with st.expander("Where these defaults come from"):
         _render_sources_panel(COW_CALF_SOURCES, "Cow-calf sources")
 
@@ -273,6 +392,23 @@ with tab_st:
 
     sd = default_stocker_inputs()
     sd_session = st.session_state.get("st_inputs", sd)
+    sd_session = StockerInputs(
+        n_head=_qp_get_int("st_n", sd_session.n_head),
+        purchase_weight_lbs=_qp_get_float("st_pw", sd_session.purchase_weight_lbs),
+        purchase_price_per_cwt=_qp_get_float("st_pp", sd_session.purchase_price_per_cwt),
+        sale_weight_lbs=_qp_get_float("st_sw", sd_session.sale_weight_lbs),
+        sale_price_per_cwt=_qp_get_float("st_sp", sd_session.sale_price_per_cwt),
+        days_on_grass=_qp_get_int("st_days", sd_session.days_on_grass),
+        pasture_cost_per_head_per_day=_qp_get_float(
+            "st_pday", sd_session.pasture_cost_per_head_per_day),
+        hay_supplement_cost_per_head=_qp_get_float(
+            "st_hay", sd_session.hay_supplement_cost_per_head),
+        feed_supplement_cost_per_head=_qp_get_float(
+            "st_feed", sd_session.feed_supplement_cost_per_head),
+        vet_per_head=_qp_get_float("st_vet", sd_session.vet_per_head),
+        death_loss_pct=_qp_get_float("st_dl", sd_session.death_loss_pct),
+        interest_rate_annual=_qp_get_float("st_ir", sd_session.interest_rate_annual),
+    )
     c1, c2, c3 = st.columns(3)
     with c1:
         st.markdown("**Animals**")
@@ -350,6 +486,21 @@ with tab_st:
     m3.metric("Breakeven sale price",
               f"${econ.breakeven_sale_price_per_cwt:,.2f}/cwt")
 
+    _share_link_button("st", {
+        "st_n": n_head,
+        "st_pw": pw,
+        "st_pp": pp,
+        "st_sw": sw,
+        "st_sp": sp,
+        "st_days": days,
+        "st_pday": pday,
+        "st_hay": hay,
+        "st_feed": feed,
+        "st_vet": vet,
+        "st_dl": dl,
+        "st_ir": ir,
+    })
+
     with st.expander("Where these defaults come from"):
         _render_sources_panel(STOCKER_SOURCES, "Stocker sources")
 
@@ -381,6 +532,29 @@ with tab_fd:
 
     fd = default_finish_direct_inputs()
     fd_session = st.session_state.get("fd_inputs", fd)
+    fd_session = FinishDirectInputs(
+        n_head=_qp_get_int("fd_n", fd_session.n_head),
+        feeder_cost_per_head=_qp_get_float("fd_fc", fd_session.feeder_cost_per_head),
+        days_on_farm=_qp_get_int("fd_days", fd_session.days_on_farm),
+        finished_live_weight_lbs=_qp_get_float(
+            "fd_flw", fd_session.finished_live_weight_lbs),
+        dressing_pct=_qp_get_float("fd_dp", fd_session.dressing_pct),
+        pasture_cost_per_head_per_day=_qp_get_float(
+            "fd_pday", fd_session.pasture_cost_per_head_per_day),
+        hay_supplement_cost_per_head=_qp_get_float(
+            "fd_hay", fd_session.hay_supplement_cost_per_head),
+        grain_supplement_cost_per_head=_qp_get_float(
+            "fd_grain", fd_session.grain_supplement_cost_per_head),
+        vet_per_head=_qp_get_float("fd_vet", fd_session.vet_per_head),
+        death_loss_pct=_qp_get_float("fd_dl", fd_session.death_loss_pct),
+        abattoir_slaughter_fee_per_head=_qp_get_float(
+            "fd_slt", fd_session.abattoir_slaughter_fee_per_head),
+        cut_and_wrap_per_lb_hanging=_qp_get_float(
+            "fd_cw", fd_session.cut_and_wrap_per_lb_hanging),
+        other_per_head=_qp_get_float("fd_other", fd_session.other_per_head),
+        direct_retail_per_lb_hanging=_qp_get_float(
+            "fd_retail", fd_session.direct_retail_per_lb_hanging),
+    )
 
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -501,6 +675,23 @@ with tab_fd:
         f"</p>",
         unsafe_allow_html=True,
     )
+
+    _share_link_button("fd", {
+        "fd_n": n_head,
+        "fd_fc": fcost,
+        "fd_days": days,
+        "fd_flw": flw,
+        "fd_dp": dp,
+        "fd_pday": pday,
+        "fd_hay": hay,
+        "fd_grain": grain,
+        "fd_vet": vet,
+        "fd_dl": dl,
+        "fd_slt": slt,
+        "fd_cw": cw,
+        "fd_other": other,
+        "fd_retail": retail,
+    })
 
     with st.expander("Where these defaults come from"):
         _render_sources_panel(FINISH_DIRECT_SOURCES, "Finish & direct sources")

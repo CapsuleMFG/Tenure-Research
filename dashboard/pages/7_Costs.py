@@ -219,51 +219,27 @@ local_hay = st.number_input(
 )
 st.session_state["local_hay_per_ton"] = local_hay
 
-# --- Cull cow proxy --------------------------------------------------------
+# --- Known gap: cull cow data ----------------------------------------------
 
-st.markdown("### Cull cow proxy (via boxed beef cutout)")
-st.caption(
-    "We don't pull AMS cull cow auction data directly (out of scope for "
-    "v3.0). However, cull cow prices correlate strongly with the boxed "
-    "beef cutout — when wholesale beef demand is strong, cull cow values "
-    "rise alongside. Use this as a rough timing signal."
+st.markdown("### Known gap — cull cow market")
+st.markdown(
+    f"<div style='background:{PARCHMENT_DEEP};border-radius:8px;"
+    f"padding:0.9rem 1.1rem;font-size:0.92rem;line-height:1.55;'>"
+    "<strong>We don't track cull cow auction prices.</strong> A previous "
+    "build of this page tried to proxy them via the boxed-beef-cutout "
+    "trend, but that signal is several steps removed from your local "
+    "sale barn and we'd rather show no data than misleading data. "
+    "<br><br>"
+    "Cull cow values matter for replacement-buying decisions and for "
+    "deciding when to move open or old cows. A future version could "
+    "ingest <a href='https://www.ams.usda.gov/market-news/livestock-poultry-and-grain-market-news' "
+    "target='_blank' rel='noopener'>AMS LMR weekly cow auction</a> "
+    "summary reports (LM_CT170 series); the obstacle is that USDA's "
+    "MARS API requires eAuth Level 2 identity proofing, which we've "
+    "kept out of scope for an open-access dashboard."
+    "</div>",
+    unsafe_allow_html=True,
 )
-boxed = _series_history("boxed_beef_cutout_choice", months=24)
-if not boxed.is_empty():
-    last = float(boxed["value"].tail(1).item())
-    last_date = boxed["period_start"].tail(1).item()
-    prior_year_ago = boxed.tail(13).head(1)
-    yoy = None
-    if not prior_year_ago.is_empty():
-        py_val = float(prior_year_ago["value"].item())
-        if py_val != 0:
-            yoy = (last / py_val - 1.0) * 100.0
-
-    st.metric(
-        "Boxed beef cutout — Choice (latest monthly)",
-        f"${last:,.2f}/cwt (carcass equivalent)",
-        delta=(f"YoY {yoy:+.1f}%" if yoy is not None else None),
-    )
-    fig = go.Figure(
-        go.Scatter(
-            x=boxed["period_start"].to_list(),
-            y=boxed["value"].to_list(),
-            mode="lines+markers",
-            line=dict(color=ACCENT, width=2),
-            marker=dict(size=4),
-            showlegend=False,
-        )
-    )
-    fig.update_layout(
-        height=240,
-        margin=dict(l=20, r=20, t=20, b=20),
-        xaxis_title=None, yaxis_title="$/cwt",
-        hovermode="x unified",
-    )
-    st.plotly_chart(fig, use_container_width=True,
-                    config={"displayModeBar": False}, key="cull_proxy")
-else:
-    st.info("Boxed beef cutout data unavailable.")
 
 st.markdown("---")
 st.caption(

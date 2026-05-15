@@ -24,6 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 __all__ = [
+    "COW_CALF_REGIONS",
     "CowCalfEconomics",
     "CowCalfInputs",
     "FinishDirectEconomics",
@@ -33,6 +34,7 @@ __all__ = [
     "compute_cow_calf_economics",
     "compute_finish_direct_economics",
     "compute_stocker_economics",
+    "cow_calf_inputs_for_region",
     "default_cow_calf_inputs",
     "default_finish_direct_inputs",
     "default_stocker_inputs",
@@ -76,6 +78,143 @@ class CowCalfEconomics:
     total_cost: float
     total_margin: float
     breakeven_weaned_price_per_cwt: float
+
+
+# Regional cow-calf cost stacks. Sourced from:
+# - NASS pasture rental rates 2024 (national avg $15.50/ac; Iowa $63.50;
+#   Maryland $50.50; Texas/Oklahoma $8-15/ac; rangeland states lower).
+# - ISU Iowa Beef Center 2025 (NGP detail).
+# - TAMU 2024 native + improved pasture budgets (Southern Plains).
+# - UKY 2024 spring-calving estimates (Mid-South / SE proxy).
+# - USDA ERS Amber Waves Dec 2024 on cost-by-region patterns.
+COW_CALF_REGIONS: dict[str, dict[str, object]] = {
+    "Plains (KS/NE/OK/TX panhandle)": {
+        "description": (
+            "Native and improved pasture; moderate hay feeding (~2 tons/cow); "
+            "low-to-moderate pasture rent; the v3.0 baseline."
+        ),
+        "pasture_acres_per_cow": 4.0,
+        "pasture_cost_per_acre": 25.0,
+        "hay_tons_per_cow": 2.2,
+        "hay_cost_per_ton": 220.0,
+        "supplement_cost_per_cow": 95.0,
+        "vet_breeding_per_cow": 75.0,
+        "fixed_per_cow": 250.0,
+        "weaning_weight_lbs": 550.0,
+    },
+    "Midwest (IA/MO/IL/IN)": {
+        "description": (
+            "High-quality cool-season pasture; competing with corn for "
+            "land; pasture rent $40-65/ac (NASS Iowa $63.50/ac 2024); "
+            "2-2.5 tons hay/cow; smaller herd sizes."
+        ),
+        "pasture_acres_per_cow": 2.5,
+        "pasture_cost_per_acre": 60.0,
+        "hay_tons_per_cow": 2.5,
+        "hay_cost_per_ton": 220.0,
+        "supplement_cost_per_cow": 90.0,
+        "vet_breeding_per_cow": 80.0,
+        "fixed_per_cow": 280.0,
+        "weaning_weight_lbs": 575.0,
+    },
+    "Southeast (TN/GA/KY/AR/FL)": {
+        "description": (
+            "Year-round forage; shorter hay-feeding window (0.5-1.5 tons/cow); "
+            "higher parasite/fly vet costs; humid heat = lower weaning "
+            "weights; smaller herds dominate."
+        ),
+        "pasture_acres_per_cow": 2.0,
+        "pasture_cost_per_acre": 45.0,
+        "hay_tons_per_cow": 1.0,
+        "hay_cost_per_ton": 180.0,
+        "supplement_cost_per_cow": 80.0,
+        "vet_breeding_per_cow": 110.0,
+        "fixed_per_cow": 240.0,
+        "weaning_weight_lbs": 520.0,
+    },
+    "Pacific NW / Mountain (MT/ID/OR/WA)": {
+        "description": (
+            "Mix of irrigated meadow and rangeland; ~1.5-2 tons hay/cow; "
+            "longer winter than Plains but shorter than Northeast; "
+            "moderate pasture rent."
+        ),
+        "pasture_acres_per_cow": 5.0,
+        "pasture_cost_per_acre": 30.0,
+        "hay_tons_per_cow": 2.0,
+        "hay_cost_per_ton": 250.0,
+        "supplement_cost_per_cow": 90.0,
+        "vet_breeding_per_cow": 75.0,
+        "fixed_per_cow": 260.0,
+        "weaning_weight_lbs": 560.0,
+    },
+    "Northeast (PA/NY/VT/MD/VA)": {
+        "description": (
+            "Long winter = 3+ tons hay/cow; highest land costs (NASS "
+            "Maryland $50.50/ac 2024 with higher rates further north); "
+            "smaller herds; lower stocking rates per acre."
+        ),
+        "pasture_acres_per_cow": 3.0,
+        "pasture_cost_per_acre": 85.0,
+        "hay_tons_per_cow": 3.0,
+        "hay_cost_per_ton": 260.0,
+        "supplement_cost_per_cow": 100.0,
+        "vet_breeding_per_cow": 95.0,
+        "fixed_per_cow": 320.0,
+        "weaning_weight_lbs": 545.0,
+    },
+    "Southwest rangeland (AZ/NM/NV/W-TX)": {
+        "description": (
+            "Arid rangeland; 20-80 acres/cow depending on rainfall; "
+            "very low $/acre but high supplementation needs; large pastures, "
+            "low hay use, high vet/transport costs."
+        ),
+        "pasture_acres_per_cow": 40.0,
+        "pasture_cost_per_acre": 4.0,
+        "hay_tons_per_cow": 0.8,
+        "hay_cost_per_ton": 270.0,
+        "supplement_cost_per_cow": 150.0,
+        "vet_breeding_per_cow": 90.0,
+        "fixed_per_cow": 270.0,
+        "weaning_weight_lbs": 500.0,
+    },
+}
+
+
+def cow_calf_inputs_for_region(
+    region: str,
+    *,
+    n_cows: int = 60,
+    calving_rate: float = 0.90,
+    weaning_rate: float = 0.94,
+    weaned_price_per_cwt: float = 315.0,
+) -> CowCalfInputs:
+    """Build a :class:`CowCalfInputs` from a regional preset.
+
+    ``region`` must be a key in :data:`COW_CALF_REGIONS`. Non-cost inputs
+    (n_cows, rates, prices) take user-supplied values so the caller can
+    plug in their actual herd.
+    """
+    if region not in COW_CALF_REGIONS:
+        raise ValueError(
+            f"Unknown region {region!r}; valid: {sorted(COW_CALF_REGIONS)}"
+        )
+    cfg = COW_CALF_REGIONS[region]
+    return CowCalfInputs(
+        n_cows=n_cows,
+        calving_rate=calving_rate,
+        weaning_rate=weaning_rate,
+        weaned_weight_lbs=float(cfg["weaning_weight_lbs"]),
+        weaned_price_per_cwt=weaned_price_per_cwt,
+        pasture_acres_per_cow=float(cfg["pasture_acres_per_cow"]),
+        pasture_cost_per_acre=float(cfg["pasture_cost_per_acre"]),
+        hay_tons_per_cow=float(cfg["hay_tons_per_cow"]),
+        hay_cost_per_ton=float(cfg["hay_cost_per_ton"]),
+        supplement_cost_per_cow=float(cfg["supplement_cost_per_cow"]),
+        vet_breeding_per_cow=float(cfg["vet_breeding_per_cow"]),
+        fixed_per_cow=float(cfg["fixed_per_cow"]),
+        bull_pct=0.04,
+        bull_annual_cost=2800.0,
+    )
 
 
 def default_cow_calf_inputs() -> CowCalfInputs:
