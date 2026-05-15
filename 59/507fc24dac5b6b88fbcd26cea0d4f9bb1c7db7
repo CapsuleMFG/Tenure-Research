@@ -1,0 +1,31 @@
+dashboard/pages/7_Costs.py
+  s_b98f758bbec157::t_b7631bb29ec21e 39-45
+dashboard/app.py
+  s_b98f758bbec157::t_67f1171b4ba50b 58-62,67-107,110-142
+  s_b98f758bbec157::t_7055d1f4d294e7 286-289
+  s_b98f758bbec157::t_56aeaa2bbfca16 108-109
+  s_b98f758bbec157::t_729bf1667dec68 230,232-235,240-245
+dashboard/pages/8_Pricing.py
+  s_b98f758bbec157::t_a18b7782d397cb 37-46
+dashboard/pages/6_Plan.py
+  s_b98f758bbec157::t_9c4272de44dadb 85-91
+  s_b98f758bbec157::t_34b84aa375020d 218-230
+  s_b98f758bbec157::t_194a275abbc117 585-599
+  s_b98f758bbec157::t_fbb7c82304e7d2 414-426
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "59507fc24dac5b6b88fbcd26cea0d4f9bb1c7db7",
+  "prompts": {},
+  "sessions": {
+    "s_b98f758bbec157": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a24664b-43f2-4f20-b569-28736be51708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
