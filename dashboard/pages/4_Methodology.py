@@ -44,13 +44,23 @@ gen_at = cache_generated_at()
 gen_label = gen_at or "not yet generated"
 st.markdown(
     f"""
-A GitHub Actions cron runs once a week (Sunday night UTC):
+**Two GitHub Actions crons keep the app live:**
+
+*Weekly (Sunday night UTC)* — full refresh + forecast rebake:
 
 1. Discovers and downloads any updated XLSX/ZIP files from the ERS product page.
-2. Pulls continuous front-month futures for LE / HE / GF via yfinance.
+2. Pulls monthly continuous front-month futures for LE / HE / GF via yfinance.
 3. Cleans every catalog series into the tidy `observations.parquet` store.
 4. Re-runs the per-series bake-off and re-bakes `forecasts.json`.
 5. Commits both to the `data` branch — Streamlit Cloud auto-redeploys.
+
+*Daily (22:00 UTC)* — daily price refresh, no forecast rebake:
+
+1. Pulls **daily** front-month closes for LE / HE / GF via yfinance.
+2. (Optional) If `AMS_API_KEY` is set as a GitHub secret, pulls AMS LMR
+   daily summary reports (national fed cattle, boxed beef cutout, hog
+   summary, pork cutout). Without the key the app uses futures + ERS only.
+3. Commits the updated `observations.parquet` to the `data` branch.
 
 **Latest forecast snapshot:** `{gen_label}`.
 """
@@ -115,6 +125,33 @@ if hi is not None:
         f"{n_w} windows**; the displayed forward forecast goes **{fwd_h} "
         f"months** ahead."
     )
+
+st.markdown("## The v2.0 producer tools")
+st.markdown(
+    """
+Three new layers turn the dashboard from "look at the data" to "use the
+data to make a decision":
+
+**Basis.** The Series page shows the latest cash-to-nearby-futures basis,
+the 5-year mean, and a p10–p90 range so you can see whether the current
+basis is tight, fat, or in-line. Basis is the gap between what a hedge
+locks in and what your local cash will actually return.
+
+**Breakeven calculator.** A KSU/ISU-style feedlot cost calc: feeder cost,
+weight, days on feed, cost of gain, yardage, interest, and death loss
+produce a single breakeven $/cwt. Tune any input; the page reflects the
+sensitivity inline. Your breakeven is auto-passed to the Decide tool.
+
+**Decide tool.** Combines today's cash, today's futures, your basis, your
+breakeven, and the 6-month forecast (point + 80% PI) into a recommendation:
+*sell now*, *sell now (downside risk)*, *hold*, *hedge or hold*, or *wait*.
+Each recommendation cites the actual numbers; the rules are deterministic
+(see the page's "How this recommendation is computed" expander).
+
+Together these answer the question producers actually care about — "should
+I sell this pen at today's market?" — using public data and transparent math.
+"""
+)
 
 st.markdown("## Limits we know about")
 st.markdown(

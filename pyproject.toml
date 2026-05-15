@@ -44,6 +44,9 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+# RUF001/RUF002 flag intentional typography (×, –, —) in user-facing strings
+# and docstrings — we *want* them rendered as Unicode in the dashboard.
+ignore = ["RUF001", "RUF002", "RUF003"]
 
 [tool.mypy]
 python_version = "3.11"

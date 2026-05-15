@@ -52,6 +52,16 @@ forecast = st.Page(
     title="Forecast",
     icon=":material/insights:",
 )
+decide = st.Page(
+    "dashboard/pages/6_Decide.py",
+    title="Decide",
+    icon=":material/balance:",
+)
+breakeven = st.Page(
+    "dashboard/pages/7_Breakeven.py",
+    title="Breakeven",
+    icon=":material/calculate:",
+)
 methodology = st.Page(
     "dashboard/pages/4_Methodology.py",
     title="Methodology",
@@ -66,6 +76,7 @@ about = st.Page(
 navigation = st.navigation(
     {
         "": [brief],
+        "Tools": [decide, breakeven],
         "Explore": [catalog, series, forecast],
         "Reference": [methodology, about],
     }

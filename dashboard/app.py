@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import polars as pl
 import streamlit as st
 from components.brief import compose_brief, render_commodity_card
 from components.cache import cache_generated_at, cached_forecast_cache
@@ -19,8 +20,13 @@ from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
 from components.theme import (
     BRAND_NAME,
     BRAND_TAGLINE,
+    DOWN,
+    INK_SOFT,
+    UP,
     inject_global_css,
 )
+
+from usda_sandbox.store import read_series
 
 inject_global_css()
 
@@ -74,6 +80,62 @@ if lead is not None:
             f"<div class='lb-brief-headline'>{brief_html}</div>",
             unsafe_allow_html=True,
         )
+
+# ---- Today's futures (daily refresh) --------------------------------------
+
+DAILY_FUT_SERIES: list[tuple[str, str]] = [
+    ("cattle_lc_front_daily", "Live Cattle (LE)"),
+    ("cattle_feeder_front_daily", "Feeder Cattle (GF)"),
+    ("hogs_he_front_daily", "Lean Hogs (HE)"),
+]
+
+
+def _render_futures_strip() -> None:
+    """One-line strip of today's three front-month futures with day-over-day %."""
+    cols = st.columns(len(DAILY_FUT_SERIES))
+    for col, (sid, label) in zip(cols, DAILY_FUT_SERIES, strict=True):
+        try:
+            df = (
+                read_series(sid, obs_path)
+                .filter(pl.col("value").is_not_null())
+                .sort("period_start")
+            )
+        except Exception:
+            df = pl.DataFrame()
+        if df.height < 2:
+            with col:
+                st.markdown(
+                    f"<div class='lb-card'>"
+                    f"<div class='lb-card-eyebrow'>{label}</div>"
+                    f"<div class='lb-card-title'>Daily futures unavailable</div>"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+            continue
+        last = float(df["value"].tail(1).item())
+        prev = float(df["value"].tail(2).head(1).item())
+        last_date = df["period_start"].tail(1).item()
+        pct = (last / prev - 1.0) * 100.0 if prev else 0.0
+        arrow = "▲" if pct > 0.05 else ("▼" if pct < -0.05 else "▬")
+        color = UP if pct > 0.05 else (DOWN if pct < -0.05 else INK_SOFT)
+        with col:
+            st.markdown(
+                "<div class='lb-card'>"
+                f"<div class='lb-card-eyebrow'>{label.upper()}</div>"
+                f"<div class='lb-card-title'>Front-month, {last_date}</div>"
+                f"<div class='lb-card-price'>${last:,.2f}"
+                "<span class='lb-card-unit'>/USD/cwt</span></div>"
+                f"<div class='lb-card-deltas'>"
+                f"<span style='color:{color};font-weight:600;'>"
+                f"{arrow} {abs(pct):.2f}%</span> "
+                f"<span style='color:{INK_SOFT}'>day-over-day</span></div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+
+
+st.markdown("### Today's front-month futures")
+_render_futures_strip()
 
 # ---- Commodity-card grid --------------------------------------------------
 

@@ -1,18 +1,21 @@
 # LivestockBrief
 
-> **USDA-grounded livestock price forecasts in plain English, with honest uncertainty.**
+> **Daily livestock prices + USDA-grounded forecasts + a sell-now decision
+> tool. Plain English. Honest uncertainty.**
 
-LivestockBrief is a free public dashboard built on USDA Economic Research
-Service livestock and meat data. Every series is forecast with three
-classical models (AutoARIMA, Prophet, LightGBM), the per-series winner is
-selected by cross-validated MAPE, and the prediction interval is
-conformally calibrated against CV residuals so "80% PI" actually means 80%
-empirical coverage.
+LivestockBrief is a free public dashboard for cattle and hog producers.
+It combines USDA Economic Research Service monthly cash, daily CME front-
+month futures, three classical forecasting models with conformally
+calibrated 80% prediction intervals, and three v2.0 producer tools:
 
-The home page leads with a plain-English market brief and a card per
-commodity. The Forecast page shows the winning model's 12-month forecast by
-default; an *Advanced* expander preserves the full live-backtest UI for
-analysts.
+- **Basis** — cash-to-nearby-futures gap, current + 5-year band
+- **Breakeven** — feedlot cost-of-production calculator (KSU defaults)
+- **Decide** — a *sell now / hold / hedge* recommendation that synthesizes
+  today's cash, today's futures, your basis, your breakeven, and the
+  6-month forecast into a deterministic, auditable suggestion
+
+Every recommendation comes with the inputs that drove it and the rule
+that fired. No LLM, no opaque score. Not financial advice.
 
 ## Live app
 
@@ -34,6 +37,9 @@ uv run python -c "from usda_sandbox.futures_continuous import sync_continuous_fu
 # Clean into the tidy parquet store
 uv run python -c "from usda_sandbox.clean import clean_all; clean_all('data/catalog.json', 'data/raw', 'data/clean/observations.parquet')"
 
+# Pull daily front-month futures (LE / GF / HE)
+uv run python -c "from usda_sandbox.futures_daily import sync_daily_futures, append_daily_to_observations; sync_daily_futures(); append_daily_to_observations()"
+
 # Bake the forecast cache (the Brief page reads this)
 uv run python -m usda_sandbox.precompute
 
@@ -41,21 +47,29 @@ uv run python -m usda_sandbox.precompute
 uv run streamlit run streamlit_app.py
 ```
 
-Opens at `http://localhost:8501`. On a deployed instance, the data sync and
-precompute steps are done weekly by GitHub Actions.
+Opens at `http://localhost:8501`. On a deployed instance, the data sync,
+daily futures refresh, and forecast cache rebake are all done by GitHub
+Actions (weekly full refresh, daily futures-only refresh).
 
 ## Pages
 
-* **Brief** *(home)* — auto-generated headline + commodity cards across
-  cattle, hogs, beef wholesale, pork wholesale, and lamb.
+* **Brief** *(home)* — today's front-month futures strip + auto-generated
+  market headline + commodity cards across cattle, hogs, beef wholesale,
+  pork wholesale, and lamb.
+* **Decide** *(v2.0)* — pick a commodity + region, enter your breakeven,
+  get a deterministic *sell now / hold / hedge* recommendation grounded
+  in today's prices and the 6-month forecast.
+* **Breakeven** *(v2.0)* — feedlot cost-of-production calculator; result
+  feeds the Decide tool.
 * **Catalog** — every series in the store, with row counts, date ranges,
   and null-span data quality summary.
 * **Series** — single-series deep dive: time series, YoY change, seasonal
-  decomposition, and a jump to that series' forecast.
+  decomposition, **basis card** (cash − nearby futures), jump to forecast.
 * **Forecast** — default = the winner from the weekly bake-off, 12-month
   forward forecast, calibrated 80% PI. Advanced expander = the live-backtest
   UI (horizon, CV windows, model selection, residual diagnostics).
-* **Methodology** — plain-English explanation of data, models, and PIs.
+* **Methodology** — plain-English explanation of data, models, PIs,
+  basis, breakeven, and the Decide tool's rules.
 * **About** — credits, version, last-refresh status, GitHub link, disclaimer.
 
 ## Architecture
@@ -81,13 +95,18 @@ dashboard/
     5_About.py              Credits + version + disclaimer
 src/usda_sandbox/
   ingest.py                 ERS XLSX downloader (idempotent, manifest-keyed)
-  futures_continuous.py     yfinance continuous front-month futures
+  futures_continuous.py     yfinance MONTHLY continuous front-month
+  futures_daily.py          yfinance DAILY continuous front-month (v2.0)
+  ams_lmr.py                AMS LMR optional ingest (needs AMS_API_KEY, v2.0)
   catalog.py                SeriesDefinition (Pydantic)
   clean.py                  Tidy-parquet builder
   store.py                  polars / DuckDB accessors over observations.parquet
   forecast.py               AutoARIMA / Prophet / LightGBM + backtest
   calibration.py            Conformal PI calibration (per-horizon)
   precompute.py             Bake forecasts.json for the Brief / Forecast UI
+  basis.py                  Cash-to-futures basis math (v2.0)
+  breakeven.py              Feedlot cost-of-production calculator (v2.0)
+  decision.py               Sell-now / hold rule engine (v2.0)
 data/
   catalog.json              All series definitions (in repo)
   raw/                      gitignored — local downloads
@@ -99,13 +118,18 @@ tests/                      67 tests over ingest/clean/store/forecast/dashboard
 ## Data flow
 
 ```
-weekly cron (GitHub Actions, Sunday 21:00 UTC)
+weekly cron (GitHub Actions, Sunday 21:00 UTC) — full refresh + rebake
   ├── sync_downloads()                   → data/raw/*.xlsx
-  ├── sync_continuous_futures()          → data/raw/futures_continuous/*.csv
+  ├── sync_continuous_futures()          → data/raw/futures_continuous/*.parquet
   ├── clean_all()                        → data/clean/observations.parquet
   └── precompute.build_forecast_cache()  → data/clean/forecasts.json
                                           → push both to `data` branch
-                                          → Streamlit Cloud redeploys
+
+daily cron (GitHub Actions, 22:00 UTC) — daily prices only
+  ├── sync_daily_futures()               → data/raw/futures_daily/*.parquet
+  ├── append_daily_to_observations()     → merge into observations.parquet
+  ├── (optional) ams_lmr.sync_ams_daily  → if AMS_API_KEY secret is set
+  └── push observations.parquet          → `data` branch → Cloud redeploys
 ```
 
 The web app reads `observations.parquet` for charts and history, and
@@ -159,5 +183,15 @@ uv run mypy
 
 ## Version
 
-v1.0 — first shippable release. See `docs/superpowers/specs/` for the
-brainstorm + design history.
+v2.0 — "actually useful" release: adds daily futures, basis, breakeven
+calculator, and the Decide tool. See `docs/superpowers/specs/2026-05-15-v2-actually-useful-design.md`
+for the v2.0 rationale; v1.0 design is alongside.
+
+## Disclaimer
+
+LivestockBrief is **educational and informational only**. The Decide tool
+is a reasoning aid: a transparent, deterministic synthesis of public
+prices, your inputs, and a calibrated forecast. It does not account for
+your working capital, pen space, hedge position, tax situation, or local
+basis dynamics beyond what appears in the cash series. Use it to structure
+the question, then make your own call. Not financial advice.

@@ -75,6 +75,46 @@ m2.metric("Unit", meta_row["unit"])
 m3.metric("Frequency", meta_row["frequency"])
 m4.metric("Observations", series.height)
 
+# ---- Basis card (cash - nearby futures) --------------------------------
+
+from usda_sandbox.basis import basis_stats, default_futures_peer  # noqa: E402
+
+_peer = default_futures_peer(series_id)
+if _peer is not None:
+    stats = basis_stats(series_id, _peer, obs_path=obs_path)
+    if stats.latest_basis is not None:
+        ranked_position = "—"
+        if stats.p10_basis is not None and stats.p90_basis is not None:
+            if stats.latest_basis <= stats.p10_basis:
+                ranked_position = "near 5-year low"
+            elif stats.latest_basis >= stats.p90_basis:
+                ranked_position = "near 5-year high"
+            elif stats.median_basis is not None and stats.latest_basis > stats.median_basis:
+                ranked_position = "above the 5-year median"
+            else:
+                ranked_position = "below the 5-year median"
+
+        st.markdown(
+            f"<div style='border:1px solid rgba(180,82,30,0.18);"
+            f"border-radius:8px;padding:0.9rem 1.1rem;margin:0.6rem 0 1rem 0;'>"
+            f"<div class='lb-card-eyebrow'>BASIS (cash &minus; nearby futures)</div>"
+            f"<div style='display:flex;flex-wrap:wrap;gap:1.8rem;margin-top:0.4rem;'>"
+            f"<div><div style='font-size:0.78rem;color:{INK_SOFT};'>Latest</div>"
+            f"<div style='font-size:1.4rem;font-weight:600;'>"
+            f"${stats.latest_basis:+,.2f}/{meta_row['unit']}</div></div>"
+            f"<div><div style='font-size:0.78rem;color:{INK_SOFT};'>5-yr mean</div>"
+            f"<div style='font-size:1.4rem;font-weight:600;'>"
+            f"${stats.mean_basis:+,.2f}</div></div>"
+            f"<div><div style='font-size:0.78rem;color:{INK_SOFT};'>5-yr range (p10-p90)</div>"
+            f"<div style='font-size:1.4rem;font-weight:600;'>"
+            f"${stats.p10_basis:+,.2f} &nbsp;&hellip;&nbsp; ${stats.p90_basis:+,.2f}</div></div>"
+            f"<div><div style='font-size:0.78rem;color:{INK_SOFT};'>Where it sits</div>"
+            f"<div style='font-size:1.0rem;font-weight:500;padding-top:0.35rem;'>"
+            f"{ranked_position}</div></div>"
+            f"</div></div>",
+            unsafe_allow_html=True,
+        )
+
 # ---- Plain-English brief (if precompute cache has this series) ---------
 
 if cache_entry is not None:

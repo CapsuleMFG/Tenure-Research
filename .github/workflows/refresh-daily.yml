@@ -1,0 +1,76 @@
+name: Daily refresh (futures + optional AMS LMR)
+
+# Daily at 22:00 UTC + manual trigger. Pulls daily front-month futures
+# via yfinance and (if AMS_API_KEY secret is set) AMS LMR daily reports.
+# Commits the refreshed observations.parquet to the `data` branch so
+# Streamlit Cloud auto-redeploys with today's prices.
+on:
+  schedule:
+    - cron: "0 22 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install project dependencies
+        run: uv sync --no-dev
+
+      - name: Pull existing data branch artifacts (so we don't lose monthly rows)
+        run: |
+          set -e
+          git fetch origin data || true
+          if git rev-parse --verify origin/data >/dev/null 2>&1; then
+            git checkout origin/data -- data/clean/observations.parquet data/clean/forecasts.json || true
+          fi
+
+      - name: Sync daily front-month futures (yfinance)
+        run: |
+          uv run python -c "
+          from usda_sandbox.futures_daily import sync_daily_futures, append_daily_to_observations
+          sync_daily_futures()
+          append_daily_to_observations()
+          "
+
+      - name: Sync AMS LMR (if AMS_API_KEY is set)
+        env:
+          AMS_API_KEY: ${{ secrets.AMS_API_KEY }}
+        run: |
+          uv run python -c "
+          from usda_sandbox.ams_lmr import is_enabled, sync_ams_daily
+          if is_enabled():
+              print('AMS_API_KEY present — running AMS LMR sync')
+              for slug, status in sync_ams_daily().items():
+                  print(f'  {slug}: {status}')
+          else:
+              print('No AMS_API_KEY — skipping AMS LMR step (futures-only daily refresh)')
+          "
+
+      - name: Commit refreshed observations to data branch
+        run: |
+          set -e
+          git config user.name  "livestockbrief-bot"
+          git config user.email "livestockbrief-bot@users.noreply.github.com"
+          git checkout -B data
+          git add -f data/clean/observations.parquet
+          if git diff --cached --quiet; then
+            echo "No row changes; skipping commit."
+          else
+            git commit -m "data: daily refresh $(date -u +%Y-%m-%d)"
+            git push -f origin data
+          fi

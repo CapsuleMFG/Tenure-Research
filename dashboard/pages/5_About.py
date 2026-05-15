@@ -24,10 +24,15 @@ st.markdown(
 st.markdown("## What this is")
 st.markdown(
     """
-LivestockBrief is a small public dashboard that takes USDA Economic Research
-Service livestock and meat data, runs three classical forecasting models
-against every series, and surfaces the winning model's forecast in plain
-English alongside an honest, calibrated prediction interval.
+LivestockBrief is a small public dashboard that takes USDA livestock and
+meat data, runs three classical forecasting models against every series,
+and surfaces today's prices, basis, breakeven economics, and a transparent
+sell-now-or-hold recommendation.
+
+v1.0 shipped the data + forecasting layer. **v2.0 added the producer
+tools** that make those forecasts actionable: daily front-month futures,
+basis-to-local-market, a feedlot breakeven calculator, and the Decide
+tool that synthesizes everything into a reasoning-aid recommendation.
 
 It's free, it's read-only, and the source is on GitHub.
 """
