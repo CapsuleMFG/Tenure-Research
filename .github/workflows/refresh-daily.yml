@@ -1,15 +1,17 @@
-name: Daily refresh (futures)
+name: Daily refresh (futures only)
 
 # Daily at 22:00 UTC + manual trigger. Pulls daily front-month futures
-# via yfinance. Commits the refreshed observations.parquet to the `data`
-# branch so Streamlit Cloud auto-redeploys with today's prices.
+# (livestock + grains) via yfinance and commits the refreshed
+# observations.parquet to main. The weekly cron does the full refresh
+# including forecasts; this one is the cheap daily update so the
+# Costs page and Plan-page market chips stay current.
 #
-# Daily AMS LMR cash was considered but skipped: USDA MARS API requires
-# eAuth Level 2 (in-person identity proofing) which is too much friction
-# for an open-source side project. Public AMS PDF scraping is fragile and
-# breaks silently when USDA changes report formats — also rejected. The
-# daily-futures layer covers the "what is the market doing today" need
-# defensibly: cash settles to futures over the contract month via basis.
+# Daily AMS LMR cash was considered and rejected: USDA MARS API requires
+# eAuth Level 2 (in-person identity proofing) — too much friction for an
+# open-access dashboard. Public-PDF scraping is fragile and fails
+# silently when USDA tweaks report layouts. Daily front-month futures
+# cover the "what is the market doing today" need defensibly: cash
+# settles to futures over the contract month via basis.
 on:
   schedule:
     - cron: "0 22 * * *"
@@ -18,13 +20,19 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: refresh-artifacts
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - name: Check out main
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -37,14 +45,6 @@ jobs:
       - name: Install project dependencies
         run: uv sync --no-dev
 
-      - name: Pull existing data branch artifacts (so we don't lose monthly rows)
-        run: |
-          set -e
-          git fetch origin data || true
-          if git rev-parse --verify origin/data >/dev/null 2>&1; then
-            git checkout origin/data -- data/clean/observations.parquet data/clean/forecasts.json || true
-          fi
-
       - name: Sync daily front-month futures (yfinance)
         run: |
           uv run python -c "
@@ -53,16 +53,18 @@ jobs:
           append_daily_to_observations()
           "
 
-      - name: Commit refreshed observations to data branch
+      - name: Commit refreshed observations.parquet to main
         run: |
           set -e
-          git config user.name  "livestockbrief-bot"
-          git config user.email "livestockbrief-bot@users.noreply.github.com"
-          git checkout -B data
-          git add -f data/clean/observations.parquet
+          git config user.name  "tenure-brief-bot"
+          git config user.email "tenure-brief-bot@users.noreply.github.com"
+
+          git add data/clean/observations.parquet
           if git diff --cached --quiet; then
-            echo "No row changes; skipping commit."
-          else
-            git commit -m "data: daily refresh $(date -u +%Y-%m-%d)"
-            git push -f origin data
+            echo "No artifact changes; nothing to commit."
+            exit 0
           fi
+          git commit -m "data: daily refresh $(date -u +%Y-%m-%d)"
+
+          git pull --rebase origin main || true
+          git push origin main

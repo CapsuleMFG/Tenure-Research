@@ -1,9 +1,9 @@
-name: Refresh data + rebake forecasts
+name: Refresh data + rebake forecasts (weekly)
 
-# Sunday 21:00 UTC weekly + manual trigger. The job pulls fresh USDA ERS XLSX
-# files and yfinance continuous futures, rebuilds observations.parquet, runs
-# the bake-off for every forecastable series, writes forecasts.json, and
-# commits both artifacts to the `data` branch so Streamlit Cloud picks them up.
+# Sunday 21:00 UTC + manual trigger. Pulls fresh USDA ERS XLSX files,
+# yfinance continuous + daily futures (livestock + grains), rebuilds
+# observations.parquet, rebakes forecasts.json, and commits both
+# artifacts directly to main. Streamlit Cloud auto-redeploys.
 on:
   schedule:
     - cron: "0 21 * * 0"
@@ -12,13 +12,19 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: refresh-artifacts
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 75
     steps:
       - name: Check out main
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need history for rebase
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -33,34 +39,52 @@ jobs:
 
       - name: Sync ERS XLSX downloads
         run: |
-          uv run python -c "from usda_sandbox.ingest import sync_downloads; sync_downloads()"
+          uv run python -c "
+          from usda_sandbox.ingest import sync_downloads
+          sync_downloads()
+          "
 
-      - name: Sync continuous front-month futures (yfinance)
+      - name: Sync monthly continuous futures (yfinance)
         run: |
-          uv run python -c "from usda_sandbox.futures_continuous import sync_continuous_futures; sync_continuous_futures()"
+          uv run python -c "
+          from usda_sandbox.futures_continuous import sync_continuous_futures
+          sync_continuous_futures()
+          "
 
       - name: Clean into observations.parquet
         run: |
-          uv run python -c "from usda_sandbox.clean import clean_all; clean_all('data/catalog.json', 'data/raw', 'data/clean/observations.parquet')"
+          uv run python -c "
+          from usda_sandbox.clean import clean_all
+          clean_all('data/catalog.json', 'data/raw',
+                    'data/clean/observations.parquet')
+          "
+
+      - name: Sync daily front-month futures (livestock + grains)
+        run: |
+          uv run python -c "
+          from usda_sandbox.futures_daily import sync_daily_futures, append_daily_to_observations
+          sync_daily_futures()
+          append_daily_to_observations()
+          "
 
       - name: Rebake forecasts.json
         run: |
-          uv run python -m usda_sandbox.precompute --out-path data/clean/forecasts.json
+          uv run python -m usda_sandbox.precompute \
+            --out-path data/clean/forecasts.json
 
-      - name: Commit refreshed artifacts to data branch
+      - name: Commit refreshed artifacts to main
         run: |
           set -e
-          git config user.name  "livestockbrief-bot"
-          git config user.email "livestockbrief-bot@users.noreply.github.com"
+          git config user.name  "tenure-brief-bot"
+          git config user.email "tenure-brief-bot@users.noreply.github.com"
 
-          # Force-publish data branch from the current refresh.
-          # observations.parquet and forecasts.json are normally gitignored;
-          # `-f` overrides that on this branch only.
-          git checkout -B data
-          git add -f data/clean/observations.parquet data/clean/forecasts.json
+          git add data/clean/observations.parquet data/clean/forecasts.json
           if git diff --cached --quiet; then
-            echo "No artifact changes; skipping commit."
-          else
-            git commit -m "data: weekly refresh $(date -u +%Y-%m-%d)"
-            git push -f origin data
+            echo "No artifact changes; nothing to commit."
+            exit 0
           fi
+          git commit -m "data: weekly refresh $(date -u +%Y-%m-%d)"
+
+          # Rebase on top of any concurrent code commits before pushing.
+          git pull --rebase origin main || true
+          git push origin main

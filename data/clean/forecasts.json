@@ -1,0 +1,2007 @@
+{
+  "generated_at": "2026-05-15T16:55:44.775637Z",
+  "horizon": 6,
+  "n_windows": 12,
+  "forward_horizon": 12,
+  "by_series": {
+    "cattle_steer_choice_tx_ok_nm": {
+      "series_name": "Steers, choice, Texas/Oklahoma/New Mexico, 35-65% Choice",
+      "commodity": "cattle",
+      "metric": "price",
+      "unit": "USD/cwt",
+      "frequency": "monthly",
+      "notes": "Live (slaughter-ready) Choice-grade steers sold in the TX/OK/NM fed-cattle reporting region. This is the price the packer pays the feedlot for finished animals. The 35-65% Choice mix reflects regional carcass quality (lower than Nebraska's). Watch this and the Nebraska series together \u2014 the spread between them tracks regional supply/demand imbalances.",
+      "winner_model": "Prophet",
+      "winner_metrics": {
+        "mape": 2.5658,
+        "smape": 2.5867,
+        "mase": 1.2078
+      },
+      "scoreboard": [
+        {
+          "model": "Prophet",
+          "mape": 2.5658,
+          "smape": 2.5867,
+          "mase": 1.2078
+        },
+        {
+          "model": "AutoARIMA",
+          "mape": 3.9148,
+          "smape": 3.9335,
+          "mase": 1.7068
+        },
+        {
+          "model": "LightGBM",
+          "mape": 4.1444,
+          "smape": 4.2482,
+          "mase": 2.159
+        }
+      ],
+      "horizon": 6,
+      "n_windows": 12,
+      "latest_actual": {
+        "period_start": "2026-03-01",
+        "value": 235.88
+      },
+      "prior_month_actual": {
+        "period_start": "2026-02-01",
+        "value": 241.27
+      },
+      "prior_year_actual": {
+        "period_start": "2025-02-01",
+        "value": 202.83
+      },
+      "sparkline": [
+        {
+          "period_start": "2024-03-01",
+          "value": 186.11
+        },
+        {
+          "period_start": "2024-04-01",
+          "value": 182.57
+        },
+        {
+          "period_start": "2024-05-01",
+          "value": 185.86
+        },
+        {
+          "period_start": "2024-06-01",
+          "value": 188.24
+        },
+        {
+          "period_start": "2024-07-01",
+          "value": 188.5
+        },
+        {
+          "period_start": "2024-08-01",
+          "value": 185.24
+        },
+        {
+          "period_start": "2024-09-01",
+          "value": 182.91
+        },
+        {
+          "period_start": "2024-10-01",
+          "value": 188.65
+        },
+        {
+          "period_start": "2024-11-01",
+          "value": 187.01
+        },
+        {
+          "period_start": "2024-12-01",
+          "value": 191.25
+        },
+        {
+          "period_start": "2025-01-01",
+          "value": 200.39
+        },
+        {
+          "period_start": "2025-02-01",
+          "value": 202.83
+        },
+        {
+          "period_start": "2025-03-01",
+          "value": 203.59
+        },
+        {
+          "period_start": "2025-04-01",
+          "value": 213.25
+        },
+        {
+          "period_start": "2025-05-01",
+          "value": 220.22
+        },
+        {
+          "period_start": "2025-06-01",
+          "value": 228.36
+        },
+        {
+          "period_start": "2025-07-01",
+          "value": 229.21
+        },
+        {
+          "period_start": "2025-08-01",
+          "value": 239.19
+        },
+        {
+          "period_start": "2025-09-01",
+          "value": 239.47
+        },
+        {
+          "period_start": "2025-10-01",
+          "value": 238.68
+        },
+        {
+          "period_start": "2025-11-01",
+          "value": 227.78
+        },
+        {
+          "period_start": "2026-01-01",
+          "value": 236.75
+        },
+        {
+          "period_start": "2026-02-01",
+          "value": 241.27
+        },
+        {
+          "period_start": "2026-03-01",
+          "value": 235.88
+        }
+      ],
+      "forward": [
+        {
+          "period_start": "2026-04-01",
+          "point": 248.40297696493803,
+          "lower_80": 242.0530594561075,
+          "upper_80": 254.55547628288883
+        },
+        {
+          "period_start": "2026-05-01",
+          "point": 250.8099166322526,
+          "lower_80": 245.0056111689136,
+          "upper_80": 256.5736206626541
+        },
+        {
+          "period_start": "2026-06-01",
+          "point": 249.08729224624125,
+          "lower_80": 244.47501755352334,
+          "upper_80": 254.13085789732054
+        },
+        {
+          "period_start": "2026-07-01",
+          "point": 248.30635761399992,
+          "lower_80": 240.6327041401024,
+          "upper_80": 255.85994881336353
+        },
+        {
+          "period_start": "2026-08-01",
+          "point": 247.97610158528474,
+          "lower_80": 241.19492502837937,
+          "upper_80": 254.32415329106232
+        },
+        {
+          "period_start": "2026-09-01",
+          "point": 247.7131690928124,
+          "lower_80": 243.76695139082372,
+          "upper_80": 251.6094042960506
+        },
+        {
+          "period_start": "2026-10-01",
+          "point": 247.05244130644655,
+          "lower_80": 242.68688169916368,
+          "upper_80": 251.19469338858352
+        },
+        {
+          "period_start": "2026-11-01",
+          "point": 248.6121952072121,
+          "lower_80": 244.7229388228375,
+          "upper_80": 252.41420232512067
+        },
+        {
+          "period_start": "2026-12-01",
+          "point": 247.22415643027722,
+          "lower_80": 243.21144532325582,
+          "upper_80": 251.23156314574484
+        },
+        {
+          "period_start": "2027-01-01",
+          "point": 248.82196917863484,
+          "lower_80": 244.6165660862364,
+          "upper_80": 252.63978180252727
+        },
+        {
+          "period_start": "2027-02-01",
+          "point": 248.81415020780588,
+          "lower_80": 244.69973359025514,
+          "upper_80": 253.05378461108543
+        },
+        {
+          "period_start": "2027-03-01",
+          "point": 250.80358418768557,
+          "lower_80": 246.79805143735328,
+          "upper_80": 255.07651010407002
+        }
+      ],
+      "conformal_scale_h1": 1.3787,
+      "conformal_scale_h_last": 0.8865
+    },
+    "cattle_steer_choice_nebraska": {
+      "series_name": "Steers, choice, Nebraska direct, 65-80% Choice",
+      "commodity": "cattle",
+      "metric": "price",
+      "unit": "USD/cwt",
+      "frequency": "monthly",
+      "notes": "Live Choice-grade steers sold direct (negotiated, not via auction) in Nebraska, with a higher-quality grade mix (65-80% Choice). Nebraska is the highest-grading fed-cattle region in the US \u2014 prices typically run a few dollars/cwt above southern regions. Cleanest fed-cattle benchmark for forecasting due to consistent reporting and grade mix.",
+      "winner_model": "Prophet",
+      "winner_metrics": {
+        "mape": 2.6641,
+        "smape": 2.6791,
+        "mase": 1.1955
+      },
+      "scoreboard": [
+        {
+          "model": "Prophet",
+          "mape": 2.6641,
+          "smape": 2.6791,
+          "mase": 1.1955
+        },
+        {
+          "model": "AutoARIMA",
+          "mape": 4.2128,
+          "smape": 4.2732,
+          "mase": 1.9274
+        },
+        {
+          "model": "LightGBM",
+          "mape": 5.0706,
+          "smape": 5.1957,
+          "mase": 2.5147
+        }
+      ],
+      "horizon": 6,
+      "n_windows": 12,
+      "latest_actual": {
+        "period_start": "2026-03-01",
+        "value": 238.3
+      },
+      "prior_month_actual": {
+        "period_start": "2026-02-01",
+        "value": 247.86
+      },
+      "prior_year_actual": {
+        "period_start": "2025-03-01",
+        "value": 210.01
+      },
+      "sparkline": [
+        {
+          "period_start": "2024-04-01",
+          "value": 185.77
+        },
+        {
+          "period_start": "2024-05-01",
+          "value": 189.02
+        },
+        {
+          "period_start": "2024-06-01",
+          "value": 194.65
+        },
+        {
+          "period_start": "2024-07-01",
+          "value": 196.99
+        },
+        {
+          "period_start": "2024-08-01",
+          "value": 191.22
+        },
+        {
+          "period_start": "2024-09-01",
+          "value": 184.08
+        },
+        {
+          "period_start": "2024-10-01",
+          "value": 189.13
+        },
+        {
+          "period_start": "2024-11-01",
+          "value": 187.6
+        },
+        {
+          "period_start": "2024-12-01",
+          "value": 194.63
+        },
+        {
+          "period_start": "2025-01-01",
+          "value": 204.23
+        },
+        {
+          "period_start": "2025-02-01",
+          "value": 205.3
+        },
+        {
+          "period_start": "2025-03-01",
+          "value": 210.01
+        },
+        {
+          "period_start": "2025-04-01",
+          "value": 209.99
+        },
+        {
+          "period_start": "2025-05-01",
+          "value": 227.57
+        },
+        {
+          "period_start": "2025-06-01",
+          "value": 238.13
+        },
+        {
+          "period_start": "2025-07-01",
+          "value": 240.45
+        },
+        {
+          "period_start": "2025-08-01",
+          "value": 245.47
+        },
+        {
+          "period_start": "2025-09-01",
+          "value": 240.04
+        },
+        {
+          "period_start": "2025-10-01",
+          "value": 234.36
+        },
+        {
+          "period_start": "2025-11-01",
+          "value": 210.0
+        },
+        {
+          "period_start": "2025-12-01",
+          "value": 223.02
+        },
+        {
+          "period_start": "2026-01-01",
+          "value": 235.82
+        },
+        {
+          "period_start": "2026-02-01",
+          "value": 247.86
+        },
+        {
+          "period_start": "2026-03-01",
+          "value": 238.3
+        }
+      ],
+      "forward": [
+        {
+          "period_start": "2026-04-01",
+          "point": 252.22474397953138,
+          "lower_80": 243.51912227839549,
+          "upper_80": 260.65970892263357
+        },
+        {
+          "period_start": "2026-05-01",
+          "point": 254.8594717725921,
+          "lower_80": 245.70164163941715,
+          "upper_80": 263.92258146847496
+        },
+        {
+          "period_start": "2026-06-01",
+          "point": 252.90918200420518,
+          "lower_80": 244.91400721196464,
+          "upper_80": 261.66141649214586
+        },
+        {
+          "period_start": "2026-07-01",
+          "point": 252.39040099723047,
+          "lower_80": 244.6849522731676,
+          "upper_80": 259.921229388743
+        },
+        {
+          "period_start": "2026-08-01",
+          "point": 251.8538244938113,
+          "lower_80": 243.90749175547143,
+          "upper_80": 259.29036246924596
+        },
+        {
+          "period_start": "2026-09-01",
+          "point": 250.5338159581234,
+          "lower_80": 248.03324968029364,
+          "upper_80": 252.97524776895546
+        },
+        {
+          "period_start": "2026-10-01",
+          "point": 249.22646849343434,
+          "lower_80": 246.46381282503256,
+          "upper_80": 251.84418153410698
+        },
+        {
+          "period_start": "2026-11-01",
+          "point": 249.96367171859646,
+          "lower_80": 247.51354657382782,
+          "upper_80": 252.38374329772054
+        },
+        {
+          "period_start": "2026-12-01",
+          "point": 248.69772335990308,
+          "lower_80": 246.14495910903833,
+          "upper_80": 251.25560907689547
+        },
+        {
+          "period_start": "2027-01-01",
+          "point": 250.60328245243562,
+          "lower_80": 247.94110654522223,
+          "upper_80": 253.0327016111606
+        },
+        {
+          "period_start": "2027-02-01",
+          "point": 250.18097197503678,
+          "lower_80": 247.5732213363749,
+          "upper_80": 252.84885778654143
+        },
+        {
+          "period_start": "2027-03-01",
+          "point": 253.0073304306191,
+          "lower_80": 250.4752518683533,
+          "upper_80": 255.74690996776542
+        }
+      ],
+      "conformal_scale_h1": 1.7309,
+      "conformal_scale_h_last": 0.5138
+    },
+    "cattle_feeder_steer_500_550": {
+      "series_name": "Feeder steers, medium and large, 500-550 lbs, Oklahoma",
+      "commodity": "cattle",
+      "metric": "price",
+      "unit": "USD/cwt",
+      "frequency": "monthly",
+      "notes": "Feeder cattle \u2014 lighter-weight calves (500-550 lbs) at Oklahoma City auction. These animals are just leaving the cow-calf operation, on their way to a stocker/grower phase. Prices here lead the fed-cattle cycle by 12-18 months \u2014 the beef on the shelf in 2026 was bought as a 500-lb calf in 2025.",
+      "winner_model": "LightGBM",
+      "winner_metrics": {
+        "mape": 6.7295,
+        "smape": 7.0506,
+        "mase": 3.1707
+      },
+      "scoreboard": [
+        {
+          "model": "LightGBM",
+          "mape": 6.7295,
+          "smape": 7.0506,
+          "mase": 3.1707
+        },
+        {
+          "model": "Prophet",
+          "mape": 9.2907,
+          "smape": 9.4539,
+          "mase": 3.9733
+        },
+        {
+          "model": "AutoARIMA",
+          "mape": 10.3817,
+          "smape": 11.3214,
+          "mase": 4.6434
+        }
+      ],
+      "horizon": 6,
+      "n_windows": 12,
+      "latest_actual": {
+        "period_start": "2026-03-01",
+        "value": 508.23
+      },
+      "prior_month_actual": {
+        "period_start": "2026-02-01",
+        "value": 515.81
+      },
+      "prior_year_actual": {
+        "period_start": "2025-03-01",
+        "value": 376.17
+      },
+      "sparkline": [
+        {
+          "period_start": "2024-04-01",
+          "value": 325.07706779661015
+        },
+        {
+          "period_start": "2024-05-01",
+          "value": 317.05
+        },
+        {
+          "period_start": "2024-06-01",
+          "value": 329.62
+        },
+        {
+          "period_start": "2024-07-01",
+          "value": 319.2196992481203
+        },
+        {
+          "period_start": "2024-08-01",
+          "value": 305.2773371104816
+        },
+        {
+          "period_start": "2024-09-01",
+          "value": 287.96
+        },
+        {
+          "period_start": "2024-10-01",
+          "value": 293.3602314814815
+        },
+        {
+          "period_start": "2024-11-01",
+          "value": 316.48204855842187
+        },
+        {
+          "period_start": "2024-12-01",
+          "value": 338.3498770226537
+        },
+        {
+          "period_start": "2025-01-01",
+          "value": 356.88
+        },
+        {
+          "period_start": "2025-02-01",
+          "value": 353.8031781376518
+        },
+        {
+          "period_start": "2025-03-01",
+          "value": 376.17
+        },
+        {
+          "period_start": "2025-04-01",
+          "value": 383.33
+        },
+        {
+          "period_start": "2025-05-01",
+          "value": 393.0964978902953
+        },
+        {
+          "period_start": "2025-06-01",
+          "value": 391.85
+        },
+        {
+          "period_start": "2025-07-01",
+          "value": 415.82
+        },
+        {
+          "period_start": "2025-08-01",
+          "value": 437.59
+        },
+        {
+          "period_start": "2025-09-01",
+          "value": 432.63
+        },
+        {
+          "period_start": "2025-10-01",
+          "value": 456.45
+        },
+        {
+          "period_start": "2025-11-01",
+          "value": 438.03
+        },
+        {
+          "period_start": "2025-12-01",
+          "value": 465.13
+        },
+        {
+          "period_start": "2026-01-01",
+          "value": 498.77
+        },
+        {
+          "period_start": "2026-02-01",
+          "value": 515.81
+        },
+        {
+          "period_start": "2026-03-01",
+          "value": 508.23
+        }
+      ],
+      "forward": [
+        {
+          "period_start": "2026-04-01",
+          "point": 507.6157936357998,
+          "lower_80": 491.429473171175,
+          "upper_80": 523.8021141004247
+        },
+        {
+          "period_start": "2026-05-01",
+          "point": 507.6157936357998,
+          "lower_80": 485.61120070077845,
+          "upper_80": 529.6203865708212
+        },
+        {
+          "period_start": "2026-06-01",
+          "point": 507.6157936357998,
+          "lower_80": 473.7290447974949,
+          "upper_80": 541.5025424741049
+        },
+        {
+          "period_start": "2026-07-01",
+          "point": 507.6157936357998,
+          "lower_80": 461.9467070512336,
+          "upper_80": 553.2848802203662
+        },
+        {
+          "period_start": "2026-08-01",
+          "point": 507.6157936357998,
+          "lower_80": 463.2232963910445,
+          "upper_80": 552.0082908805553
+        },
+        {
+          "period_start": "2026-09-01",
+          "point": 484.635209409593,
+          "lower_80": 421.29533788559047,
+          "upper_80": 547.9750809335956
+        },
+        {
+          "period_start": "2026-10-01",
+          "point": 482.8227027774584,
+          "lower_80": 419.48283125345586,
+          "upper_80": 546.162574301461
+        },
+        {
+          "period_start": "2026-11-01",
+          "point": 502.01580208866005,
+          "lower_80": 438.6759305646575,
+          "upper_80": 565.3556736126626
+        },
+        {
+          "period_start": "2026-12-01",
+          "point": 490.16698232428547,
+          "lower_80": 426.8271108002829,
+          "upper_80": 553.5068538482881
+        },
+        {
+          "period_start": "2027-01-01",
+          "point": 503.57773695720925,
+          "lower_80": 440.2378654332067,
+          "upper_80": 566.9176084812118
+        },
+        {
+          "period_start": "2027-02-01",
+          "point": 508.2689555943831,
+          "lower_80": 444.92908407038055,
+          "upper_80": 571.6088271183856
+        },
+        {
+          "period_start": "2027-03-01",
+          "point": 507.90154350050216,
+          "lower_80": 444.5616719764996,
+          "upper_80": 571.2414150245047
+        }
+      ],
+      "conformal_scale_h1": 1.5472,
+      "conformal_scale_h_last": 6.0543
+    },
+    "cattle_feeder_steer_750_800": {
+      "series_name": "Feeder steers, medium and large, 750-800 lbs, Oklahoma",
+      "commodity": "cattle",
+      "metric": "price",
+      "unit": "USD/cwt",
+      "frequency": "monthly",
+      "notes": "Feeder cattle \u2014 heavier-weight steers (750-800 lbs) at Oklahoma City auction, near typical feedlot placement weight. These animals will be slaughter-ready in 4-6 months \u2014 closer to the fed-cattle cycle in time than the lighter feeders, but still a leading indicator for the boxed-beef cutout.",
+      "winner_model": "AutoARIMA",
+      "winner_metrics": {
+        "mape": 6.3312,
+        "smape": 6.6523,
+        "mase": 3.3319
+      },
+      "scoreboard": [
+        {
+          "model": "AutoARIMA",
+          "mape": 6.3312,
+          "smape": 6.6523,
+          "mase": 3.3319
+        },
+        {
+          "model": "LightGBM",
+          "mape": 6.9892,
+          "smape": 7.2309,
+          "mase": 3.5054
+        },
+        {
+          "model": "Prophet",
+          "mape": 7.1987,
+          "smape": 7.311,
+          "mase": 3.4493
+        }
+      ],
+      "horizon": 6,
+      "n_windows": 12,
+      "latest_actual": {
+        "period_start": "2026-03-01",
+        "value": 366.16
+      },
+      "prior_month_actual": {
+        "period_start": "2026-02-01",
+        "value": 371.42
+      },
+      "prior_year_actual": {
+        "period_start": "2025-03-01",
+        "value": 283.18
+      },
+      "sparkline": [
+        {
+          "period_start": "2024-04-01",
+          "value": 254.15424725822533
+        },
+        {
+          "period_start": "2024-05-01",
+          "value": 253.9
+        },
+        {
+          "period_start": "2024-06-01",
+          "value": 263.47
+        },
+        {
+          "period_start": "2024-07-01",
+          "value": 263.0626148409894
+        },
+        {
+          "period_start": "2024-08-01",
+          "value": 247.2798177920686
+        },
+        {
+          "period_start": "2024-09-01",
+          "value": 246.78
+        },
+        {
+          "period_start": "2024-10-01",
+          "value": 254.1915875912409
+        },
+        {
+          "period_start": "2024-11-01",
+          "value": 252.79945205479453
+        },
+        {
+          "period_start": "2024-12-01",
+          "value": 268.4512387791741
+        },
+        {
+          "period_start": "2025-01-01",
+          "value": 274.45
+        },
+        {
+          "period_start": "2025-02-01",
+          "value": 270.66936
+        },
+        {
+          "period_start": "2025-03-01",
+          "value": 283.18
+        },
+        {
+          "period_start": "2025-04-01",
+          "value": 298.22
+        },
+        {
+          "period_start": "2025-05-01",
+          "value": 300.4290112640801
+        },
+        {
+          "period_start": "2025-06-01",
+          "value": 310.47
+        },
+        {
+          "period_start": "2025-07-01",
+          "value": 335.09
+        },
+        {
+          "period_start": "2025-08-01",
+          "value": 355.55
+        },
+        {
+          "period_start": "2025-09-01",
+          "value": 367.5
+        },
+        {
+          "period_start": "2025-10-01",
+          "value": 376.02
+        },
+        {
+          "period_start": "2025-11-01",
+          "value": 346.18
+        },
+        {
+          "period_start": "2025-12-01",
+          "value": 344.53
+        },
+        {
+          "period_start": "2026-01-01",
+          "value": 360.04
+        },
+        {
+          "period_start": "2026-02-01",
+          "value": 371.42
+        },
+        {
+          "period_start": "2026-03-01",
+          "value": 366.16
+        }
+      ],
+      "forward": [
+        {
+          "period_start": "2026-04-01",
+          "point": 369.3218005497512,
+          "lower_80": 361.3750264424437,
+          "upper_80": 377.26857465705865
+        },
+        {
+          "period_start": "2026-05-01",
+          "point": 369.5858699552702,
+          "lower_80": 349.4929464580379,
+          "upper_80": 389.6787934525025
+        },
+        {
+          "period_start": "2026-06-01",
+          "point": 369.86296608135297,
+          "lower_80": 335.63237558828274,
+          "upper_80": 404.0935565744232
+        },
+        {
+          "period_start": "2026-07-01",
+          "point": 370.0230640812794,
+          "lower_80": 334.9279803645072,
+          "upper_80": 405.1181477980516
+        },
+        {
+          "period_start": "2026-08-01",
+          "point": 366.178984749249,
+          "lower_80": 328.37413456271224,
+          "upper_80": 403.9838349357858
+        },
+        {
+          "period_start": "2026-09-01",
+          "point": 366.111737357931,
+          "lower_80": 319.4075251390031,
+          "upper_80": 412.81594957685894
+        },
+        {
+          "period_start": "2026-10-01",
+          "point": 367.060735774678,
+          "lower_80": 316.4242592426788,
+          "upper_80": 417.6972123066772
+        },
+        {
+          "period_start": "2026-11-01",
+          "point": 366.74135916243836,
+          "lower_80": 312.4651357150434,
+          "upper_80": 421.0175826098333
+        },
+        {
+          "period_start": "2026-12-01",
+          "point": 370.0293283918017,
+          "lower_80": 312.35045315843286,
+          "upper_80": 427.70820362517054
+        },
+        {
+          "period_start": "2027-01-01",
+          "point": 369.68809361263203,
+          "lower_80": 308.80387906909334,
+          "upper_80": 430.5723081561707
+        },
+        {
+          "period_start": "2027-02-01",
+          "point": 369.2938433970038,
+          "lower_80": 305.37189568502515,
+          "upper_80": 433.21579110898244
+        },
+        {
+          "period_start": "2027-03-01",
+          "point": 370.6742323062468,
+          "lower_80": 303.85927687317127,
+          "upper_80": 437.4891877393223
+        }
+      ],
+      "conformal_scale_h1": 1.0782,
+      "conformal_scale_h_last": 2.1609
+    },
+    "hog_barrow_gilt_natbase_51_52": {
+      "series_name": "Hogs, barrows and gilts, national base, 51-52% lean",
+      "commodity": "hogs",
+      "metric": "price",
+      "unit": "USD/cwt",
+      "frequency": "monthly",
+      "notes": "Live hogs (barrows and gilts \u2014 castrated males and unbred females, the typical slaughter cohort) priced on the National Base lean-percentage formula at 51-52% lean carcass. This became the headline US hog price after USDA's 2013 mandatory price reporting redefinition; pre-2013 values are NA because the series didn't exist in this form.",
+      "winner_model": "Prophet",
+      "winner_metrics": {
+        "mape": 6.6615,
+        "smape": 6.7382,
+        "mase": 0.9543
+      },
+      "scoreboard": [
+        {
+          "model": "Prophet",
+          "mape": 6.6615,
+          "smape": 6.7382,
+          "mase": 0.9543
+        },
+        {
+          "model": "LightGBM",
+          "mape": 7.1377,
+          "smape": 7.045,
+          "mase": 1.0251
+        },
+        {
+          "model": "AutoARIMA",
+          "mape": 7.7612,
+          "smape": 7.8982,
+          "mase": 1.1401
+        }
+      ],
+      "horizon": 6,
+      "n_windows": 12,
+      "latest_actual": {
+        "period_start": "2025-03-01",
+        "value": 64.51
+      },
+      "prior_month_actual": {
+        "period_start": "2025-02-01",
+        "value": 63.87
+      },
+      "prior_year_actual": {
+        "period_start": "2024-03-01",
+        "value": 59.84
+      },
+      "sparkline": [
+        {
+          "period_start": "2023-04-01",
+          "value": 51.68
+        },
+        {
+          "period_start": "2023-05-01",
+          "value": 55.35
+        },
+        {
+          "period_start": "2023-06-01",
+          "value": 63.06
+        },
+        {
+          "period_start": "2023-07-01",
+          "value": 73.92
+        },
+        {
+          "period_start": "2023-08-01",
+          "value": 71.51
+        },
+        {
+          "period_start": "2023-09-01",
+          "value": 62.38
+        },
+        {
+          "period_start": "2023-10-01",
+          "value": 58.08
+        },
+        {
+          "period_start": "2023-11-01",
+          "value": 56.19
+        },
+        {
+          "period_start": "2023-12-01",
+          "value": 48.72
+        },
+        {
+          "period_start": "2024-01-01",
+          "value": 49.83
+        },
+        {
+          "period_start": "2024-02-01",
+          "value": 55.24
+        },
+        {
+          "period_start": "2024-03-01",
+          "value": 59.84
+        },
+        {
+          "period_start": "2024-04-01",
+          "value": 64.83
+        },
+        {
+          "period_start": "2024-05-01",
+          "value": 66.1634
+        },
+        {
+          "period_start": "2024-06-01",
+          "value": 65.6
+        },
+        {
+          "period_start": "2024-07-01",
+          "value": 64.95
+        },
+        {
+          "period_start": "2024-08-01",
+          "value": 64.91
+        },
+        {
+          "period_start": "2024-09-01",
+          "value": 61.27
+        },
+        {
+          "period_start": "2024-10-01",
+          "value": 61.52
+        },
+        {
+          "period_start": "2024-11-01",
+          "value": 63.71
+        },
+        {
+          "period_start": "2024-12-01",
+          "value": 60.88
+        },
+        {
+          "period_start": "2025-01-01",
+          "value": 59.34
+        },
+        {
+          "period_start": "2025-02-01",
+          "value": 63.87
+        },
+        {
+          "period_start": "2025-03-01",
+          "value": 64.51
+        }
+      ],
+      "forward": [
+        {
+          "period_start": "2025-04-01",
+          "point": 70.68571150852804,
+          "lower_80": 64.9229710695629,
+          "upper_80": 76.26928902287439
+        },
+        {
+          "period_start": "2025-05-01",
+          "point": 73.81945280411102,
+          "lower_80": 66.82171341198179,
+          "upper_80": 80.7395177595627
+        },
+        {
+          "period_start": "2025-06-01",
+          "point": 75.57861110562533,
+          "lower_80": 70.02657838908098,
+          "upper_80": 81.65597365983785
+        },
+        {
+          "period_start": "2025-07-01",
+          "point": 76.20046183259697,
+          "lower_80": 70.04220920204384,
+          "upper_80": 82.1872401492745
+        },
+        {
+          "period_start": "2025-08-01",
+          "point": 80.73191323537651,
+          "lower_80": 75.13645521606416,
+          "upper_80": 85.97103844317893
+        },
+        {
+          "period_start": "2025-09-01",
+          "point": 75.95465925198494,
+          "lower_80": 71.3310260705422,
+          "upper_80": 80.48849056562044
+        },
+        {
+          "period_start": "2025-10-01",
+          "point": 77.92214922642226,
+          "lower_80": 72.81342895031297,
+          "upper_80": 82.76239080756275
+        },
+        {
+          "period_start": "2025-11-01",
+          "point": 73.50346493345407,
+          "lower_80": 68.97309914452104,
+          "upper_80": 77.98710299620927
+        },
+        {
+          "period_start": "2025-12-01",
+          "point": 70.91742766881367,
+          "lower_80": 66.18456156447776,
+          "upper_80": 75.65068999751261
+        },
+        {
+          "period_start": "2026-01-01",
+          "point": 71.73854854656815,
+          "lower_80": 66.80716101444642,
+          "upper_80": 76.23155637240092
+        },
+        {
+          "period_start": "2026-02-01",
+          "point": 72.20632957784478,
+          "lower_80": 67.38381502111837,
+          "upper_80": 77.13794896298641
+        },
+        {
+          "period_start": "2026-03-01",
+          "point": 73.11883807047995,
+          "lower_80": 68.44892734722282,
+          "upper_80": 78.1889174084122
+        }
+      ],
+      "conformal_scale_h1": 1.1594,
+      "conformal_scale_h_last": 0.9613
+    },
+    "lamb_slaughter_choice_san_angelo": {
+      "series_name": "Slaughter lambs, choice, San Angelo, TX",
+      "commodity": "sheep_lamb",
+      "metric": "price",
+      "unit": "USD/cwt",
+      "frequency": "monthly",
+      "notes": "Live slaughter-ready lambs at San Angelo, Texas \u2014 the historical center of US sheep marketing. Note: this series effectively went dark in 2018-04 when AMS changed reporting; expect ~96 nulls from then forward. The US lamb sector is small enough that no national benchmark replaced it cleanly.",
+      "winner_model": "AutoARIMA",
+      "winner_metrics": {
+        "mape": 12.1397,
+        "smape": 12.0923,
+        "mase": 2.6539
+      },
+      "scoreboard": [
+        {
+          "model": "AutoARIMA",
+          "mape": 12.1397,
+          "smape": 12.0923,
+          "mase": 2.6539
+        },
+        {
+          "model": "LightGBM",
+          "mape": 13.9194,
+          "smape": 14.565,
+          "mase": 3.1215
+        },
+        {
+          "model": "Prophet",
+          "mape": 20.7315,
+          "smape": 18.1211,
+          "mase": 4.1492
+        }
+      ],
+      "horizon": 6,
+      "n_windows": 12,
+      "latest_actual": {
+        "period_start": "2018-03-01",
+        "value": 135.5
+      },
+      "prior_month_actual": {
+        "period_start": "2018-02-01",
+        "value": 133.75
+      },
+      "prior_year_actual": {
+        "period_start": "2017-03-01",
+        "value": 139.38
+      },
+      "sparkline": [
+        {
+          "period_start": "2016-04-01",
+          "value": 136.56
+        },
+        {
+          "period_start": "2016-05-01",
+          "value": 136.4
+        },
+        {
+          "period_start": "2016-06-01",
+          "value": 135.5
+        },
+        {
+          "period_start": "2016-07-01",
+          "value": 130.66
+        },
+        {
+          "period_start": "2016-08-01",
+          "value": 139.9
+        },
+        {
+          "period_start": "2016-09-01",
+          "value": 142.0
+        },
+        {
+          "period_start": "2016-10-01",
+          "value": 130.5
+        },
+        {
+          "period_start": "2016-11-01",
+          "value": 126.13
+        },
+        {
+          "period_start": "2016-12-01",
+          "value": 139.0
+        },
+        {
+          "period_start": "2017-01-01",
+          "value": 138.1
+        },
+        {
+          "period_start": "2017-02-01",
+          "value": 139.25
+        },
+        {
+          "period_start": "2017-03-01",
+          "value": 139.38
+        },
+        {
+          "period_start": "2017-04-01",
+          "value": 140.5
+        },
+        {
+          "period_start": "2017-05-01",
+          "value": 159.0
+        },
+        {
+          "period_start": "2017-06-01",
+          "value": 160.88
+        },
+        {
+          "period_start": "2017-07-01",
+          "value": 146.0
+        },
+        {
+          "period_start": "2017-08-01",
+          "value": 147.0
+        },
+        {
+          "period_start": "2017-09-01",
+          "value": 138.88
+        },
+        {
+          "period_start": "2017-10-01",
+          "value": 127.5
+        },
+        {
+          "period_start": "2017-11-01",
+          "value": 130.17
+        },
+        {
+          "period_start": "2017-12-01",
+          "value": 136.0
+        },
+        {
+          "period_start": "2018-01-01",
+          "value": 130.88
+        },
+        {
+          "period_start": "2018-02-01",
+          "value": 133.75
+        },
+        {
+          "period_start": "2018-03-01",
+          "value": 135.5
+        }
+      ],
+      "forward": [
+        {
+          "period_start": "2018-04-01",
+          "point": 135.4018191601194,
+          "lower_80": 121.84991956825853,
+          "upper_80": 148.9537187519803
+        },
+        {
+          "period_start": "2018-05-01",
+          "point": 138.85546111696937,
+          "lower_80": 120.73334690051776,
+          "upper_80": 156.97757533342096
+        },
+        {
+          "period_start": "2018-06-01",
+          "point": 139.20407753587932,
+          "lower_80": 120.79979576417585,
+          "upper_80": 157.6083593075828
+        },
+        {
+          "period_start": "2018-07-01",
+          "point": 136.6211673057565,
+          "lower_80": 100.42983827494866,
+          "upper_80": 172.81249633656432
+        },
+        {
+          "period_start": "2018-08-01",
+          "point": 136.53866000752404,
+          "lower_80": 103.3651559061311,
+          "upper_80": 169.71216410891697
+        },
+        {
+          "period_start": "2018-09-01",
+          "point": 134.993459709141,
+          "lower_80": 101.27737295046104,
+          "upper_80": 168.70954646782096
+        },
+        {
+          "period_start": "2018-10-01",
+          "point": 133.24839536759563,
+          "lower_80": 96.8308594262577,
+          "upper_80": 169.66593130893358
+        },
+        {
+          "period_start": "2018-11-01",
+          "point": 133.934997392584,
+          "lower_80": 95.0030138602947,
+          "upper_80": 172.8669809248733
+        },
+        {
+          "period_start": "2018-12-01",
+          "point": 134.5152402642114,
+          "lower_80": 93.22163592312427,
+          "upper_80": 175.80884460529856
+        },
+        {
+          "period_start": "2019-01-01",
+          "point": 133.61929088243693,
+          "lower_80": 90.09201004388629,
+          "upper_80": 177.14657172098757
+        },
+        {
+          "period_start": "2019-02-01",
+          "point": 134.0821475119334,
+          "lower_80": 88.43035023167442,
+          "upper_80": 179.73394479219243
+        },
+        {
+          "period_start": "2019-03-01",
+          "point": 134.36637881274376,
+          "lower_80": 86.68463164847063,
+          "upper_80": 182.0481259770169
+        }
+      ],
+      "conformal_scale_h1": 1.3227,
+      "conformal_scale_h_last": 1.3435
+    },
+    "boxed_beef_cutout_choice": {
+      "series_name": "Boxed beef cutout, choice 1-3, 600-900 lbs",
+      "commodity": "cattle",
+      "metric": "wholesale_price",
+      "unit": "USD/cwt",
+      "frequency": "monthly",
+      "notes": "Wholesale beef benchmark. The 'cutout' is a weighted-average value of all the boxed primals (chuck, rib, loin, round, brisket, etc.) cut from a Choice-grade carcass in the 600-900 lb weight band. Expressed as $/cwt of carcass-equivalent weight \u2014 effectively 'what the wholesale value of a slaughtered animal adds up to.' Packers' gross margin = cutout \u2212 fed cattle price; a widening spread means packers are profitable.",
+      "winner_model": "Prophet",
+      "winner_metrics": {
+        "mape": 8.1303,
+        "smape": 8.3258,
+        "mase": 2.864
+      },
+      "scoreboard": [
+        {
+          "model": "Prophet",
+          "mape": 8.1303,
+          "smape": 8.3258,
+          "mase": 2.864
+        },
+        {
+          "model": "LightGBM",
+          "mape": 8.2961,
+          "smape": 8.6473,
+          "mase": 3.0438
+        },
+        {
+          "model": "AutoARIMA",
+          "mape": 8.8383,
+          "smape": 8.7535,
+          "mase": 3.0063
+        }
+      ],
+      "horizon": 6,
+      "n_windows": 12,
+      "latest_actual": {
+        "period_start": "2026-03-01",
+        "value": 394.57
+      },
+      "prior_month_actual": {
+        "period_start": "2026-02-01",
+        "value": 369.29
+      },
+      "prior_year_actual": {
+        "period_start": "2025-03-01",
+        "value": 323.25
+      },
+      "sparkline": [
+        {
+          "period_start": "2024-04-01",
+          "value": 298.86
+        },
+        {
+          "period_start": "2024-05-01",
+          "value": 304.58
+        },
+        {
+          "period_start": "2024-06-01",
+          "value": 319.86
+        },
+        {
+          "period_start": "2024-07-01",
+          "value": 321.41
+        },
+        {
+          "period_start": "2024-08-01",
+          "value": 314.29
+        },
+        {
+          "period_start": "2024-09-01",
+          "value": 304.735
+        },
+        {
+          "period_start": "2024-10-01",
+          "value": 312.17
+        },
+        {
+          "period_start": "2024-11-01",
+          "value": 311.43
+        },
+        {
+          "period_start": "2024-12-01",
+          "value": 315.16
+        },
+        {
+          "period_start": "2025-01-01",
+          "value": 329.6
+        },
+        {
+          "period_start": "2025-02-01",
+          "value": 318.2
+        },
+        {
+          "period_start": "2025-03-01",
+          "value": 323.25
+        },
+        {
+          "period_start": "2025-04-01",
+          "value": 335.73
+        },
+        {
+          "period_start": "2025-05-01",
+          "value": 352.84
+        },
+        {
+          "period_start": "2025-06-01",
+          "value": 380.48
+        },
+        {
+          "period_start": "2025-07-01",
+          "value": 381.24
+        },
+        {
+          "period_start": "2025-08-01",
+          "value": 389.61
+        },
+        {
+          "period_start": "2025-09-01",
+          "value": 396.1
+        },
+        {
+          "period_start": "2025-10-01",
+          "value": 369.82
+        },
+        {
+          "period_start": "2025-11-01",
+          "value": 373.29
+        },
+        {
+          "period_start": "2025-12-01",
+          "value": 359.61
+        },
+        {
+          "period_start": "2026-01-01",
+          "value": 359.35
+        },
+        {
+          "period_start": "2026-02-01",
+          "value": 369.29
+        },
+        {
+          "period_start": "2026-03-01",
+          "value": 394.57
+        }
+      ],
+      "forward": [
+        {
+          "period_start": "2026-04-01",
+          "point": 387.35589336746807,
+          "lower_80": 351.1693992507315,
+          "upper_80": 422.41735362465084
+        },
+        {
+          "period_start": "2026-05-01",
+          "point": 397.4460893936091,
+          "lower_80": 338.7678274131482,
+          "upper_80": 455.45564901722406
+        },
+        {
+          "period_start": "2026-06-01",
+          "point": 395.55796614544187,
+          "lower_80": 356.8264411893677,
+          "upper_80": 437.9531795826472
+        },
+        {
+          "period_start": "2026-07-01",
+          "point": 386.8754691392709,
+          "lower_80": 357.82554925954184,
+          "upper_80": 415.12205796414565
+        },
+        {
+          "period_start": "2026-08-01",
+          "point": 388.7117089711408,
+          "lower_80": 355.86222870772195,
+          "upper_80": 419.46955207377164
+        },
+        {
+          "period_start": "2026-09-01",
+          "point": 386.7293125945955,
+          "lower_80": 343.7893738291813,
+          "upper_80": 428.906265828195
+        },
+        {
+          "period_start": "2026-10-01",
+          "point": 381.18600298827675,
+          "lower_80": 333.74203500186525,
+          "upper_80": 426.1375960208215
+        },
+        {
+          "period_start": "2026-11-01",
+          "point": 383.5251692764514,
+          "lower_80": 341.4514099777068,
+          "upper_80": 425.1656948296207
+        },
+        {
+          "period_start": "2026-12-01",
+          "point": 379.79227574087173,
+          "lower_80": 335.76524509825276,
+          "upper_80": 423.76358742062433
+        },
+        {
+          "period_start": "2027-01-01",
+          "point": 383.0399396166672,
+          "lower_80": 337.32147417451176,
+          "upper_80": 424.7605697376361
+        },
+        {
+          "period_start": "2027-02-01",
+          "point": 380.1241487691181,
+          "lower_80": 335.33466626636476,
+          "upper_80": 425.91695828091804
+        },
+        {
+          "period_start": "2027-03-01",
+          "point": 392.51874540477525,
+          "lower_80": 349.23208566567513,
+          "upper_80": 439.62039530063055
+        }
+      ],
+      "conformal_scale_h1": 1.7218,
+      "conformal_scale_h_last": 2.1114
+    },
+    "boxed_beef_cutout_select": {
+      "series_name": "Boxed beef cutout, select 1-3, 600-900 lbs",
+      "commodity": "cattle",
+      "metric": "wholesale_price",
+      "unit": "USD/cwt",
+      "frequency": "monthly",
+      "notes": "Same idea as the Choice cutout but for Select-grade carcasses \u2014 one quality tier below Choice. Select beef is leaner with less marbling, used mostly for ground beef, supermarket private-label, and casual restaurants. The Choice-Select spread is one of the cleanest cattle-cycle indicators: wide spread = strong demand for high-quality beef and tight Choice supply; narrow spread = the opposite.",
+      "winner_model": "AutoARIMA",
+      "winner_metrics": {
+        "mape": 6.8904,
+        "smape": 7.0934,
+        "mase": 2.5081
+      },
+      "scoreboard": [
+        {
+          "model": "AutoARIMA",
+          "mape": 6.8904,
+          "smape": 7.0934,
+          "mase": 2.5081
+        },
+        {
+          "model": "LightGBM",
+          "mape": 8.1645,
+          "smape": 8.4479,
+          "mase": 3.0188
+        },
+        {
+          "model": "Prophet",
+          "mape": 8.3114,
+          "smape": 8.5099,
+          "mase": 2.9812
+        }
+      ],
+      "horizon": 6,
+      "n_windows": 12,
+      "latest_actual": {
+        "period_start": "2026-03-01",
+        "value": 388.84
+      },
+      "prior_month_actual": {
+        "period_start": "2026-02-01",
+        "value": 364.08
+      },
+      "prior_year_actual": {
+        "period_start": "2025-03-01",
+        "value": 309.02
+      },
+      "sparkline": [
+        {
+          "period_start": "2024-04-01",
+          "value": 295.56
+        },
+        {
+          "period_start": "2024-05-01",
+          "value": 294.7
+        },
+        {
+          "period_start": "2024-06-01",
+          "value": 302.76
+        },
+        {
+          "period_start": "2024-07-01",
+          "value": 302.06
+        },
+        {
+          "period_start": "2024-08-01",
+          "value": 299.82
+        },
+        {
+          "period_start": "2024-09-01",
+          "value": 292.1775
+        },
+        {
+          "period_start": "2024-10-01",
+          "value": 290.41
+        },
+        {
+          "period_start": "2024-11-01",
+          "value": 279.41
+        },
+        {
+          "period_start": "2024-12-01",
+          "value": 283.17
+        },
+        {
+          "period_start": "2025-01-01",
+          "value": 311.74
+        },
+        {
+          "period_start": "2025-02-01",
+          "value": 308.32
+        },
+        {
+          "period_start": "2025-03-01",
+          "value": 309.02
+        },
+        {
+          "period_start": "2025-04-01",
+          "value": 317.58
+        },
+        {
+          "period_start": "2025-05-01",
+          "value": 338.83
+        },
+        {
+          "period_start": "2025-06-01",
+          "value": 367.98
+        },
+        {
+          "period_start": "2025-07-01",
+          "value": 364.8
+        },
+        {
+          "period_start": "2025-08-01",
+          "value": 365.51
+        },
+        {
+          "period_start": "2025-09-01",
+          "value": 373.59
+        },
+        {
+          "period_start": "2025-10-01",
+          "value": 351.49
+        },
+        {
+          "period_start": "2025-11-01",
+          "value": 357.04
+        },
+        {
+          "period_start": "2025-12-01",
+          "value": 347.94
+        },
+        {
+          "period_start": "2026-01-01",
+          "value": 355.87
+        },
+        {
+          "period_start": "2026-02-01",
+          "value": 364.08
+        },
+        {
+          "period_start": "2026-03-01",
+          "value": 388.84
+        }
+      ],
+      "forward": [
+        {
+          "period_start": "2026-04-01",
+          "point": 381.42916789731254,
+          "lower_80": 360.56438954232186,
+          "upper_80": 402.2939462523032
+        },
+        {
+          "period_start": "2026-05-01",
+          "point": 379.9083765540364,
+          "lower_80": 357.8835263313223,
+          "upper_80": 401.93322677675053
+        },
+        {
+          "period_start": "2026-06-01",
+          "point": 382.0514011489595,
+          "lower_80": 332.8352244782591,
+          "upper_80": 431.2675778196599
+        },
+        {
+          "period_start": "2026-07-01",
+          "point": 375.6694414166752,
+          "lower_80": 344.8873369327989,
+          "upper_80": 406.45154590055154
+        },
+        {
+          "period_start": "2026-08-01",
+          "point": 371.05030798812055,
+          "lower_80": 347.3223219032612,
+          "upper_80": 394.7782940729799
+        },
+        {
+          "period_start": "2026-09-01",
+          "point": 373.6927098595864,
+          "lower_80": 329.86550324956846,
+          "upper_80": 417.5199164696043
+        },
+        {
+          "period_start": "2026-10-01",
+          "point": 366.53611384380577,
+          "lower_80": 322.4548640991385,
+          "upper_80": 410.61736358847304
+        },
+        {
+          "period_start": "2026-11-01",
+          "point": 371.5382149285513,
+          "lower_80": 327.28089715457526,
+          "upper_80": 415.7955327025274
+        },
+        {
+          "period_start": "2026-12-01",
+          "point": 365.9376592718535,
+          "lower_80": 321.54839901222607,
+          "upper_80": 410.3269195314809
+        },
+        {
+          "period_start": "2027-01-01",
+          "point": 367.1318747656087,
+          "lower_80": 322.63664556777775,
+          "upper_80": 411.62710396343965
+        },
+        {
+          "period_start": "2027-02-01",
+          "point": 369.2419980009195,
+          "lower_80": 324.6566129143556,
+          "upper_80": 413.82738308748344
+        },
+        {
+          "period_start": "2027-03-01",
+          "point": 375.5203435411174,
+          "lower_80": 330.85469949092686,
+          "upper_80": 420.185987591308
+        }
+      ],
+      "conformal_scale_h1": 1.1435,
+      "conformal_scale_h_last": 1.8605
+    },
+    "pork_cutout_composite": {
+      "series_name": "Pork cutout composite, Central U.S.",
+      "commodity": "hogs",
+      "metric": "wholesale_price",
+      "unit": "USD/cwt",
+      "frequency": "monthly",
+      "notes": "Wholesale pork benchmark. Like the boxed beef cutout but for pork primals (loin, ham, belly, butt, picnic, rib, trim). Composite weighting reflects the typical sale mix to retailers and processors. Belly prices (bacon) drive most of the cyclical movement \u2014 pork demand is famously seasonal around grilling season.",
+      "winner_model": "Prophet",
+      "winner_metrics": {
+        "mape": 4.9819,
+        "smape": 5.0303,
+        "mase": 0.9671
+      },
+      "scoreboard": [
+        {
+          "model": "Prophet",
+          "mape": 4.9819,
+          "smape": 5.0303,
+          "mase": 0.9671
+        },
+        {
+          "model": "AutoARIMA",
+          "mape": 5.8975,
+          "smape": 5.9868,
+          "mase": 1.1802
+        },
+        {
+          "model": "LightGBM",
+          "mape": 7.5739,
+          "smape": 7.8687,
+          "mase": 1.4904
+        }
+      ],
+      "horizon": 6,
+      "n_windows": 12,
+      "latest_actual": {
+        "period_start": "2026-03-01",
+        "value": 98.63
+      },
+      "prior_month_actual": {
+        "period_start": "2026-02-01",
+        "value": 95.91
+      },
+      "prior_year_actual": {
+        "period_start": "2025-03-01",
+        "value": 96.88
+      },
+      "sparkline": [
+        {
+          "period_start": "2024-04-01",
+          "value": 99.08
+        },
+        {
+          "period_start": "2024-05-01",
+          "value": 100.25181818181818
+        },
+        {
+          "period_start": "2024-06-01",
+          "value": 98.93
+        },
+        {
+          "period_start": "2024-07-01",
+          "value": 99.98
+        },
+        {
+          "period_start": "2024-08-01",
+          "value": 98.87
+        },
+        {
+          "period_start": "2024-09-01",
+          "value": 94.88
+        },
+        {
+          "period_start": "2024-10-01",
+          "value": 97.03
+        },
+        {
+          "period_start": "2024-11-01",
+          "value": 96.72
+        },
+        {
+          "period_start": "2024-12-01",
+          "value": 93.4
+        },
+        {
+          "period_start": "2025-01-01",
+          "value": 91.07
+        },
+        {
+          "period_start": "2025-02-01",
+          "value": 97.73
+        },
+        {
+          "period_start": "2025-03-01",
+          "value": 96.88
+        },
+        {
+          "period_start": "2025-04-01",
+          "value": 94.53
+        },
+        {
+          "period_start": "2025-05-01",
+          "value": 99.38
+        },
+        {
+          "period_start": "2025-06-01",
+          "value": 115.41190476190476
+        },
+        {
+          "period_start": "2025-07-01",
+          "value": 115.03
+        },
+        {
+          "period_start": "2025-08-01",
+          "value": 115.03
+        },
+        {
+          "period_start": "2025-09-01",
+          "value": 113.19
+        },
+        {
+          "period_start": "2025-10-01",
+          "value": 103.08
+        },
+        {
+          "period_start": "2025-11-01",
+          "value": 96.02
+        },
+        {
+          "period_start": "2025-12-01",
+          "value": 96.48
+        },
+        {
+          "period_start": "2026-01-01",
+          "value": 93.63
+        },
+        {
+          "period_start": "2026-02-01",
+          "value": 95.91
+        },
+        {
+          "period_start": "2026-03-01",
+          "value": 98.63
+        }
+      ],
+      "forward": [
+        {
+          "period_start": "2026-04-01",
+          "point": 106.60675156800166,
+          "lower_80": 99.19442096752134,
+          "upper_80": 113.78863367914103
+        },
+        {
+          "period_start": "2026-05-01",
+          "point": 108.75563090486213,
+          "lower_80": 101.58715312648714,
+          "upper_80": 115.84646092896655
+        },
+        {
+          "period_start": "2026-06-01",
+          "point": 111.84719692444753,
+          "lower_80": 102.43233228726459,
+          "upper_80": 122.15312426338828
+        },
+        {
+          "period_start": "2026-07-01",
+          "point": 112.39933226311118,
+          "lower_80": 106.24714657048145,
+          "upper_80": 118.39085366908398
+        },
+        {
+          "period_start": "2026-08-01",
+          "point": 119.97684383970514,
+          "lower_80": 113.55317765394283,
+          "upper_80": 125.99036045100135
+        },
+        {
+          "period_start": "2026-09-01",
+          "point": 114.57052010950034,
+          "lower_80": 111.44463189937694,
+          "upper_80": 117.63101655942494
+        },
+        {
+          "period_start": "2026-10-01",
+          "point": 116.14698989849899,
+          "lower_80": 112.6931449066801,
+          "upper_80": 119.41932001183098
+        },
+        {
+          "period_start": "2026-11-01",
+          "point": 112.50266385319497,
+          "lower_80": 109.4398306976562,
+          "upper_80": 115.53347372038549
+        },
+        {
+          "period_start": "2026-12-01",
+          "point": 108.99189610424591,
+          "lower_80": 105.79692112760651,
+          "upper_80": 112.19102842198058
+        },
+        {
+          "period_start": "2027-01-01",
+          "point": 108.10802544893932,
+          "lower_80": 104.78000028080318,
+          "upper_80": 111.14789517152226
+        },
+        {
+          "period_start": "2027-02-01",
+          "point": 106.98948595050668,
+          "lower_80": 103.72930666245536,
+          "upper_80": 110.32408224154334
+        },
+        {
+          "period_start": "2027-03-01",
+          "point": 109.61727831092205,
+          "lower_80": 106.45416647853851,
+          "upper_80": 113.04391597357494
+        }
+      ],
+      "conformal_scale_h1": 1.05,
+      "conformal_scale_h_last": 0.4576
+    }
+  },
+  "by_series_errors": {}
+}

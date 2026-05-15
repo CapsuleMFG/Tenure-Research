@@ -1,8 +1,10 @@
-# Project data — gitignored on main. The weekly GitHub Action force-pushes
-# refreshed artifacts to the `data` branch (using `git add -f`), which is
-# what Streamlit Cloud reads. Keeping them out of main keeps PRs reviewable.
+# Project data:
+# - data/raw/ stays gitignored (downloaded XLSX/CSV source files; can
+#   always be re-fetched via sync_downloads + sync_*_futures).
+# - data/clean/ is committed to main so Streamlit Cloud has something
+#   to serve immediately. The weekly + daily Actions refresh and push
+#   to main directly. Files are tiny (parquet ~30KB, forecasts ~60KB).
 data/raw/
-data/clean/
 
 # Streamlit run logs (local-only)
 sl.log
