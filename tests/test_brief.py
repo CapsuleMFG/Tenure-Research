@@ -28,7 +28,10 @@ def test_compose_brief_renders_all_components() -> None:
     assert "Steers, choice, Nebraska" in brief
     assert "March 2026" in brief
     assert "$221" in brief
-    assert "USD/cwt" in brief
+    # Unit displays in short form ("cwt"), not the long-form catalog "USD/cwt",
+    # because the dollar sign already implies USD.
+    assert "/cwt" in brief
+    assert "/USD/cwt" not in brief
     # MoM: 221 vs 216 = +2.3% — should be "up"
     assert "up 2.3%" in brief
     # YoY: 221 vs 187 = +18.2% — should be "up"
@@ -38,6 +41,15 @@ def test_compose_brief_renders_all_components() -> None:
     assert "$220" in brief
     assert "$270" in brief
     assert "AutoARIMA" in brief
+
+
+def test_display_unit_strips_usd_prefix() -> None:
+    from components.brief import display_unit
+
+    assert display_unit("USD/cwt") == "cwt"
+    assert display_unit("USD/lb") == "lb"
+    assert display_unit("million_lbs") == "million_lbs"
+    assert display_unit("") == ""
 
 
 def test_compose_brief_handles_missing_priors() -> None:

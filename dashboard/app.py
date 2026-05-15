@@ -14,7 +14,7 @@ from pathlib import Path
 
 import polars as pl
 import streamlit as st
-from components.brief import compose_brief, render_commodity_card
+from components.brief import compose_brief, display_unit, render_commodity_card
 from components.cache import cache_generated_at, cached_forecast_cache
 from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
 from components.theme import (
@@ -45,17 +45,24 @@ LEAD_SERIES = "cattle_steer_choice_nebraska"
 
 st.markdown(
     f"<h1 style='margin-bottom:0.1rem'>{BRAND_NAME}</h1>"
-    f"<p style='color:#5A5550;font-size:1.02rem;margin-top:0;'>{BRAND_TAGLINE}</p>",
+    f"<p style='color:#5A5550;font-size:1.02rem;margin-top:0;'>{BRAND_TAGLINE}</p>"
+    "<p style='color:#5A5550;font-size:0.95rem;margin-top:0.6rem;max-width:780px;"
+    "line-height:1.5;'>"
+    "Look at today's market in the cards below. When you're ready to weigh "
+    "whether to sell a pen of cattle, head to <strong>Decide</strong> in the "
+    "sidebar — it combines today's prices with the cached forecast and your "
+    "breakeven into a transparent recommendation. Free, public, "
+    "not financial advice."
+    "</p>",
     unsafe_allow_html=True,
 )
 
 obs_path = Path(DEFAULT_OBS_PATH)
 if not obs_path.exists():
-    st.warning(
-        "**Initial data sync needed.** Open the **Admin** expander in the "
-        "sidebar and click *Refresh data*, then *Rebuild forecast cache*. "
-        "On a deployed instance the scheduled refresh handles this; on first "
-        "launch you do it once manually."
+    st.info(
+        "**Loading market data…** The dataset refresh is queued; this "
+        "page will populate as soon as the next scheduled sync completes "
+        "(typically within a few hours)."
     )
     st.stop()
 
@@ -64,9 +71,8 @@ by_series = cache.get("by_series", {})
 
 if not by_series:
     st.info(
-        "**Forecast snapshot generating.** The cleaned data is loaded but "
-        "the forecast cache hasn't been built yet. Open the **Admin** "
-        "expander in the sidebar and click *Rebuild forecast cache*."
+        "**Forecast snapshot generating…** The cleaned data is in place "
+        "and the next forecast bake is queued. Check back shortly."
     )
     st.stop()
 
@@ -118,13 +124,14 @@ def _render_futures_strip() -> None:
         pct = (last / prev - 1.0) * 100.0 if prev else 0.0
         arrow = "▲" if pct > 0.05 else ("▼" if pct < -0.05 else "▬")
         color = UP if pct > 0.05 else (DOWN if pct < -0.05 else INK_SOFT)
+        short = display_unit("USD/cwt")
         with col:
             st.markdown(
                 "<div class='lb-card'>"
                 f"<div class='lb-card-eyebrow'>{label.upper()}</div>"
                 f"<div class='lb-card-title'>Front-month, {last_date}</div>"
                 f"<div class='lb-card-price'>${last:,.2f}"
-                "<span class='lb-card-unit'>/USD/cwt</span></div>"
+                f"<span class='lb-card-unit'>/{short}</span></div>"
                 f"<div class='lb-card-deltas'>"
                 f"<span style='color:{color};font-weight:600;'>"
                 f"{arrow} {abs(pct):.2f}%</span> "
@@ -164,9 +171,10 @@ for row_idx, row in enumerate(rows):
                 continue
             render_commodity_card(entry, key_prefix=f"home_r{row_idx}c{col_idx}")
             if st.button(
-                "View detail →",
+                "Open series →",
                 key=f"home_detail_{sid}",
                 use_container_width=True,
+                type="tertiary",
             ):
                 st.session_state["series_id"] = sid
                 st.switch_page("dashboard/pages/2_Series.py")

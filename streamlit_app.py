@@ -23,11 +23,28 @@ for sub in (ROOT / "dashboard", ROOT / "src"):
     if p not in sys.path:
         sys.path.insert(0, p)
 
+FAVICON_PATH = ROOT / "dashboard" / "static" / "favicon.png"
+page_icon: str | Path = FAVICON_PATH if FAVICON_PATH.exists() else "🌾"
+
 st.set_page_config(
-    page_title="LivestockBrief",
-    page_icon="🌾",
+    page_title="LivestockBrief — daily livestock prices, forecasts, decisions",
+    page_icon=page_icon,
     layout="wide",
     initial_sidebar_state="expanded",
+)
+
+# Inject Open Graph + Twitter card meta tags so shared links get a real
+# preview instead of generic Streamlit chrome. Runs once per page load via
+# an iframe shim that mutates the parent document's <head>.
+from components.theme import inject_og_tags  # noqa: E402
+
+inject_og_tags(
+    title="LivestockBrief",
+    description=(
+        "Daily livestock prices, USDA-grounded 6-month forecasts with "
+        "honest uncertainty, and a transparent sell-now / hold decision "
+        "tool for cattle and hog producers. Free, public."
+    ),
 )
 
 # Each page is one file. Titles drive sidebar labels.

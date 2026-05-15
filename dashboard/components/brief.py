@@ -82,12 +82,27 @@ def _delta(curr: float | None, prior: float | None, *, label: str) -> _DeltaPart
 
 
 def _format_money(value: float, unit: str) -> str:
-    """Format a price; unit shown adjacent."""
+    """Format a price magnitude; unit is rendered separately by callers."""
+    _ = unit  # accepted for API symmetry; unit comes in via display_unit
     if abs(value) >= 1000:
         return f"${value:,.0f}"
     if abs(value) >= 100:
         return f"${value:,.1f}"
     return f"${value:,.2f}"
+
+
+def display_unit(unit: str) -> str:
+    """Short-form unit string suitable for appending to a dollar price.
+
+    The catalog stores ``USD/cwt``, ``USD/lb``, etc. — but in UI the
+    dollar sign already implies USD, so the display form drops the leading
+    ``USD/``. Non-USD units pass through unchanged.
+    """
+    if not unit:
+        return ""
+    if unit.startswith("USD/"):
+        return unit[len("USD/"):]
+    return unit
 
 
 def _parse_iso_date(s: str) -> _dt.date:
@@ -130,6 +145,7 @@ def compose_brief(entry: dict) -> str:
     latest_date = _parse_iso_date(latest["period_start"])
     latest_value = float(latest["value"])
     unit = entry["unit"]
+    short_unit = display_unit(unit)
 
     mom = _delta(latest_value, prior_month["value"] if prior_month else None, label="MoM")
     yoy = _delta(latest_value, prior_year["value"] if prior_year else None, label="YoY")
@@ -141,7 +157,7 @@ def compose_brief(entry: dict) -> str:
     if fc is None:
         return (
             f"<span><em>{series_name}</em> closed "
-            f"{_month_label(latest_date)} at <strong>{money}/{unit}</strong>, "
+            f"{_month_label(latest_date)} at <strong>{money}/{short_unit}</strong>, "
             f"{mom.sentence} MoM and {yoy.sentence} YoY. Forecast snapshot is "
             f"regenerating.</span>"
         )
@@ -154,9 +170,9 @@ def compose_brief(entry: dict) -> str:
 
     return (
         f"<em>{series_name}</em> closed {_month_label(latest_date)} at "
-        f"<strong>{money}/{unit}</strong>, {mom.sentence} month-over-month and "
+        f"<strong>{money}/{short_unit}</strong>, {mom.sentence} month-over-month and "
         f"{yoy.sentence} year-over-year. Our {fc['horizon_months']}-month "
-        f"{winner} forecast expects <strong>{end_money}/{unit}</strong> by "
+        f"{winner} forecast expects <strong>{end_money}/{short_unit}</strong> by "
         f"{end_label}, with 80% confidence the price lands between "
         f"{pi_lo} and {pi_hi}."
     )
@@ -224,6 +240,7 @@ def render_commodity_card(entry: dict, *, key_prefix: str = "card") -> None:
 
     latest_value = float(latest["value"])
     unit = entry["unit"]
+    short_unit = display_unit(unit)
     prior_month = entry.get("prior_month_actual")
     prior_year = entry.get("prior_year_actual")
     mom = _delta(latest_value, prior_month["value"] if prior_month else None, label="MoM")
@@ -240,14 +257,14 @@ def render_commodity_card(entry: dict, *, key_prefix: str = "card") -> None:
             "<div class='lb-card-fcst-label'>"
             f"{fc['horizon_months']}-month forecast"
             "</div>"
-            f"→ <strong>{end_money}/{unit}</strong> by {end_label}"
+            f"→ <strong>{end_money}/{short_unit}</strong> by {end_label}"
             f" <span style='color:{INK_SOFT}'>(±{_format_money(pi_half, unit)})</span>"
             "</div>"
         )
 
     price_html = (
         f"<div class='lb-card-price'>{_format_money(latest_value, unit)}"
-        f"<span class='lb-card-unit'>/{unit}</span></div>"
+        f"<span class='lb-card-unit'>/{short_unit}</span></div>"
     )
 
     st.markdown(
@@ -272,5 +289,6 @@ def render_commodity_card(entry: dict, *, key_prefix: str = "card") -> None:
 
 __all__ = [
     "compose_brief",
+    "display_unit",
     "render_commodity_card",
 ]

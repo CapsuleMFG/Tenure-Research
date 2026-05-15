@@ -13,6 +13,7 @@ from pathlib import Path
 
 import polars as pl
 import streamlit as st
+from components.brief import display_unit
 from components.cache import get_series_entry
 from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
 from components.theme import (
@@ -88,6 +89,7 @@ latest_cash_row = cash_df.tail(1).row(0, named=True)
 cash_now = float(latest_cash_row["value"])
 cash_date: date = latest_cash_row["period_start"]
 unit = latest_cash_row["unit"]
+unit_short = display_unit(unit)
 
 # Prefer daily futures for "today's futures"; fall back to monthly.
 try:
@@ -185,49 +187,95 @@ st.markdown(
 )
 
 st.markdown("### The numbers")
+st.caption(
+    f"All values per **{unit_short}**. Cash is the latest monthly ERS print; "
+    f"the futures number is today's daily front-month close. The Decide tool "
+    f"uses both because monthly cash and daily futures together cover the "
+    f"price-discovery window producers actually trade against."
+)
 m1, m2, m3, m4 = st.columns(4)
 m1.metric(
-    "Cash today",
-    f"${cash_now:,.2f}",
-    delta=f"{cash_date}",
+    "Latest cash (monthly)",
+    f"${cash_now:,.2f}/{unit_short}",
+    delta=f"as of {cash_date}",
     delta_color="off",
 )
 m2.metric(
-    "Futures",
-    f"${futures_now:,.2f}",
-    delta=f"{futures_date}",
+    "Front futures",
+    f"${futures_now:,.2f}/{unit_short}",
+    delta=f"as of {futures_date}",
     delta_color="off",
 )
 m3.metric(
-    "Basis",
-    f"${basis_now:+,.2f}",
-    delta=f"vs {basis_date}",
+    "Basis (cash − futures)",
+    f"${basis_now:+,.2f}/{unit_short}",
+    delta=f"basis date {basis_date}",
     delta_color="off",
 )
 m4.metric(
     "Breakeven",
-    f"${breakeven:,.2f}",
+    f"${breakeven:,.2f}/{unit_short}",
     delta=f"margin ${rec.margin_today:+,.2f}",
     delta_color="normal" if rec.margin_today >= 0 else "inverse",
 )
 
 st.markdown("### 6-month forecast")
+
+# Confidence signal — based on PI half-width relative to the point.
+# Wider band = lower confidence in the central case. The thresholds below
+# are conservative; for fed cattle, MAPE 5-10% is typical, so an 80% PI
+# half-width of ~12% of point ≈ "medium" confidence; wider than 25% = low.
+_pi_half = (inputs.forecast_pi_hi - inputs.forecast_pi_lo) / 2.0
+_pi_half_pct = (_pi_half / inputs.forecast_point * 100.0) if inputs.forecast_point else 0.0
+if _pi_half_pct <= 12.0:
+    conf_label = "HIGH"
+    conf_color = "#3E7D5A"
+    conf_blurb = (
+        f"PI half-width is {_pi_half_pct:.1f}% of the point forecast — "
+        f"tight band, the central case is well-supported by CV residuals."
+    )
+elif _pi_half_pct <= 25.0:
+    conf_label = "MEDIUM"
+    conf_color = ACCENT
+    conf_blurb = (
+        f"PI half-width is {_pi_half_pct:.1f}% of the point forecast — "
+        f"moderate spread; weight the recommendation against your own "
+        f"local-market read."
+    )
+else:
+    conf_label = "LOW"
+    conf_color = "#B4521E"
+    conf_blurb = (
+        f"PI half-width is {_pi_half_pct:.1f}% of the point forecast — "
+        f"wide spread. Treat the recommendation as one input among many; "
+        f"the data isn't strong enough to lean hard."
+    )
+st.markdown(
+    f"<div style='display:inline-block;padding:0.3rem 0.7rem;border-radius:14px;"
+    f"background:{conf_color};color:white;font-size:0.78rem;letter-spacing:0.08em;"
+    f"text-transform:uppercase;font-weight:600;margin-bottom:0.5rem;'>"
+    f"Confidence: {conf_label}</div>"
+    f"<div style='color:{INK_SOFT};font-size:0.9rem;margin-bottom:0.7rem;'>"
+    f"{conf_blurb}</div>",
+    unsafe_allow_html=True,
+)
+
 n1, n2, n3 = st.columns(3)
 n1.metric(
     "Point forecast",
-    f"${inputs.forecast_point:,.2f}",
+    f"${inputs.forecast_point:,.2f}/{unit_short}",
     delta=f"margin ${rec.margin_6m:+,.2f}",
     delta_color="normal" if rec.margin_6m >= 0 else "inverse",
 )
 n2.metric(
     "PI lower (80%)",
-    f"${inputs.forecast_pi_lo:,.2f}",
+    f"${inputs.forecast_pi_lo:,.2f}/{unit_short}",
     delta=f"margin ${rec.margin_6m_lo:+,.2f}",
     delta_color="normal" if rec.margin_6m_lo >= 0 else "inverse",
 )
 n3.metric(
     "PI upper (80%)",
-    f"${inputs.forecast_pi_hi:,.2f}",
+    f"${inputs.forecast_pi_hi:,.2f}/{unit_short}",
     delta=f"margin ${rec.margin_6m_hi:+,.2f}",
     delta_color="normal" if rec.margin_6m_hi >= 0 else "inverse",
 )

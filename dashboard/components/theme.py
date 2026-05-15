@@ -180,6 +180,22 @@ footer {{ visibility: hidden; }}
 
 /* Trim top padding so headlines sit closer to the top ---------------- */
 .block-container {{ padding-top: 2rem; padding-bottom: 2rem; }}
+
+/* Mobile + narrow tablet: dial back type and pack the cards tighter. */
+@media (max-width: 768px) {{
+  .block-container {{ padding-top: 1rem; padding-left: 0.5rem; padding-right: 0.5rem; }}
+  h1 {{ font-size: 1.55rem; }}
+  h2 {{ font-size: 1.25rem; }}
+  h3 {{ font-size: 1.1rem; }}
+  .lb-brief-headline {{ font-size: 1.0rem; padding: 0.85rem 1.0rem; line-height: 1.45; }}
+  .lb-card {{ padding: 0.85rem 0.95rem 0.75rem 0.95rem; border-radius: 8px; }}
+  .lb-card-title {{ font-size: 0.95rem; }}
+  .lb-card-price {{ font-size: 1.5rem; }}
+  .lb-card-eyebrow {{ font-size: 0.68rem; }}
+  .lb-card-deltas, .lb-card-fcst {{ font-size: 0.78rem; }}
+  .lb-wordmark {{ font-size: 1.2rem; }}
+  .lb-wordmark-sub {{ font-size: 0.72rem; }}
+}}
 </style>
 """
 
@@ -187,6 +203,67 @@ footer {{ visibility: hidden; }}
 def inject_global_css() -> None:
     """Inject the brand stylesheet. Safe to call repeatedly per session."""
     st.markdown(_GLOBAL_CSS, unsafe_allow_html=True)
+
+
+def inject_og_tags(
+    *,
+    title: str,
+    description: str,
+    image_url: str | None = None,
+) -> None:
+    """Inject Open Graph + Twitter meta tags into the parent ``<head>``.
+
+    Streamlit doesn't expose head injection directly; we use a 0-height
+    component-html script that, from inside the iframe, mutates
+    ``window.parent.document.head`` to add the meta tags. Most social-card
+    crawlers (Twitter / X, Slack, Facebook, LinkedIn, iMessage) read OG
+    tags from anywhere in the rendered HTML, so this works for them; the
+    parent-head mutation makes it work for stricter crawlers too.
+    """
+    import json as _json
+
+    import streamlit.components.v1 as _components
+
+    tags: list[tuple[str, str, str]] = [
+        ("property", "og:title", title),
+        ("property", "og:description", description),
+        ("property", "og:type", "website"),
+        ("property", "og:site_name", BRAND_NAME),
+        ("name", "twitter:card", "summary_large_image" if image_url else "summary"),
+        ("name", "twitter:title", title),
+        ("name", "twitter:description", description),
+        ("name", "description", description),
+    ]
+    if image_url:
+        tags.append(("property", "og:image", image_url))
+        tags.append(("name", "twitter:image", image_url))
+
+    payload = _json.dumps([list(t) for t in tags])
+    _components.html(
+        f"""
+        <script>
+        (function() {{
+          try {{
+            const head = window.parent.document.head;
+            const seen = new Set(
+              Array.from(head.querySelectorAll('meta'))
+                .map(m => (m.getAttribute('property') || m.getAttribute('name') || ''))
+            );
+            const tags = {payload};
+            tags.forEach(function(t) {{
+              const [attr, key, content] = t;
+              if (seen.has(key)) return;
+              const m = window.parent.document.createElement('meta');
+              m.setAttribute(attr, key);
+              m.setAttribute('content', content);
+              head.appendChild(m);
+            }});
+          }} catch (e) {{ /* iframe sandbox may block; tags still render in body */ }}
+        }})();
+        </script>
+        """,
+        height=0,
+    )
 
 
 __all__ = [
@@ -201,4 +278,5 @@ __all__ = [
     "PARCHMENT_DEEP",
     "UP",
     "inject_global_css",
+    "inject_og_tags",
 ]

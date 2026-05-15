@@ -103,11 +103,15 @@ def render_sidebar(
     st.sidebar.markdown("")  # vertical spacer
 
     if not obs_path.exists():
-        st.sidebar.warning(
-            "No cleaned data yet. Click **Refresh data** below to download "
-            "and clean the ERS files."
-        )
-        _render_refresh_button(obs_path)
+        if _is_admin_mode():
+            st.sidebar.warning(
+                "No cleaned data yet. Click **Refresh data** below."
+            )
+            _render_refresh_button(obs_path)
+        else:
+            st.sidebar.info(
+                "Market data is loading. Check back shortly."
+            )
         return None
 
     series_df = cached_list_series(str(obs_path))
@@ -181,12 +185,27 @@ def render_sidebar(
         f"Last refresh: `{_format_age(mtime)}`"
     )
 
-    # Refresh button stays in the sidebar; it's the admin door.
-    with st.sidebar.expander("Admin"):
-        _render_refresh_button(obs_path)
-        _render_precompute_button()
+    # The admin panel (refresh data / rebuild forecast cache) is gated on
+    # an ``?admin=1`` query parameter so public visitors never see it.
+    # Open the app with ``?admin=1`` to expose the panel; without it, the
+    # sidebar is read-only.
+    if _is_admin_mode():
+        with st.sidebar.expander("Admin", expanded=False):
+            _render_refresh_button(obs_path)
+            _render_precompute_button()
 
     return chosen
+
+
+def _is_admin_mode() -> bool:
+    """Whether ``?admin=1`` is present in the URL query string."""
+    try:
+        val = st.query_params.get("admin")
+    except Exception:
+        return False
+    if val is None:
+        return False
+    return str(val).strip().lower() in ("1", "true", "yes")
 
 
 def _render_refresh_button(obs_path: Path) -> None:
