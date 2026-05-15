@@ -1,0 +1,28 @@
+.github/workflows/refresh-daily.yml
+  s_b98f758bbec157::t_ab1847d8221d82 1,4-12
+README.md
+  s_b98f758bbec157::t_71885316d8ad19 182-203
+docs/superpowers/specs/2026-05-15-v2-actually-useful-design.md
+  s_b98f758bbec157::t_8d81dda578be0b 38-49
+  s_b98f758bbec157::t_b5755d91128109 114
+  s_b98f758bbec157::t_5e8fbb9f5ecfb9 147
+  s_b98f758bbec157::t_6789e5d3d806aa 166-168
+dashboard/pages/4_Methodology.py
+  s_b98f758bbec157::t_eded34ab41110b 60-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "180c57ca56cf356e5e18dfc1762e7b131b57bff6",
+  "prompts": {},
+  "sessions": {
+    "s_b98f758bbec157": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a24664b-43f2-4f20-b569-28736be51708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
