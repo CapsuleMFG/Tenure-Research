@@ -1,0 +1,43 @@
+dashboard/components/brief.py
+  s_b98f758bbec157::t_c477f58f936468 85-86,94-105
+  s_b98f758bbec157::t_a3950fa7461e99 243,260,267
+  s_b98f758bbec157::t_ee44225073c7a2 148,160,173,175
+  s_b98f758bbec157::t_b3bf74e73ceed9 292
+dashboard/pages/6_Decide.py
+  s_b98f758bbec157::t_26b9ef1eae79ff 223-262,266,272,278
+  s_b98f758bbec157::t_c09867c48c6338 190-195,198-200,204-206,210-212,217
+  s_b98f758bbec157::t_331ae260349feb 16
+  s_b98f758bbec157::t_343c4f465ffc90 92
+streamlit_app.py
+  s_b98f758bbec157::t_076abebd1b5a85 26-28,30-31,36-47
+dashboard/components/sidebar.py
+  s_b98f758bbec157::t_b762e489fe9923 106-114
+  s_b98f758bbec157::t_ed90d0def6f579 188-195,200-208
+tests/test_brief.py
+  s_b98f758bbec157::t_3fe351515f76ec 31-34,46-52
+dashboard/app.py
+  s_b98f758bbec157::t_fb0f6749c74a81 127,134
+  s_b98f758bbec157::t_cbba2ee0238c64 48-56
+  s_b98f758bbec157::t_37d752cf6da493 62-65,74-75
+  s_b98f758bbec157::t_43da77b0826943 17
+  s_b98f758bbec157::t_1686a183a03334 174,177
+dashboard/components/theme.py
+  s_b98f758bbec157::t_8e44dceb3531db 183-198
+  s_b98f758bbec157::t_1980e3ff460e89 208-268,281
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "696317dadacde2dd1aada63f509ef959653f7b3a",
+  "prompts": {},
+  "sessions": {
+    "s_b98f758bbec157": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a24664b-43f2-4f20-b569-28736be51708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
