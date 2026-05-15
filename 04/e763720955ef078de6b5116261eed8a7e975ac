@@ -1,0 +1,22 @@
+dashboard/components/theme.py
+  s_b98f758bbec157::t_ff2c06b808ea80 102-108,111
+dashboard/app.py
+  s_b98f758bbec157::t_a2dbf309aee37a 197-200,216-218,232-234,248-250
+  s_b98f758bbec157::t_b1025bf6c7dbc8 121-122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "04e763720955ef078de6b5116261eed8a7e975ac",
+  "prompts": {},
+  "sessions": {
+    "s_b98f758bbec157": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a24664b-43f2-4f20-b569-28736be51708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
