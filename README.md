@@ -1,21 +1,31 @@
 # LivestockBrief
 
-> **Daily livestock prices + USDA-grounded forecasts + a sell-now decision
-> tool. Plain English. Honest uncertainty.**
+> **A free public dashboard for direct-market cattle ranchers. Plan your
+> operation, track today's input costs, set your freezer-beef pricing.**
 
-LivestockBrief is a free public dashboard for cattle and hog producers.
-It combines USDA Economic Research Service monthly cash, daily CME front-
-month futures, three classical forecasting models with conformally
-calibrated 80% prediction intervals, and three v2.0 producer tools:
+LivestockBrief is built for farms that **raise, finish, and (often)
+slaughter their own cattle**, selling freezer beef directly to consumers
+as quarters, halves, wholes, or retail cuts.
 
-- **Basis** — cash-to-nearby-futures gap, current + 5-year band
-- **Breakeven** — feedlot cost-of-production calculator (KSU defaults)
-- **Decide** — a *sell now / hold / hedge* recommendation that synthesizes
-  today's cash, today's futures, your basis, your breakeven, and the
-  6-month forecast into a deterministic, auditable suggestion
+The headline tools (v3.0):
 
-Every recommendation comes with the inputs that drove it and the rule
-that fired. No LLM, no opaque score. Not financial advice.
+- **Plan** — three modes (cow-calf, stocker, finish-and-direct). Pure
+  cost-stack math; pasture-shaped, not feedlot-shaped. Per-head margin,
+  annual operation P&L, breakeven $/cwt — with the relevant market
+  signals (feeders, live cattle, corn) surfaced inline.
+- **Costs** — today's feed grains (CME corn, soybean meal, oats), feeder
+  cattle (GF futures + Oklahoma auction), and a hay reference with a
+  local-price override that flows back into Plan.
+- **Pricing** — research-derived ranges for hanging-weight pricing
+  (grain-finished / grass-finished / premium branded), share sizing
+  (quarter / half / whole), and per-cut retail. With a calculator that
+  turns your hanging weight + $/lb into share-size revenue.
+
+Underneath sit the v1.0/v2.0 forecasting layer (AutoARIMA, Prophet,
+LightGBM with conformally calibrated 80% PIs over USDA ERS cash + CME
+futures) and the v2.0 commodity tools (Decide, Feedlot Breakeven, Basis),
+kept available for users who want them. All v1.0/v2.0 series IDs and
+APIs unchanged.
 
 ## Live app
 
@@ -53,24 +63,32 @@ Actions (weekly full refresh, daily futures-only refresh).
 
 ## Pages
 
-* **Brief** *(home)* — today's front-month futures strip + auto-generated
-  market headline + commodity cards across cattle, hogs, beef wholesale,
-  pork wholesale, and lamb.
-* **Decide** *(v2.0)* — pick a commodity + region, enter your breakeven,
-  get a deterministic *sell now / hold / hedge* recommendation grounded
-  in today's prices and the 6-month forecast.
-* **Breakeven** *(v2.0)* — feedlot cost-of-production calculator; result
-  feeds the Decide tool.
-* **Catalog** — every series in the store, with row counts, date ranges,
-  and null-span data quality summary.
-* **Series** — single-series deep dive: time series, YoY change, seasonal
-  decomposition, **basis card** (cash − nearby futures), jump to forecast.
-* **Forecast** — default = the winner from the weekly bake-off, 12-month
-  forward forecast, calibrated 80% PI. Advanced expander = the live-backtest
-  UI (horizon, CV windows, model selection, residual diagnostics).
-* **Methodology** — plain-English explanation of data, models, PIs,
-  basis, breakeven, and the Decide tool's rules.
-* **About** — credits, version, last-refresh status, GitHub link, disclaimer.
+**Primary (v3.0 direct-market tools):**
+
+* **Brief** *(home)* — today's daily futures (feeder, live cattle, corn),
+  intro tagline, commodity cards reframed for direct-market context.
+* **Plan** — the central operation modeler. Three tabs:
+  *cow-calf* (breeding herd, sell weaned calves), *stocker* (buy weaned,
+  graze, sell to feedlot), *finish-and-direct* (finish + freezer beef
+  sales with commodity-floor sanity check).
+* **Costs** — daily feed grains + feeder cattle prices + hay reference
+  + cull-cow proxy via boxed-beef cutout trend.
+* **Pricing** — share-size and per-cut pricing reference with a
+  hanging-weight calculator.
+
+**Explore data (kept):**
+
+* **Catalog** — every series in the store, row counts, date ranges,
+  null-span data quality summary.
+* **Series** — single-series deep dive with basis card.
+* **Forecast** — cached winner per series + Advanced live-backtest UI.
+
+**Commodity tools (v2.0, kept for fed-cattle / feedlot users):**
+
+* **Decide (commodity)** — sell-now / hold tool for commodity producers.
+* **Feedlot breakeven** — KSU-style feedlot cost calc.
+
+**Reference:** Methodology, About.
 
 ## Architecture
 
@@ -96,16 +114,18 @@ dashboard/
 src/usda_sandbox/
   ingest.py                 ERS XLSX downloader (idempotent, manifest-keyed)
   futures_continuous.py     yfinance MONTHLY continuous front-month
-  futures_daily.py          yfinance DAILY continuous front-month (v2.0)
+  futures_daily.py          yfinance DAILY (livestock + grains, v3.0)
   catalog.py                SeriesDefinition (Pydantic)
   clean.py                  Tidy-parquet builder
-  store.py                  polars / DuckDB accessors over observations.parquet
+  store.py                  polars / DuckDB accessors
   forecast.py               AutoARIMA / Prophet / LightGBM + backtest
   calibration.py            Conformal PI calibration (per-horizon)
   precompute.py             Bake forecasts.json for the Brief / Forecast UI
   basis.py                  Cash-to-futures basis math (v2.0)
   breakeven.py              Feedlot cost-of-production calculator (v2.0)
   decision.py               Sell-now / hold rule engine (v2.0)
+  direct_market.py          Cow-calf / stocker / finish-direct economics (v3.0)
+  direct_pricing.py         Freezer-beef pricing reference + yield (v3.0)
 data/
   catalog.json              All series definitions (in repo)
   raw/                      gitignored — local downloads
@@ -203,9 +223,12 @@ needs an owner who'll maintain it.
 
 ## Version
 
-v2.0 — "actually useful" release: adds daily futures, basis, breakeven
-calculator, and the Decide tool. See `docs/superpowers/specs/2026-05-15-v2-actually-useful-design.md`
-for the v2.0 rationale; v1.0 design is alongside.
+v3.0 — "direct-market rancher" release: reorients the app around farms
+that raise, finish, and direct-sell. Adds the Plan / Costs / Pricing
+trio, plus daily grain futures (corn, SBM, oats). v2.0 commodity tools
+(Decide, Feedlot Breakeven) remain. See
+`docs/superpowers/specs/2026-05-15-v3-direct-market-design.md` for the
+v3.0 rationale; v1.0 and v2.0 design docs are alongside.
 
 ## Disclaimer
 

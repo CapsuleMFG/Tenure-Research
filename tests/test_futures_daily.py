@@ -42,7 +42,13 @@ def _fake_fetcher(symbol: str) -> pl.DataFrame:
 
 
 def test_sync_daily_futures_writes_manifest_and_parquets(tmp_path: Path) -> None:
-    manifest = sync_daily_futures(raw_dir=tmp_path, fetcher=_fake_fetcher)
+    # Restrict to just the livestock symbols (grains are v3.0 additions and
+    # _fake_fetcher only knows the livestock three).
+    manifest = sync_daily_futures(
+        symbols=("LE=F", "HE=F", "GF=F"),
+        raw_dir=tmp_path,
+        fetcher=_fake_fetcher,
+    )
     assert set(manifest.keys()) == {"LE=F", "HE=F", "GF=F"}
     for sym, entry in manifest.items():
         assert isinstance(entry, DailyManifestEntry)
@@ -64,10 +70,18 @@ def test_sync_daily_futures_writes_manifest_and_parquets(tmp_path: Path) -> None
 def test_append_daily_to_observations_emits_daily_rows(tmp_path: Path) -> None:
     raw_dir = tmp_path / "raw"
     raw_dir.mkdir()
-    sync_daily_futures(raw_dir=raw_dir, fetcher=_fake_fetcher)
+    sync_daily_futures(
+        symbols=("LE=F", "HE=F", "GF=F"),
+        raw_dir=raw_dir,
+        fetcher=_fake_fetcher,
+    )
 
     obs_path = tmp_path / "observations.parquet"
-    append_daily_to_observations(obs_path=obs_path, raw_dir=raw_dir)
+    append_daily_to_observations(
+        obs_path=obs_path,
+        raw_dir=raw_dir,
+        symbols=("LE=F", "HE=F", "GF=F"),
+    )
 
     obs = pl.read_parquet(obs_path)
     daily = obs.filter(pl.col("frequency") == "daily")
@@ -84,11 +98,21 @@ def test_append_daily_to_observations_emits_daily_rows(tmp_path: Path) -> None:
 def test_append_is_idempotent_on_rerun(tmp_path: Path) -> None:
     raw_dir = tmp_path / "raw"
     raw_dir.mkdir()
-    sync_daily_futures(raw_dir=raw_dir, fetcher=_fake_fetcher)
+    sync_daily_futures(
+        symbols=("LE=F", "HE=F", "GF=F"),
+        raw_dir=raw_dir,
+        fetcher=_fake_fetcher,
+    )
     obs_path = tmp_path / "observations.parquet"
 
-    append_daily_to_observations(obs_path=obs_path, raw_dir=raw_dir)
+    append_daily_to_observations(
+        obs_path=obs_path, raw_dir=raw_dir,
+        symbols=("LE=F", "HE=F", "GF=F"),
+    )
     first = pl.read_parquet(obs_path).height
-    append_daily_to_observations(obs_path=obs_path, raw_dir=raw_dir)
+    append_daily_to_observations(
+        obs_path=obs_path, raw_dir=raw_dir,
+        symbols=("LE=F", "HE=F", "GF=F"),
+    )
     second = pl.read_parquet(obs_path).height
     assert first == second

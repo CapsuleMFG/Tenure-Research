@@ -49,22 +49,46 @@ class DailyManifestEntry:
 _MANIFEST_FILENAME = "manifest.json"
 
 
-# Symbol -> (series_id, series_name, commodity).
-_SYMBOL_META: dict[str, tuple[str, str, str]] = {
+# Symbol -> (series_id, series_name, commodity, unit).
+# Livestock futures use USD/cwt; grain futures use US cents per bushel
+# (yfinance returns the raw cent figure, e.g. 455.25 = $4.5525/bu). We
+# preserve that and document the unit so the UI can render it correctly.
+_SYMBOL_META: dict[str, tuple[str, str, str, str]] = {
     "LE=F": (
         "cattle_lc_front_daily",
         "Live Cattle front-month futures (daily continuous)",
         "cattle",
+        "USD/cwt",
     ),
     "HE=F": (
         "hogs_he_front_daily",
         "Lean Hogs front-month futures (daily continuous)",
         "hogs",
+        "USD/cwt",
     ),
     "GF=F": (
         "cattle_feeder_front_daily",
         "Feeder Cattle front-month futures (daily continuous)",
         "cattle",
+        "USD/cwt",
+    ),
+    "ZC=F": (
+        "corn_front_daily",
+        "Corn front-month futures (daily continuous)",
+        "grain",
+        "cents/bushel",
+    ),
+    "ZM=F": (
+        "soybean_meal_front_daily",
+        "Soybean Meal front-month futures (daily continuous)",
+        "grain",
+        "USD/short_ton",
+    ),
+    "ZO=F": (
+        "oats_front_daily",
+        "Oats front-month futures (daily continuous)",
+        "grain",
+        "cents/bushel",
     ),
 }
 
@@ -133,7 +157,7 @@ def _default_fetcher_daily(symbol: str) -> pl.DataFrame:
 
 def sync_daily_futures(
     *,
-    symbols: Iterable[str] = ("LE=F", "HE=F", "GF=F"),
+    symbols: Iterable[str] = ("LE=F", "HE=F", "GF=F", "ZC=F", "ZM=F", "ZO=F"),
     raw_dir: Path = Path("data/raw/futures_daily"),
     fetcher: Callable[[str], pl.DataFrame] | None = None,
 ) -> dict[str, DailyManifestEntry]:
@@ -186,7 +210,7 @@ def append_daily_to_observations(
     *,
     obs_path: Path = Path("data/clean/observations.parquet"),
     raw_dir: Path = Path("data/raw/futures_daily"),
-    symbols: Iterable[str] = ("LE=F", "HE=F", "GF=F"),
+    symbols: Iterable[str] = ("LE=F", "HE=F", "GF=F", "ZC=F", "ZM=F", "ZO=F"),
 ) -> None:
     """Merge cached daily futures parquets into ``observations.parquet``.
 
@@ -209,7 +233,7 @@ def append_daily_to_observations(
         file_path = raw_dir / f"{_safe_filename(symbol)}.parquet"
         if not file_path.exists():
             continue
-        series_id, series_name, commodity = _SYMBOL_META[symbol]
+        series_id, series_name, commodity, unit = _SYMBOL_META[symbol]
         cached = pl.read_parquet(file_path)
         if cached.is_empty():
             continue
@@ -218,7 +242,7 @@ def append_daily_to_observations(
             series_name=pl.lit(series_name),
             commodity=pl.lit(commodity),
             metric=pl.lit("futures_price"),
-            unit=pl.lit("USD/cwt"),
+            unit=pl.lit(unit),
             frequency=pl.lit("daily"),
             period_start=pl.col("period_start"),
             period_end=pl.col("period_start"),

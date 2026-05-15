@@ -130,30 +130,56 @@ if hi is not None:
         f"months** ahead."
     )
 
-st.markdown("## The v2.0 producer tools")
+st.markdown("## The v3.0 direct-market tools")
 st.markdown(
     """
-Three new layers turn the dashboard from "look at the data" to "use the
-data to make a decision":
+v3.0 reorients the app around **direct-market cattle ranchers** — farms
+that raise, finish, and sell freezer beef directly to consumers. The
+v2.0 commodity tools (Decide / Feedlot breakeven) remain available
+under "Commodity tools (v2.0)" in the sidebar, but the headline tools
+are now:
 
-**Basis.** The Series page shows the latest cash-to-nearby-futures basis,
-the 5-year mean, and a p10–p90 range so you can see whether the current
-basis is tight, fat, or in-line. Basis is the gap between what a hedge
-locks in and what your local cash will actually return.
+**Plan** — three tabs for three operation modes:
 
-**Breakeven calculator.** A KSU/ISU-style feedlot cost calc: feeder cost,
-weight, days on feed, cost of gain, yardage, interest, and death loss
-produce a single breakeven $/cwt. Tune any input; the page reflects the
-sensitivity inline. Your breakeven is auto-passed to the Decide tool.
+- *Cow-calf* — maintain a breeding herd, sell weaned calves into the
+  feeder market. Pasture acres × cost/acre, hay tons/cow, vet/breeding,
+  fence/labor amortized per cow; revenue is calf weight × $/cwt at
+  weaning. Output: per-calf cost, per-calf margin, annual operation P&L,
+  breakeven weaned-price-per-cwt.
+- *Stocker* — buy weaned calves, graze, sell to a feedlot. Margin lives
+  in the gap between buy and sell prices net of grass + supplement +
+  interest + death loss.
+- *Finish and direct (freezer beef)* — raise or buy feeders, finish on
+  the farm, sell direct as freezer beef. Cost stack: feeder + pasture +
+  hay + grain + vet + abattoir + cut-and-wrap. Output: cost per pound
+  hanging, margin per head, and a *commodity floor sanity check* (what
+  the same animal would have sold for at LE futures prices, so you can
+  see your direct premium explicitly).
 
-**Decide tool.** Combines today's cash, today's futures, your basis, your
-breakeven, and the 6-month forecast (point + 80% PI) into a recommendation:
-*sell now*, *sell now (downside risk)*, *hold*, *hedge or hold*, or *wait*.
-Each recommendation cites the actual numbers; the rules are deterministic
-(see the page's "How this recommendation is computed" expander).
+**Costs** — daily snapshot of feed grains (CME corn / soybean meal /
+oats), feeder cattle (GF futures + ERS Oklahoma auctions), and a hay
+reference band with a "enter your local $/ton" input that flows back
+into the Plan page.
 
-Together these answer the question producers actually care about — "should
-I sell this pen at today's market?" — using public data and transparent math.
+**Pricing** — research-derived ranges for hanging-weight pricing
+(grain-finished vs grass-finished vs premium branded), share sizing
+(quarter / half / whole), and individual retail cuts (ground beef,
+steaks, roasts, specialty). Plus a calculator that converts your
+hanging weight + $/lb into share-size revenue.
+
+### v2.0 commodity tools (still available)
+
+**Basis.** The Series page shows the latest cash-to-nearby-futures
+basis, the 5-year mean, and a p10–p90 band. Useful if you hedge.
+
+**Decide (commodity).** The v2.0 sell-now/hold tool for fed-cattle
+operators selling into commodity markets. Combines cash + futures +
+breakeven + 6-month forecast into a deterministic recommendation.
+
+**Feedlot breakeven.** The v2.0 closed-form feedlot cost-of-production
+calculator (yardage + cost of gain + interest + death loss). Different
+math from the Plan page's pasture-shaped cost stack — use this one if
+your operation actually looks like a feedlot.
 """
 )
 

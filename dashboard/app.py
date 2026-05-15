@@ -32,27 +32,40 @@ inject_global_css()
 
 render_sidebar(persistent_picker=False)
 
-# Headline series featured on the home page, in display order.
-HEADLINE_SERIES: list[tuple[str, str]] = [
-    ("cattle_steer_choice_nebraska", "Fed Cattle"),
-    ("cattle_feeder_steer_750_800", "Feeder Cattle"),
-    ("hog_barrow_gilt_natbase_51_52", "Hogs"),
-    ("boxed_beef_cutout_choice", "Beef Wholesale"),
-    ("pork_cutout_composite", "Pork Wholesale"),
-    ("lamb_slaughter_choice_san_angelo", "Lamb"),
+# Daily front-month strip on home, reframed for direct-market: feeder
+# (replacement cost), live cattle (commodity floor), corn (supplement feed).
+DAILY_FUT_SERIES: list[tuple[str, str]] = [
+    ("cattle_feeder_front_daily", "Feeder Cattle (GF) — buy side"),
+    ("cattle_lc_front_daily", "Live Cattle (LE) — commodity floor"),
+    ("corn_front_daily", "Corn (ZC) — finishing feed"),
 ]
-LEAD_SERIES = "cattle_steer_choice_nebraska"
+
+# Headline series featured on the home page, in display order. For the
+# v3.0 direct-market audience, lead with feeder + buying-relevant series;
+# keep boxed beef as a downstream/demand signal but de-emphasize the
+# 5-area fed steer (which was the v2.0 commodity lead).
+HEADLINE_SERIES: list[tuple[str, str]] = [
+    ("cattle_feeder_steer_500_550", "Light Feeders (Buy)"),
+    ("cattle_feeder_steer_750_800", "Placement Feeders (Sell)"),
+    ("cattle_steer_choice_nebraska", "Fed Cattle (Floor)"),
+    ("boxed_beef_cutout_choice", "Beef Wholesale (Demand)"),
+    ("hog_barrow_gilt_natbase_51_52", "Hogs"),
+    ("pork_cutout_composite", "Pork Wholesale"),
+]
+LEAD_SERIES = "cattle_feeder_steer_750_800"
 
 st.markdown(
     f"<h1 style='margin-bottom:0.1rem'>{BRAND_NAME}</h1>"
     f"<p style='color:#5A5550;font-size:1.02rem;margin-top:0;'>{BRAND_TAGLINE}</p>"
     "<p style='color:#5A5550;font-size:0.95rem;margin-top:0.6rem;max-width:780px;"
     "line-height:1.5;'>"
-    "Look at today's market in the cards below. When you're ready to weigh "
-    "whether to sell a pen of cattle, head to <strong>Decide</strong> in the "
-    "sidebar — it combines today's prices with the cached forecast and your "
-    "breakeven into a transparent recommendation. Free, public, "
-    "not financial advice."
+    "Built for direct-market cattle and hog producers — farms that raise, "
+    "finish, and sell freezer beef direct to consumers. Head to "
+    "<strong>Plan</strong> in the sidebar to model your cow-calf, stocker, "
+    "or finish-and-direct operation. <strong>Costs</strong> tracks today's "
+    "feed and feeder prices. <strong>Pricing</strong> is your reference "
+    "for setting share / hanging-weight prices. Free, public, not "
+    "financial advice."
     "</p>",
     unsafe_allow_html=True,
 )
@@ -89,12 +102,6 @@ if lead is not None:
 
 # ---- Today's futures (daily refresh) --------------------------------------
 
-DAILY_FUT_SERIES: list[tuple[str, str]] = [
-    ("cattle_lc_front_daily", "Live Cattle (LE)"),
-    ("cattle_feeder_front_daily", "Feeder Cattle (GF)"),
-    ("hogs_he_front_daily", "Lean Hogs (HE)"),
-]
-
 
 def _render_futures_strip() -> None:
     """One-line strip of today's three front-month futures with day-over-day %."""
@@ -124,14 +131,22 @@ def _render_futures_strip() -> None:
         pct = (last / prev - 1.0) * 100.0 if prev else 0.0
         arrow = "▲" if pct > 0.05 else ("▼" if pct < -0.05 else "▬")
         color = UP if pct > 0.05 else (DOWN if pct < -0.05 else INK_SOFT)
-        short = display_unit("USD/cwt")
+        # Corn is reported in cents/bushel; convert to $/bu for display
+        if sid == "corn_front_daily":
+            display_value = (
+                f"${last/100:.2f}<span class='lb-card-unit'>/bu</span>"
+            )
+        else:
+            short = display_unit("USD/cwt")
+            display_value = (
+                f"${last:,.2f}<span class='lb-card-unit'>/{short}</span>"
+            )
         with col:
             st.markdown(
                 "<div class='lb-card'>"
                 f"<div class='lb-card-eyebrow'>{label.upper()}</div>"
                 f"<div class='lb-card-title'>Front-month, {last_date}</div>"
-                f"<div class='lb-card-price'>${last:,.2f}"
-                f"<span class='lb-card-unit'>/{short}</span></div>"
+                f"<div class='lb-card-price'>{display_value}</div>"
                 f"<div class='lb-card-deltas'>"
                 f"<span style='color:{color};font-weight:600;'>"
                 f"{arrow} {abs(pct):.2f}%</span> "

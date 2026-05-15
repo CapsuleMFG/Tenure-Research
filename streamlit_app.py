@@ -69,14 +69,31 @@ forecast = st.Page(
     title="Forecast",
     icon=":material/insights:",
 )
+# v3.0 direct-market tools (primary)
+plan = st.Page(
+    "dashboard/pages/6_Plan.py",
+    title="Plan",
+    icon=":material/route:",
+)
+costs = st.Page(
+    "dashboard/pages/7_Costs.py",
+    title="Costs",
+    icon=":material/payments:",
+)
+pricing = st.Page(
+    "dashboard/pages/8_Pricing.py",
+    title="Pricing",
+    icon=":material/sell:",
+)
+# v2.0 commodity tools (kept for users who want them)
 decide = st.Page(
     "dashboard/pages/6_Decide.py",
-    title="Decide",
+    title="Decide (commodity)",
     icon=":material/balance:",
 )
 breakeven = st.Page(
     "dashboard/pages/7_Breakeven.py",
-    title="Breakeven",
+    title="Feedlot breakeven",
     icon=":material/calculate:",
 )
 methodology = st.Page(
@@ -93,8 +110,9 @@ about = st.Page(
 navigation = st.navigation(
     {
         "": [brief],
-        "Tools": [decide, breakeven],
-        "Explore": [catalog, series, forecast],
+        "Plan your operation": [plan, costs, pricing],
+        "Explore data": [catalog, series, forecast],
+        "Commodity tools (v2.0)": [decide, breakeven],
         "Reference": [methodology, about],
     }
 )

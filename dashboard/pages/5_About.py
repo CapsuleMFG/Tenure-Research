@@ -24,15 +24,26 @@ st.markdown(
 st.markdown("## What this is")
 st.markdown(
     """
-LivestockBrief is a small public dashboard that takes USDA livestock and
-meat data, runs three classical forecasting models against every series,
-and surfaces today's prices, basis, breakeven economics, and a transparent
-sell-now-or-hold recommendation.
+LivestockBrief is a free public dashboard built for **direct-market
+cattle ranchers** — farms that raise, finish, and (often) slaughter
+their own cattle, selling freezer beef directly to consumers as
+quarters, halves, wholes, or retail cuts.
 
-v1.0 shipped the data + forecasting layer. **v2.0 added the producer
-tools** that make those forecasts actionable: daily front-month futures,
-basis-to-local-market, a feedlot breakeven calculator, and the Decide
-tool that synthesizes everything into a reasoning-aid recommendation.
+The headline tools (v3.0):
+
+- **Plan** — model your cow-calf, stocker, or finish-and-direct
+  operation. Pure cost-stack math; transparent line items; outputs
+  per-head margins and annual operation P&L.
+- **Costs** — today's feed grain (corn, soybean meal, oats), feeder
+  cattle, and a hay reference, so you know what's moving on the input side.
+- **Pricing** — research-derived ranges for share / hanging-weight /
+  retail-cut pricing, with a calculator that converts your hanging
+  weight + $/lb into share-size revenue.
+
+Underneath the tools sits a USDA-grounded forecasting layer (AutoARIMA,
+Prophet, LightGBM with calibrated 80% PIs) and daily front-month CME
+futures via yfinance — the same data used for the macro-context cards
+on the home page and the commodity-decide tool kept from v2.0.
 
 It's free, it's read-only, and the source is on GitHub.
 """
