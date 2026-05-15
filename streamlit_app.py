@@ -1,4 +1,4 @@
-"""LivestockBrief — Streamlit Cloud entrypoint.
+"""Tenure Brief — Streamlit Cloud entrypoint.
 
 Uses ``st.navigation`` (Streamlit 1.36+) to explicitly register all pages
 so they work whether the app runs from the repo root (Streamlit Cloud
@@ -27,7 +27,7 @@ FAVICON_PATH = ROOT / "dashboard" / "static" / "favicon.png"
 page_icon: str | Path = FAVICON_PATH if FAVICON_PATH.exists() else "🌾"
 
 st.set_page_config(
-    page_title="LivestockBrief — daily livestock prices, forecasts, decisions",
+    page_title="Tenure Brief — economics + market data for direct-market ranchers",
     page_icon=page_icon,
     layout="wide",
     initial_sidebar_state="expanded",
@@ -39,11 +39,11 @@ st.set_page_config(
 from components.theme import inject_og_tags  # noqa: E402
 
 inject_og_tags(
-    title="LivestockBrief",
+    title="Tenure Brief",
     description=(
-        "Daily livestock prices, USDA-grounded 6-month forecasts with "
-        "honest uncertainty, and a transparent sell-now / hold decision "
-        "tool for cattle and hog producers. Free, public."
+        "Honest cost economics, daily market data, and freezer-beef "
+        "pricing reference for direct-market cattle ranchers. Free, "
+        "public, by Tenure."
     ),
 )
 

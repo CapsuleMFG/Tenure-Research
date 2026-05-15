@@ -1,9 +1,9 @@
-# LivestockBrief
+# Tenure Brief
 
 > **A free public dashboard for direct-market cattle ranchers. Plan your
 > operation, track today's input costs, set your freezer-beef pricing.**
 
-LivestockBrief is built for farms that **raise, finish, and (often)
+Tenure Brief is built for farms that **raise, finish, and (often)
 slaughter their own cattle**, selling freezer beef directly to consumers
 as quarters, halves, wholes, or retail cuts.
 
@@ -109,7 +109,7 @@ dashboard/
     1_Explore.py            Catalog & coverage
     2_Series.py             Single-series deep dive
     3_Forecast.py           Simplified default + Advanced backtest
-    4_Methodology.py        How LivestockBrief works
+    4_Methodology.py        How Tenure Brief works
     5_About.py              Credits + version + disclaimer
 src/usda_sandbox/
   ingest.py                 ERS XLSX downloader (idempotent, manifest-keyed)
@@ -232,7 +232,7 @@ v3.0 rationale; v1.0 and v2.0 design docs are alongside.
 
 ## Disclaimer
 
-LivestockBrief is **educational and informational only**. The Decide tool
+Tenure Brief is **educational and informational only**. The Decide tool
 is a reasoning aid: a transparent, deterministic synthesis of public
 prices, your inputs, and a calibrated forecast. It does not account for
 your working capital, pen space, hedge position, tax situation, or local

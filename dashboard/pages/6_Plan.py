@@ -84,12 +84,56 @@ st.markdown("# Plan your operation")
 st.markdown(
     f"<p style='color:{INK_SOFT};font-size:1.0rem;line-height:1.5;"
     f"max-width:780px;'>"
-    "Three tabs for three operation modes. Pick yours, pick your "
-    "<strong>region</strong> (pre-fills typical costs), then adjust "
-    "every input to match your real operation. The big margin card at "
-    "the bottom of each tab is the answer — everything above it is the "
-    "math that produced it."
+    "Pick a mode, pick a region, adjust the inputs, read the answer. "
+    "Every cost line is shown; the math is in "
+    "<a href='/Methodology' target='_self'>Methodology</a>."
     "</p>",
+    unsafe_allow_html=True,
+)
+
+# --- Step markers ----------------------------------------------------------
+
+st.markdown(
+    f"""
+    <div style='display:flex;flex-wrap:wrap;gap:0.6rem;margin:0.5rem 0 1.2rem 0;'>
+      <div style='flex:1 1 160px;padding:0.6rem 0.9rem;border-radius:8px;
+                  background:{PARCHMENT_DEEP};
+                  border-left:3px solid {ACCENT};font-size:0.85rem;'>
+        <strong style='color:{ACCENT};letter-spacing:0.08em;
+                       font-size:0.72rem;text-transform:uppercase;'>
+          Step 1
+        </strong><br>
+        <span style='font-size:0.9rem;'>Pick your mode (tab below)</span>
+      </div>
+      <div style='flex:1 1 160px;padding:0.6rem 0.9rem;border-radius:8px;
+                  background:{PARCHMENT_DEEP};
+                  border-left:3px solid {ACCENT};font-size:0.85rem;'>
+        <strong style='color:{ACCENT};letter-spacing:0.08em;
+                       font-size:0.72rem;text-transform:uppercase;'>
+          Step 2
+        </strong><br>
+        <span style='font-size:0.9rem;'>Pick your region (pre-fills costs)</span>
+      </div>
+      <div style='flex:1 1 160px;padding:0.6rem 0.9rem;border-radius:8px;
+                  background:{PARCHMENT_DEEP};
+                  border-left:3px solid {ACCENT};font-size:0.85rem;'>
+        <strong style='color:{ACCENT};letter-spacing:0.08em;
+                       font-size:0.72rem;text-transform:uppercase;'>
+          Step 3
+        </strong><br>
+        <span style='font-size:0.9rem;'>Adjust inputs to your reality</span>
+      </div>
+      <div style='flex:1 1 160px;padding:0.6rem 0.9rem;border-radius:8px;
+                  background:{PARCHMENT_DEEP};
+                  border-left:3px solid {ACCENT};font-size:0.85rem;'>
+        <strong style='color:{ACCENT};letter-spacing:0.08em;
+                       font-size:0.72rem;text-transform:uppercase;'>
+          Step 4
+        </strong><br>
+        <span style='font-size:0.9rem;'>Read the big margin card</span>
+      </div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 

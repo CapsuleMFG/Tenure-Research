@@ -24,7 +24,7 @@ st.markdown(
 st.markdown("## What this is")
 st.markdown(
     """
-LivestockBrief is a free public dashboard built for **direct-market
+Tenure Brief is a free public dashboard built for **direct-market
 cattle ranchers** — farms that raise, finish, and (often) slaughter
 their own cattle, selling freezer beef directly to consumers as
 quarters, halves, wholes, or retail cuts.
@@ -86,7 +86,7 @@ st.markdown(
 st.markdown("## Disclaimer")
 st.markdown(
     """
-LivestockBrief is **educational and informational only**. The forecasts
+Tenure Brief is **educational and informational only**. The forecasts
 shown here are model outputs from classical statistical methods applied to
 public USDA data, with calibrated prediction intervals. They are not
 investment, trading, hedging, or financial advice of any kind. The authors

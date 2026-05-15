@@ -10,7 +10,7 @@ from components.theme import INK_SOFT, inject_global_css
 inject_global_css()
 render_sidebar(persistent_picker=False)
 
-st.markdown("# How LivestockBrief works")
+st.markdown("# How Tenure Brief works")
 st.markdown(
     f"<p style='color:{INK_SOFT};font-size:1.0rem;'>"
     "Plain-English explanation of where the data comes from, what the models "

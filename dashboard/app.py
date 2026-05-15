@@ -1,4 +1,4 @@
-"""LivestockBrief — Streamlit entrypoint and landing page (the Brief).
+"""Tenure Brief — Streamlit entrypoint and landing page (the Brief).
 
 Launch with::
 
@@ -14,17 +14,24 @@ from pathlib import Path
 
 import polars as pl
 import streamlit as st
-from components.brief import compose_brief, display_unit, render_commodity_card
+from components.brief import display_unit, render_commodity_card
 from components.cache import cache_generated_at, cached_forecast_cache
 from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
 from components.theme import (
+    ACCENT,
     BRAND_NAME,
+    BRAND_TAGLINE,
     DOWN,
     INK_SOFT,
+    PARCHMENT_DEEP,
     UP,
     inject_global_css,
 )
 
+from usda_sandbox.direct_market import (
+    compute_cow_calf_economics,
+    cow_calf_inputs_for_region,
+)
 from usda_sandbox.store import read_series
 
 inject_global_css()
@@ -51,95 +58,229 @@ HEADLINE_SERIES: list[tuple[str, str]] = [
     ("hog_barrow_gilt_natbase_51_52", "Hogs"),
     ("pork_cutout_composite", "Pork Wholesale"),
 ]
-LEAD_SERIES = "cattle_feeder_steer_750_800"
+
+# ---- Hero -----------------------------------------------------------------
 
 st.markdown(
-    f"<h1 style='margin-bottom:0.1rem'>{BRAND_NAME}</h1>"
-    f"<p style='color:#5A5550;font-size:1.05rem;margin-top:0.2rem;"
-    f"max-width:780px;line-height:1.45;'>"
-    "<strong>For direct-market cattle ranchers</strong> — farms that "
-    "raise, finish, and (often) slaughter their own cattle, selling "
-    "freezer beef directly to consumers. Free. Public. No login."
-    "</p>",
+    f"""
+    <div style='padding:2.2rem 0 0.6rem 0;'>
+      <div style='font-size:0.78rem;letter-spacing:0.12em;
+                  text-transform:uppercase;color:{ACCENT};font-weight:600;'>
+        A Tenure product
+      </div>
+      <h1 style='margin-top:0.3rem;margin-bottom:0.4rem;
+                 font-size:2.6rem;line-height:1.1;letter-spacing:-0.02em;'>
+        {BRAND_NAME}
+      </h1>
+      <p style='color:{INK_SOFT};font-size:1.15rem;max-width:720px;
+                line-height:1.45;margin-top:0.4rem;margin-bottom:0;'>
+        {BRAND_TAGLINE}<br>
+        <span style='color:#1F1F1F;'>Plan your operation. Track your inputs.
+        Set your freezer-beef pricing — with the math shown and the sources
+        cited.</span>
+      </p>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
-# --- Quick-start onboarding panel -----------------------------------------
+# ---- "See it in action" sample-scenario hook -----------------------------
+# A single live computation: what a default Southeast cow-calf operation
+# looks like. Renders the result card from direct_market so a first-time
+# visitor sees the Plan tool's output before they have to enter anything.
 
-with st.container(border=True):
-    st.markdown("#### What you'll get in 5 minutes")
-    a, b, c = st.columns(3)
-    with a:
-        st.markdown(
-            "<div style='font-size:0.92rem;line-height:1.5;'>"
-            "<div style='font-size:1.5rem;'>📋</div>"
-            "<strong>Your operation, modeled</strong><br>"
-            f"<span style='color:{INK_SOFT}'>Pick cow-calf, stocker, or "
-            "finish-and-direct. Pick your region (pre-fills typical "
-            "costs). Plug in your numbers. Get per-head margin and "
-            "annual P&L.</span></div>",
-            unsafe_allow_html=True,
-        )
-    with b:
-        st.markdown(
-            "<div style='font-size:0.92rem;line-height:1.5;'>"
-            "<div style='font-size:1.5rem;'>📈</div>"
-            "<strong>Today's input costs</strong><br>"
-            f"<span style='color:{INK_SOFT}'>Daily corn, soybean meal, "
-            "and feeder cattle prices — the inputs that drive your "
-            "real costs. From CME futures and USDA ERS.</span></div>",
-            unsafe_allow_html=True,
-        )
-    with c:
-        st.markdown(
-            "<div style='font-size:0.92rem;line-height:1.5;'>"
-            "<div style='font-size:1.5rem;'>🥩</div>"
-            "<strong>Freezer-beef pricing</strong><br>"
-            f"<span style='color:{INK_SOFT}'>Research-derived $/lb "
-            "hanging ranges for grain-finished, grass-finished, and "
-            "premium-branded beef. Plus a share-size calculator.</span>"
-            "</div>",
-            unsafe_allow_html=True,
-        )
+SAMPLE_REGION = "Southeast (TN/GA/KY/AR/FL)"
+try:
+    sample_inputs = cow_calf_inputs_for_region(SAMPLE_REGION)
+    sample_econ = compute_cow_calf_economics(sample_inputs)
+    sample_margin = sample_econ.margin_per_calf
+    sample_total = sample_econ.total_margin
+    sample_n = sample_econ.n_calves_weaned
+    sample_be = sample_econ.breakeven_weaned_price_per_cwt
+    sample_cost = sample_econ.annual_cost_per_cow
+except Exception:
+    sample_econ = None
 
-    st.markdown("")
-    st.markdown("**How to use it**")
+if sample_econ is not None:
+    margin_color = "#3E7D5A" if sample_margin >= 0 else ACCENT
     st.markdown(
-        "<ol style='color:#1F1F1F;font-size:0.92rem;line-height:1.55;"
-        "margin-top:0.2rem;padding-left:1.2rem;'>"
-        "<li>Go to <strong>Plan</strong> (sidebar). Pick the tab that "
-        "matches your operation: cow-calf, stocker, or finish-and-direct.</li>"
-        "<li>Pick your <strong>region</strong> from the dropdown. The cost "
-        "stack pre-fills with typical numbers for your geography.</li>"
-        "<li>Adjust any input to match your reality. The math updates live; "
-        "every cost line is shown so nothing is hidden.</li>"
-        "<li>Click <strong>🔗 Copy shareable link</strong> at the bottom "
-        "to save your inputs in the URL. Or use <strong>📋 Save / load "
-        "scenarios</strong> at the top to keep multiple named versions "
-        "in your browser.</li>"
-        "</ol>",
+        f"""
+        <div style='border:1px solid rgba(180,82,30,0.25);border-radius:14px;
+                    padding:1.4rem 1.6rem;margin:1.4rem 0 1rem 0;
+                    background:linear-gradient(180deg, #FFFBF5 0%, {PARCHMENT_DEEP} 100%);'>
+          <div style='font-size:0.78rem;letter-spacing:0.1em;
+                      text-transform:uppercase;color:{INK_SOFT};
+                      font-weight:600;margin-bottom:0.5rem;'>
+            See it in action — sample run
+          </div>
+          <div style='font-size:1.0rem;color:#1F1F1F;margin-bottom:0.9rem;
+                      line-height:1.5;max-width:720px;'>
+            A typical <strong>Southeast cow-calf operation</strong> (60 cows,
+            year-round fescue/bermuda pasture, ~1 ton hay/cow). Numbers below
+            come straight from the <strong>Plan</strong> tool with the
+            <em>Southeast</em> regional preset. <em>Click "Try it with your
+            numbers" to put your real operation through the same math.</em>
+          </div>
+          <div style='display:flex;flex-wrap:wrap;gap:1.6rem;
+                      margin-top:0.4rem;'>
+            <div>
+              <div style='font-size:0.72rem;color:{INK_SOFT};
+                          text-transform:uppercase;letter-spacing:0.08em;'>
+                Annual cost per cow
+              </div>
+              <div style='font-size:1.6rem;font-weight:600;
+                          font-family:Iowan Old Style,Source Serif Pro,Georgia,serif;'>
+                ${sample_cost:,.0f}
+              </div>
+            </div>
+            <div>
+              <div style='font-size:0.72rem;color:{INK_SOFT};
+                          text-transform:uppercase;letter-spacing:0.08em;'>
+                Margin per calf
+              </div>
+              <div style='font-size:1.6rem;font-weight:600;color:{margin_color};
+                          font-family:Iowan Old Style,Source Serif Pro,Georgia,serif;'>
+                ${sample_margin:+,.0f}
+              </div>
+            </div>
+            <div>
+              <div style='font-size:0.72rem;color:{INK_SOFT};
+                          text-transform:uppercase;letter-spacing:0.08em;'>
+                Annual operation P&amp;L
+              </div>
+              <div style='font-size:1.6rem;font-weight:600;color:{margin_color};
+                          font-family:Iowan Old Style,Source Serif Pro,Georgia,serif;'>
+                ${sample_total:+,.0f}
+              </div>
+            </div>
+            <div>
+              <div style='font-size:0.72rem;color:{INK_SOFT};
+                          text-transform:uppercase;letter-spacing:0.08em;'>
+                Breakeven weaned price
+              </div>
+              <div style='font-size:1.6rem;font-weight:600;
+                          font-family:Iowan Old Style,Source Serif Pro,Georgia,serif;'>
+                ${sample_be:.0f}/cwt
+              </div>
+            </div>
+          </div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
-    cta_a, cta_b, cta_c = st.columns([1, 1, 1])
-    with cta_a:
-        if st.button(
-            "📋 Start with Plan", type="primary", use_container_width=True,
-            key="cta_plan",
-        ):
-            st.switch_page("dashboard/pages/6_Plan.py")
-    with cta_b:
-        if st.button(
-            "📈 See today's costs", use_container_width=True,
-            key="cta_costs",
-        ):
-            st.switch_page("dashboard/pages/7_Costs.py")
-    with cta_c:
-        if st.button(
-            "🥩 Pricing reference", use_container_width=True,
-            key="cta_pricing",
-        ):
-            st.switch_page("dashboard/pages/8_Pricing.py")
+# Primary CTA — single, clear, accent-colored.
+cta_main_a, cta_main_b, cta_main_c = st.columns([2, 2, 2])
+with cta_main_a:
+    if st.button(
+        "📋 Try it with your numbers →",
+        type="primary", use_container_width=True, key="cta_plan_main",
+    ):
+        st.switch_page("dashboard/pages/6_Plan.py")
+with cta_main_b:
+    if st.button(
+        "📈 See today's input costs",
+        use_container_width=True, key="cta_costs_main",
+    ):
+        st.switch_page("dashboard/pages/7_Costs.py")
+with cta_main_c:
+    if st.button(
+        "🥩 Pricing reference",
+        use_container_width=True, key="cta_pricing_main",
+    ):
+        st.switch_page("dashboard/pages/8_Pricing.py")
+
+# ---- What you'll get + how to use ----------------------------------------
+
+st.markdown("&nbsp;", unsafe_allow_html=True)
+st.markdown("### What you'll get")
+
+a, b, c = st.columns(3)
+with a:
+    st.markdown(
+        "<div class='lb-card' style='height:100%;'>"
+        "<div style='font-size:1.8rem;margin-bottom:0.3rem;'>📋</div>"
+        "<div class='lb-card-title'>Your operation, modeled</div>"
+        f"<div style='color:{INK_SOFT};font-size:0.9rem;line-height:1.5;"
+        f"margin-top:0.4rem;'>"
+        "Three modes — cow-calf, stocker, finish-and-direct. Six regional "
+        "cost presets. Per-head margin and annual P&L with every cost "
+        "line shown."
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
+with b:
+    st.markdown(
+        "<div class='lb-card' style='height:100%;'>"
+        "<div style='font-size:1.8rem;margin-bottom:0.3rem;'>📈</div>"
+        "<div class='lb-card-title'>Today's input costs</div>"
+        f"<div style='color:{INK_SOFT};font-size:0.9rem;line-height:1.5;"
+        f"margin-top:0.4rem;'>"
+        "Daily corn, soybean meal, and feeder cattle prices from CME via "
+        "yfinance + USDA ERS monthly cash. Take any number straight back "
+        "to Plan."
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
+with c:
+    st.markdown(
+        "<div class='lb-card' style='height:100%;'>"
+        "<div style='font-size:1.8rem;margin-bottom:0.3rem;'>🥩</div>"
+        "<div class='lb-card-title'>Freezer-beef pricing</div>"
+        f"<div style='color:{INK_SOFT};font-size:0.9rem;line-height:1.5;"
+        f"margin-top:0.4rem;'>"
+        "Hanging-weight ranges by finishing style, share-size calculator, "
+        "and per-cut retail benchmarks. Anchored to USDA AMS + extension "
+        "data + a real producer survey."
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
+
+st.markdown("&nbsp;", unsafe_allow_html=True)
+st.markdown("### How to use it")
+st.markdown(
+    f"""
+    <div style='display:flex;flex-wrap:wrap;gap:1rem;margin-top:0.4rem;'>
+      <div style='flex:1 1 220px;padding:0.85rem 1.1rem;border-radius:10px;
+                  background:{PARCHMENT_DEEP};border-left:3px solid {ACCENT};'>
+        <div style='font-size:0.72rem;color:{ACCENT};font-weight:700;
+                    letter-spacing:0.1em;'>STEP 1</div>
+        <div style='font-size:0.95rem;line-height:1.45;margin-top:0.25rem;'>
+          Open <strong>Plan</strong>. Pick the tab matching your operation —
+          cow-calf, stocker, or finish-and-direct.
+        </div>
+      </div>
+      <div style='flex:1 1 220px;padding:0.85rem 1.1rem;border-radius:10px;
+                  background:{PARCHMENT_DEEP};border-left:3px solid {ACCENT};'>
+        <div style='font-size:0.72rem;color:{ACCENT};font-weight:700;
+                    letter-spacing:0.1em;'>STEP 2</div>
+        <div style='font-size:0.95rem;line-height:1.45;margin-top:0.25rem;'>
+          Pick your <strong>region</strong>. Pasture, hay, vet, and other
+          costs pre-fill with typical numbers for your geography.
+        </div>
+      </div>
+      <div style='flex:1 1 220px;padding:0.85rem 1.1rem;border-radius:10px;
+                  background:{PARCHMENT_DEEP};border-left:3px solid {ACCENT};'>
+        <div style='font-size:0.72rem;color:{ACCENT};font-weight:700;
+                    letter-spacing:0.1em;'>STEP 3</div>
+        <div style='font-size:0.95rem;line-height:1.45;margin-top:0.25rem;'>
+          Adjust any input to match your real operation. Math updates
+          live — the margin card at the bottom is your answer.
+        </div>
+      </div>
+      <div style='flex:1 1 220px;padding:0.85rem 1.1rem;border-radius:10px;
+                  background:{PARCHMENT_DEEP};border-left:3px solid {ACCENT};'>
+        <div style='font-size:0.72rem;color:{ACCENT};font-weight:700;
+                    letter-spacing:0.1em;'>STEP 4</div>
+        <div style='font-size:0.95rem;line-height:1.45;margin-top:0.25rem;'>
+          <strong>Save scenarios</strong> by name (browser localStorage) or
+          <strong>copy a shareable link</strong> that bundles your inputs.
+        </div>
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 obs_path = Path(DEFAULT_OBS_PATH)
 if not obs_path.exists():
@@ -159,17 +300,6 @@ if not by_series:
         "and the next forecast bake is queued. Check back shortly."
     )
     st.stop()
-
-# ---- Headline brief on the lead series ------------------------------------
-
-lead = by_series.get(LEAD_SERIES)
-if lead is not None:
-    brief_html = compose_brief(lead)
-    if brief_html:
-        st.markdown(
-            f"<div class='lb-brief-headline'>{brief_html}</div>",
-            unsafe_allow_html=True,
-        )
 
 # ---- Today's futures (daily refresh) --------------------------------------
 
@@ -227,22 +357,24 @@ def _render_futures_strip() -> None:
             )
 
 
+st.markdown("&nbsp;", unsafe_allow_html=True)
 st.markdown("---")
-st.markdown("### Today's front-month futures")
-st.caption(
-    "CME daily closes via yfinance. These are the prices the industry "
-    "discovers daily — your local cash settles toward them through basis."
-)
-_render_futures_strip()
 
-# ---- Commodity-card grid --------------------------------------------------
-
-st.markdown("### Reference series — what the market looks like right now")
-st.caption(
-    "Monthly USDA ERS prices with 6-month forecasts and recent trend. "
-    "Use these as macro context — the feeder cards are most relevant to "
-    "buy-side decisions; the wholesale cards signal downstream demand."
-)
+with st.expander("📊 Today's market context", expanded=False):
+    st.caption(
+        "Optional context — feeder cattle, live cattle, and corn front-"
+        "month futures from CME via yfinance. Cash prices settle toward "
+        "these through basis. Use them as macro signals, not as the price "
+        "you'll get."
+    )
+    _render_futures_strip()
+    st.markdown("&nbsp;", unsafe_allow_html=True)
+    st.markdown("**Reference series — monthly USDA ERS**")
+    st.caption(
+        "Six-month forecasts with calibrated 80% prediction intervals. "
+        "Feeder cards inform buy-side decisions; wholesale cards signal "
+        "downstream demand."
+    )
 
 cols_per_row = 3
 rows = [
@@ -281,12 +413,21 @@ st.markdown("---")
 gen_at = cache_generated_at()
 gen_label = gen_at[:10] if gen_at else "unavailable"
 st.markdown(
-    "<p style='color:#5A5550;font-size:0.85rem;'>"
-    f"Latest forecast snapshot: <strong>{gen_label}</strong>. "
-    "See <a href='/Methodology' target='_self'>Methodology</a> for how "
-    "the data is sourced and the math works, or <a href='/About' "
-    "target='_self'>About</a> for the project background. "
-    "This site is informational and not financial advice."
-    "</p>",
+    f"""
+    <div style='display:flex;justify-content:space-between;flex-wrap:wrap;
+                gap:0.6rem;margin-top:1rem;'>
+      <p style='color:{INK_SOFT};font-size:0.82rem;margin:0;
+                max-width:560px;'>
+        Built by <strong>Tenure</strong>. The math is honest and the sources
+        are cited — see <a href='/Methodology' target='_self'>Methodology</a>
+        for how the data flows and <a href='/About' target='_self'>About</a>
+        for the project background. <strong>Not financial advice.</strong>
+      </p>
+      <p style='color:{INK_SOFT};font-size:0.82rem;margin:0;
+                text-align:right;'>
+        Forecast snapshot: <code>{gen_label}</code>
+      </p>
+    </div>
+    """,
     unsafe_allow_html=True,
 )

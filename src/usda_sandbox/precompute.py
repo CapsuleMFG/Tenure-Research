@@ -1,4 +1,4 @@
-"""Precompute the headline forecast cache for the LivestockBrief dashboard.
+"""Precompute the headline forecast cache for the Tenure Brief dashboard.
 
 The Streamlit app's home page must be instant — we can't fit AutoARIMA /
 Prophet / LightGBM live on every visit. This module bakes a single JSON
@@ -382,7 +382,7 @@ def load_forecast_cache(path: Path | str = DEFAULT_CACHE_PATH) -> dict:
 
 def _cli(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Precompute the LivestockBrief forecast cache."
+        description="Precompute the Tenure Brief forecast cache."
     )
     parser.add_argument("--obs-path", default="data/clean/observations.parquet")
     parser.add_argument("--catalog-path", default="data/catalog.json")

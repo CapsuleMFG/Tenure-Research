@@ -1,4 +1,4 @@
-"""Visual identity: global CSS for LivestockBrief.
+"""Visual identity: global CSS for Tenure Brief.
 
 Streamlit's default theme picks up the colors in ``.streamlit/config.toml``;
 this module layers on typography, card chrome, and headline styling via
@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import streamlit as st
 
-BRAND_NAME = "LivestockBrief"
-BRAND_TAGLINE = "USDA-grounded livestock price forecasts in plain English."
+BRAND_NAME = "Tenure Brief"
+BRAND_TAGLINE = "Honest economics + market data for direct-market cattle ranchers."
 
 # Clay/rust accent for primary, parchment for background.
 ACCENT = "#B4521E"
