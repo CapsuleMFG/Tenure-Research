@@ -187,5 +187,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 if st.button("View 12-month forecast →", type="primary", key="goto_forecast"):
-    st.session_state["series_id"] = series_id
+    # ``series_id`` already lives in session_state via the sidebar selectbox
+    # widget on this page (Streamlit forbids writing to a widget-owned key
+    # mid-run). The Forecast page reads it from the global ``series_id``
+    # state to seed its own monthly-filtered picker.
     st.switch_page("dashboard/pages/3_Forecast.py")
