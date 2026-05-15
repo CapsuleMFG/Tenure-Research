@@ -1,4 +1,4 @@
-"""Persistent sidebar — series picker, data status, refresh button.
+"""Persistent sidebar — branding, optional series picker, data status, refresh.
 
 Each page calls :func:`render_sidebar` once at the top. The chosen series
 lives in ``st.session_state["series_id"]`` so it survives navigation.
@@ -17,7 +17,10 @@ from usda_sandbox.catalog import load_catalog
 from usda_sandbox.clean import clean_all
 from usda_sandbox.futures_continuous import sync_continuous_futures
 from usda_sandbox.ingest import sync_downloads
+from usda_sandbox.precompute import build_forecast_cache
 from usda_sandbox.store import list_series, read_observations
+
+from .theme import BRAND_NAME, BRAND_TAGLINE, inject_global_css
 
 DEFAULT_OBS_PATH = Path("data/clean/observations.parquet")
 DEFAULT_CATALOG_PATH = Path("data/catalog.json")
@@ -70,6 +73,7 @@ def render_sidebar(
     obs_path: Path = DEFAULT_OBS_PATH,
     frequencies: Sequence[str] | None = None,
     forecastable_only: bool = False,
+    persistent_picker: bool = True,
 ) -> str | None:
     """Render the sidebar and return the currently-selected series_id (or None).
 
@@ -82,8 +86,21 @@ def render_sidebar(
 
     ``forecastable_only`` filters out series whose catalog ``forecastable``
     field is ``False`` (e.g. CME futures series used only as regressors).
+
+    ``persistent_picker`` controls whether the series picker is shown. Pages
+    that operate on a specific series (Series detail, Forecast) set this to
+    ``True``; pages that don't need a picker (Brief, About, Methodology)
+    set it to ``False`` for a less cluttered sidebar.
     """
-    st.sidebar.title("USDA Livestock")
+    inject_global_css()
+
+    # Brand wordmark — replaces the old "USDA Livestock" title.
+    st.sidebar.markdown(
+        f"<div class='lb-wordmark'>{BRAND_NAME}</div>"
+        f"<div class='lb-wordmark-sub'>{BRAND_TAGLINE}</div>",
+        unsafe_allow_html=True,
+    )
+    st.sidebar.markdown("")  # vertical spacer
 
     if not obs_path.exists():
         st.sidebar.warning(
@@ -114,61 +131,68 @@ def render_sidebar(
             )
             return None
 
-    st.sidebar.subheader("Series")
-    series_ids = series_df["series_id"].to_list()
-    name_lookup = {
-        sid: name
-        for sid, name in zip(
-            series_df["series_id"].to_list(),
-            series_df["series_name"].to_list(),
-            strict=True,
+    chosen: str | None = None
+    if persistent_picker:
+        st.sidebar.subheader("Active series")
+        series_ids = series_df["series_id"].to_list()
+        name_lookup = {
+            sid: name
+            for sid, name in zip(
+                series_df["series_id"].to_list(),
+                series_df["series_name"].to_list(),
+                strict=True,
+            )
+        }
+
+        # Use a unique selectbox key per frequency-filter so session_state on a
+        # filtered page (e.g. Forecast: monthly only) doesn't clobber the global
+        # cross-page selection used by Explore/Visualize.
+        state_key = (
+            "series_id"
+            if frequencies is None
+            else f"series_id__{'_'.join(sorted(frequencies))}"
         )
-    }
 
-    # Use a unique selectbox key per frequency-filter so session_state on a
-    # filtered page (e.g. Forecast: monthly only) doesn't clobber the global
-    # cross-page selection used by Explore/Visualize.
-    state_key = (
-        "series_id"
-        if frequencies is None
-        else f"series_id__{'_'.join(sorted(frequencies))}"
-    )
+        default_index = 0
+        if state_key in st.session_state and st.session_state[state_key] in series_ids:
+            default_index = series_ids.index(st.session_state[state_key])
+        elif (
+            frequencies is not None
+            and "series_id" in st.session_state
+            and st.session_state["series_id"] in series_ids
+        ):
+            default_index = series_ids.index(st.session_state["series_id"])
 
-    default_index = 0
-    if state_key in st.session_state and st.session_state[state_key] in series_ids:
-        default_index = series_ids.index(st.session_state[state_key])
-    elif (
-        frequencies is not None
-        and "series_id" in st.session_state
-        and st.session_state["series_id"] in series_ids
-    ):
-        # Carry over from the global picker if it happens to fit the filter
-        default_index = series_ids.index(st.session_state["series_id"])
+        chosen = st.sidebar.selectbox(
+            label="Series",
+            label_visibility="collapsed",
+            options=series_ids,
+            index=default_index,
+            format_func=lambda sid: name_lookup.get(sid, sid),
+            key=state_key,
+        )
 
-    chosen = st.sidebar.selectbox(
-        label="Active series",
-        options=series_ids,
-        index=default_index,
-        format_func=lambda sid: name_lookup.get(sid, sid),
-        key=state_key,
-    )
-
-    st.sidebar.subheader("Data status")
+    st.sidebar.subheader("Snapshot")
     mtime = datetime.fromtimestamp(obs_path.stat().st_mtime, tz=UTC)
     st.sidebar.markdown(
-        f"**{overview['n_series']}** series · **{overview['n_rows']:,}** rows  \n"
-        f"Range: `{overview['earliest']}` .. `{overview['latest']}`  \n"
-        f"Last cleaned: `{_format_age(mtime)}`"
+        f"**{overview['n_series']}** series &middot; "
+        f"**{overview['n_rows']:,}** rows  \n"
+        f"Range: `{overview['earliest']}` &rarr; `{overview['latest']}`  \n"
+        f"Last refresh: `{_format_age(mtime)}`"
     )
 
-    _render_refresh_button(obs_path)
+    # Refresh button stays in the sidebar; it's the admin door.
+    with st.sidebar.expander("Admin"):
+        _render_refresh_button(obs_path)
+        _render_precompute_button()
+
     return chosen
 
 
 def _render_refresh_button(obs_path: Path) -> None:
-    if not st.sidebar.button("🔄 Refresh data", use_container_width=True):
+    if not st.button("Refresh data", use_container_width=True, key="refresh_btn"):
         return
-    with st.sidebar.status("Refreshing data...", expanded=True) as status:
+    with st.status("Refreshing data...", expanded=True) as status:
         status.write("Discovering ERS download URLs...")
         try:
             sync_downloads(raw_dir=DEFAULT_RAW_DIR)
@@ -177,13 +201,9 @@ def _render_refresh_button(obs_path: Path) -> None:
             return
         status.write("Syncing continuous front-month futures via yfinance...")
         try:
-            sync_continuous_futures(
-                raw_dir=DEFAULT_RAW_DIR / "futures_continuous"
-            )
+            sync_continuous_futures(raw_dir=DEFAULT_RAW_DIR / "futures_continuous")
         except Exception as exc:
-            status.update(
-                label=f"Continuous-futures sync failed: {exc}", state="error"
-            )
+            status.update(label=f"Continuous-futures sync failed: {exc}", state="error")
             return
         status.write("Cleaning all catalog series...")
         try:
@@ -194,4 +214,27 @@ def _render_refresh_button(obs_path: Path) -> None:
         status.update(label="Refresh complete", state="complete")
     cached_list_series.clear()
     cached_dataset_overview.clear()
+    st.rerun()
+
+
+def _render_precompute_button() -> None:
+    if not st.button("Rebuild forecast cache", use_container_width=True, key="precompute_btn"):
+        return
+    with st.status("Precomputing forecasts...", expanded=True) as status:
+        try:
+            out = build_forecast_cache()
+            status.update(
+                label=f"Forecast cache written to {out}",
+                state="complete",
+            )
+        except Exception as exc:
+            status.update(label=f"Precompute failed: {exc}", state="error")
+            return
+    # Bust the cache helper so the Brief page re-reads.
+    try:
+        from .cache import cached_forecast_cache as _cfc
+
+        _cfc.clear()
+    except Exception:
+        pass
     st.rerun()

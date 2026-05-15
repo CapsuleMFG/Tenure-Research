@@ -1,0 +1,66 @@
+name: Refresh data + rebake forecasts
+
+# Sunday 21:00 UTC weekly + manual trigger. The job pulls fresh USDA ERS XLSX
+# files and yfinance continuous futures, rebuilds observations.parquet, runs
+# the bake-off for every forecastable series, writes forecasts.json, and
+# commits both artifacts to the `data` branch so Streamlit Cloud picks them up.
+on:
+  schedule:
+    - cron: "0 21 * * 0"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install project dependencies
+        run: uv sync --no-dev
+
+      - name: Sync ERS XLSX downloads
+        run: |
+          uv run python -c "from usda_sandbox.ingest import sync_downloads; sync_downloads()"
+
+      - name: Sync continuous front-month futures (yfinance)
+        run: |
+          uv run python -c "from usda_sandbox.futures_continuous import sync_continuous_futures; sync_continuous_futures()"
+
+      - name: Clean into observations.parquet
+        run: |
+          uv run python -c "from usda_sandbox.clean import clean_all; clean_all('data/catalog.json', 'data/raw', 'data/clean/observations.parquet')"
+
+      - name: Rebake forecasts.json
+        run: |
+          uv run python -m usda_sandbox.precompute --out-path data/clean/forecasts.json
+
+      - name: Commit refreshed artifacts to data branch
+        run: |
+          set -e
+          git config user.name  "livestockbrief-bot"
+          git config user.email "livestockbrief-bot@users.noreply.github.com"
+
+          # Force-publish data branch from the current refresh.
+          # observations.parquet and forecasts.json are normally gitignored;
+          # `-f` overrides that on this branch only.
+          git checkout -B data
+          git add -f data/clean/observations.parquet data/clean/forecasts.json
+          if git diff --cached --quiet; then
+            echo "No artifact changes; skipping commit."
+          else
+            git commit -m "data: weekly refresh $(date -u +%Y-%m-%d)"
+            git push -f origin data
+          fi

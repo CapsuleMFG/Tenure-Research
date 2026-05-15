@@ -1,4 +1,4 @@
-"""Page 1 — what's in the cleaned store."""
+"""Catalog & coverage — what's in the cleaned store."""
 
 from __future__ import annotations
 
@@ -12,13 +12,23 @@ from components.sidebar import (
     cached_list_series,
     render_sidebar,
 )
+from components.theme import INK_SOFT, inject_global_css, set_page_chrome
 
 from usda_sandbox.store import duckdb_connection
 
-st.set_page_config(page_title="Explore — USDA Livestock", page_icon="🐂", layout="wide")
-render_sidebar()
+set_page_chrome(page_title="Catalog")
+inject_global_css()
+render_sidebar(persistent_picker=False)
 
-st.title("Explore the cleaned store")
+st.markdown("# Catalog & coverage")
+st.markdown(
+    f"<p style='color:{INK_SOFT};font-size:1.0rem;'>"
+    "Every series in the cleaned store, with row counts, date ranges, and "
+    "data-quality gaps. Use this page to see exactly what's behind the "
+    "forecasts on the Brief and Forecast pages."
+    "</p>",
+    unsafe_allow_html=True,
+)
 
 obs_path = Path(DEFAULT_OBS_PATH)
 if not obs_path.exists():

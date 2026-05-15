@@ -1,6 +1,12 @@
-# Project data — gitignored per CLAUDE.md
+# Project data — gitignored on main. The weekly GitHub Action force-pushes
+# refreshed artifacts to the `data` branch (using `git add -f`), which is
+# what Streamlit Cloud reads. Keeping them out of main keeps PRs reviewable.
 data/raw/
 data/clean/
+
+# Streamlit run logs (local-only)
+sl.log
+sl_err.log
 
 # Generated test fixtures — built fresh each test run
 tests/fixtures/*.xlsx

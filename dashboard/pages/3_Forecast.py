@@ -1,4 +1,16 @@
-"""Page 3 -- live backtest + forecast results."""
+"""Forecast — simplified default view + Advanced backtest expander.
+
+Default state (95% of visitors):
+    * Series picker (sidebar).
+    * Plain-English brief.
+    * 12-month forward forecast chart from the precomputed cache.
+    * Scoreboard, in a small collapsed expander.
+
+Advanced expander (analysts):
+    * Live backtest config (horizon, CV windows, model selection).
+    * "Run backtest" with progress streaming.
+    * Scoreboard / CV overlay / residual diagnostics / live forward forecast.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +19,8 @@ from pathlib import Path
 
 import polars as pl
 import streamlit as st
+from components.brief import compose_brief
+from components.cache import cache_horizon, get_series_entry
 from components.plots import (
     build_cv_overlay,
     build_forward_forecast,
@@ -18,6 +32,7 @@ from components.sidebar import (
     cached_series_notes,
     render_sidebar,
 )
+from components.theme import INK_SOFT, inject_global_css, set_page_chrome
 
 from usda_sandbox.calibration import (
     apply_conformal_scaling,
@@ -34,25 +49,20 @@ from usda_sandbox.forecast import (
 )
 from usda_sandbox.store import read_observations, read_series
 
-st.set_page_config(
-    page_title="Forecast -- USDA Livestock", page_icon="🐂", layout="wide"
-)
+set_page_chrome(page_title="Forecast")
+inject_global_css()
 series_id = render_sidebar(frequencies=["monthly"], forecastable_only=True)
-
-st.title("Forecast")
 
 if series_id is None:
     st.warning(
         "No monthly series available — click **Refresh data** in the sidebar "
-        "(or note that the Forecast page only supports monthly series; "
-        "quarterly WASDE series live on Explore and Visualize)."
+        "(the Forecast page is monthly-only; quarterly series live on Series)."
     )
     st.stop()
 
 obs_path = Path(DEFAULT_OBS_PATH)
 
-# Pull the chosen series' metadata for human-readable labels and the
-# explanatory panel below.
+# Series metadata (always needed)
 _meta_df = cached_list_series(str(obs_path)).filter(pl.col("series_id") == series_id)
 if _meta_df.is_empty():
     st.error(f"Series {series_id!r} not found in catalog.")
@@ -60,415 +70,374 @@ if _meta_df.is_empty():
 _meta = _meta_df.row(0, named=True)
 series_name = _meta["series_name"]
 
-# Series snapshot — what is this thing, in plain terms.
-_notes = cached_series_notes().get(series_id, "")
-with st.container(border=True):
-    a, b, c, d = st.columns([3, 1, 1, 1])
-    a.markdown(f"**{series_name}**  \n`{series_id}`")
-    b.markdown(f"**Commodity**  \n{_meta['commodity']}")
-    c.markdown(f"**Unit**  \n{_meta['unit']}")
-    d.markdown(f"**Frequency**  \n{_meta['frequency']}")
-    if _notes:
-        st.markdown(f"_{_notes}_")
-
-# Inspect the chosen series so slider bounds match what's actually possible.
-_series_full = (
-    read_series(series_id, obs_path)
-    .filter(pl.col("value").is_not_null())
-    .select(["period_start", "value"])
-)
-n_obs = _series_full.height
-
-# When the series has exogenous regressors, the lockstep null-drop on
-# exog rows reduces the effective row count to the overlap window —
-# yfinance's contract history is much shorter than ERS cash history, so
-# the cash count overstates what CV actually sees. Compute the real
-# effective count and use it for slider bounds.
-_catalog_full = _load_catalog("data/catalog.json")
-_target_def_full = next(
-    (sd for sd in _catalog_full if sd.series_id == series_id), None
-)
-_regressor_ids = (
-    list(_target_def_full.exogenous_regressors) if _target_def_full else []
-)
-effective_n_obs = n_obs
-overlap_n_obs = n_obs
-if _regressor_ids:
-    _exog_long = (
-        read_observations(obs_path)
-        .filter(pl.col("series_id").is_in(_regressor_ids))
-        .select(["series_id", "period_start", "value"])
-        .collect()
+st.markdown(f"# Forecast: {series_name}")
+notes = cached_series_notes().get(series_id, "")
+if notes:
+    st.markdown(
+        f"<p style='color:{INK_SOFT};font-size:0.95rem;margin-top:-0.5rem;'>"
+        f"{notes}</p>",
+        unsafe_allow_html=True,
     )
-    _exog_wide = _exog_long.pivot(values="value", index="period_start", on="series_id")
-    _reg_cols = [c for c in _exog_wide.columns if c != "period_start"]
-    _exog_full = _exog_wide.filter(
-        pl.all_horizontal([pl.col(c).is_not_null() for c in _reg_cols])
-    )
-    _cash_dates = set(_series_full["period_start"].to_list())
-    _exog_dates = set(_exog_full["period_start"].to_list())
-    overlap_n_obs = len(_cash_dates & _exog_dates)
-    effective_n_obs = min(n_obs, overlap_n_obs)
 
-# Adaptive slider bounds: the cross-validator needs horizon * (n_windows + 1) <= n_obs.
-# Cap horizon so at least 2 CV windows are achievable; cap n_windows from the chosen
-# horizon. If a series is too short for any meaningful backtest, surface that early.
-max_horizon = max(1, min(12, effective_n_obs // 3 - 1))
-default_horizon = min(6, max_horizon)
+# ---- Default view: read from precomputed cache --------------------------
 
-# ---------------- Inputs -----------------------------------------------------
+cache_entry = get_series_entry(series_id)
+horizon_info = cache_horizon()
 
-cfg_a, cfg_b, cfg_c, cfg_d = st.columns([1, 1, 2, 1])
-horizon = cfg_a.slider(
-    "Horizon (months)", min_value=1, max_value=max_horizon, value=default_horizon
-)
-max_n_windows = max(2, min(24, effective_n_obs // horizon - 1))
-default_n_windows = min(12, max_n_windows)
-n_windows = cfg_b.slider(
-    "CV windows",
-    min_value=2,
-    max_value=max_n_windows,
-    value=default_n_windows,
-)
-all_models = ("AutoARIMA", "Prophet", "LightGBM")
-selected_models = cfg_c.multiselect(
-    "Models", options=list(all_models), default=list(all_models)
-)
-run_clicked = cfg_d.button("> Run backtest", type="primary", use_container_width=True)
-
-if _regressor_ids and overlap_n_obs < n_obs:
-    st.caption(
-        f"Series has **{n_obs}** non-null cash observations, but only "
-        f"**{overlap_n_obs}** align with all {len(_regressor_ids)} futures "
-        f"regressors (yfinance's per-contract history is short). Sliders are "
-        f"bounded by the smaller number so CV always has enough rows."
+if cache_entry is None:
+    st.info(
+        "**No precomputed forecast** for this series yet. Open the "
+        "**Advanced** expander below to run a live backtest."
     )
 else:
+    brief_html = compose_brief(cache_entry)
+    if brief_html:
+        st.markdown(
+            f"<div class='lb-brief-headline'>{brief_html}</div>",
+            unsafe_allow_html=True,
+        )
+
+    forward_records = cache_entry.get("forward") or []
+    if forward_records:
+        forward = pl.DataFrame(
+            {
+                "period_start": [date.fromisoformat(r["period_start"]) for r in forward_records],
+                "point": [r["point"] for r in forward_records],
+                "lower_80": [r["lower_80"] for r in forward_records],
+                "upper_80": [r["upper_80"] for r in forward_records],
+            }
+        )
+        history = (
+            read_series(series_id, obs_path)
+            .filter(pl.col("value").is_not_null())
+            .sort("period_start")
+        )
+        winner = str(cache_entry.get("winner_model", "model"))
+        st.plotly_chart(
+            build_forward_forecast(
+                history, forward, model_name=winner, label=series_name
+            ),
+            use_container_width=True,
+        )
+        st.caption(
+            f"Forecast: **{winner}**, selected from a {cache_entry.get('n_windows', '?')}-"
+            f"window backtest. 80% prediction interval is conformally calibrated "
+            f"per horizon step from the CV residuals."
+        )
+
+    with st.expander("Model comparison (scoreboard)"):
+        scoreboard = pl.DataFrame(cache_entry.get("scoreboard") or [])
+        if scoreboard.is_empty():
+            st.info("No scoreboard available in the cache.")
+        else:
+            st.dataframe(
+                scoreboard.with_columns(
+                    pl.col("mape").round(2),
+                    pl.col("smape").round(2),
+                    pl.col("mase").round(2),
+                ),
+                hide_index=True,
+                use_container_width=True,
+            )
+            st.caption(
+                "MAPE = average % miss. sMAPE = symmetric MAPE. MASE = error "
+                "relative to a naive 'last value' baseline (>1 means worse than "
+                "naive; <1 means better)."
+            )
+
+# ---- Advanced expander: the original live-backtest UI -------------------
+
+with st.expander("Advanced — run a live backtest", expanded=False):
     st.caption(
-        f"Series has **{n_obs}** non-null observations. Sliders are bounded so "
-        f"any combination produces a valid backtest."
+        "For analysts. Re-runs the full bake-off live (3 models × your chosen "
+        "CV windows) and shows the scoreboard, CV overlay, residual "
+        "diagnostics, and a freshly fit 12-month forward forecast. Slower than "
+        "the cached default above."
     )
 
-cache_key = f"backtest:{series_id}:{horizon}:{n_windows}:{','.join(sorted(selected_models))}"
-
-# ---------------- Run --------------------------------------------------------
-
-if run_clicked:
-    if not selected_models:
-        st.error("Pick at least one model.")
-        st.stop()
-
-    series = (
+    _series_full = (
         read_series(series_id, obs_path)
         .filter(pl.col("value").is_not_null())
         .select(["period_start", "value"])
     )
-    _required_rows = horizon * (n_windows + 1)
-    if effective_n_obs < _required_rows:
-        _suffix = (
-            f" (after aligning with {len(_regressor_ids)} futures regressors)"
-            if _regressor_ids and overlap_n_obs < n_obs
-            else ""
-        )
-        st.error(
-            f"Series has {effective_n_obs} effective observations{_suffix}; "
-            f"need at least {_required_rows} for {n_windows} windows of "
-            f"horizon {horizon}."
-        )
-        st.stop()
+    n_obs = _series_full.height
 
-    with st.status(
-        f"Running backtest for {series_name}...", expanded=True
-    ) as status:
-        progress_bar = st.progress(0.0)
-        total_steps = len(selected_models) * n_windows
-        completed = 0
-        try:
-            for event in iter_run_backtest(
-                series_id,
-                horizon=horizon,
-                n_windows=n_windows,
-                obs_path=obs_path,
-                models=selected_models,
-            ):
-                if isinstance(event, BacktestProgress):
-                    completed += 1
-                    pct = completed / total_steps
-                    progress_bar.progress(pct)
-                    mape_str = (
-                        f"{event.running_mape:.2f}%"
-                        if event.running_mape is not None
-                        else "n/a"
-                    )
-                    status.write(
-                        f"{event.model} window {event.window + 1}/{event.n_windows} "
-                        f"done - running MAPE: {mape_str} - "
-                        f"elapsed: {event.elapsed_s:.1f}s"
-                    )
-                elif isinstance(event, BacktestResult):
-                    st.session_state[cache_key] = event
-            status.update(label="Backtest complete", state="complete")
-        except Exception as exc:
-            status.update(label=f"Backtest failed: {exc}", state="error")
-            st.exception(exc)
-            st.stop()
-
-# ---------------- Results ----------------------------------------------------
-
-result: BacktestResult | None = st.session_state.get(cache_key)
-if result is None:
-    st.info(
-        "Configure the inputs above and click **Run backtest** to see "
-        "scoreboard, CV overlay, residual diagnostics, and a 12-month "
-        "forward forecast."
-    )
-    st.stop()
-
-# Filter to selected models only
-filtered_cv = result.cv_details.filter(pl.col("model").is_in(selected_models))
-filtered_metrics = result.metrics.filter(pl.col("model").is_in(selected_models))
-
-with st.expander("How to read these results", expanded=False):
-    st.markdown(
-        """
-**What we did.** For each model, we ran the same exercise N times: hide
-the most recent stretch of history, ask the model to predict it, then
-score the prediction against what actually happened. Each "stretch" is
-one CV window. The scoreboard averages across all windows so the
-numbers describe how the model **usually** does, not how it did on one
-lucky/unlucky stretch.
-
-**The metrics, in plain terms:**
-- **MAPE** — the average miss as a *percent* of the actual value.
-  Lower is better. *5%* means the forecast is typically off by 5% of
-  the price.
-- **sMAPE** — like MAPE but symmetric, so it doesn't blow up when
-  actuals are tiny.
-- **MASE** — model error vs. a naive *"tomorrow looks like today"*
-  baseline. **Below 1.0** means the model beats naive. **Above 1.0**
-  means naive wins. On these series MASE typically lands around 2-7
-  for 6-month forecasts — model errors are 2-7x the typical
-  month-to-month price change. Useful for **level/range, not for
-  tactical timing.**
-        """.strip()
-    )
-
-st.subheader("Scoreboard")
-st.dataframe(
-    filtered_metrics.with_columns(
-        pl.col("mape").round(2),
-        pl.col("smape").round(2),
-        pl.col("mase").round(2),
-    ).sort("mape"),
-    hide_index=True,
-    use_container_width=True,
-)
-
-# Surface exogenous regressors used (if any) — catalog-driven, set in data/catalog.json
-_target_def = next(
-    (sd for sd in _load_catalog("data/catalog.json") if sd.series_id == series_id),
-    None,
-)
-if _target_def is not None and _target_def.exogenous_regressors:
-    # Map the first regressor's id to a human-readable commodity label.
-    _front_labels = {
-        "cattle_lc_front": "Live Cattle",
-        "cattle_feeder_front": "Feeder Cattle",
-        "hogs_he_front": "Lean Hogs",
-    }
-    _first_reg = _target_def.exogenous_regressors[0]
-    if _first_reg in _front_labels:
-        _commodity_label = _front_labels[_first_reg]
-    elif _first_reg.startswith("cattle_lc_"):
-        _commodity_label = "Live Cattle"
-    elif _first_reg.startswith("cattle_feeder_"):
-        _commodity_label = "Feeder Cattle"
-    elif _first_reg.startswith("hogs_he_"):
-        _commodity_label = "Lean Hogs"
-    else:
-        _commodity_label = "futures"
-
-    if len(_target_def.exogenous_regressors) == 1:
-        st.caption(
-            f"This series was forecast with a single exogenous regressor: "
-            f"the continuous front-month **{_commodity_label}** futures price. "
-            f"Each forecaster (AutoARIMA, Prophet, LightGBM) sees it alongside "
-            f"the cash history."
-        )
-    else:
-        st.caption(
-            f"This series was forecast with **{len(_target_def.exogenous_regressors)} "
-            f"exogenous regressors**: deferred {_commodity_label} futures "
-            f"(1-12 months ahead). Each forecaster (AutoARIMA, Prophet, LightGBM) "
-            f"sees these alongside the cash history."
-        )
-
-# Pick the winner from the filtered set
-winner = filtered_metrics.sort("mape")["model"][0]
-winner_metrics = filtered_metrics.filter(pl.col("model") == winner).row(0, named=True)
-
-# History first so we can quote a recent price level in the contextual blurb
-history = (
-    read_series(series_id, obs_path)
-    .filter(pl.col("value").is_not_null())
-    .sort("period_start")
-)
-last_actual = float(history["value"].tail(1).item())
-typical_err = winner_metrics["mape"] / 100.0 * last_actual
-
-st.success(
-    f"**Winner:** {winner} — MAPE {winner_metrics['mape']:.2f}%  ·  "
-    f"sMAPE {winner_metrics['smape']:.2f}%  ·  MASE {winner_metrics['mase']:.2f}"
-)
-st.markdown(
-    f"At the recent level of **${last_actual:,.2f} {_meta['unit']}**, a "
-    f"**{winner_metrics['mape']:.1f}% MAPE** means the typical "
-    f"**{result.horizon}-month forecast is off by about "
-    f"±${typical_err:,.2f} {_meta['unit']}**. Some windows do better, some "
-    f"worse — that's the average across all {result.n_windows} CV windows. "
-    f"MASE of {winner_metrics['mase']:.2f} says the model's error is roughly "
-    f"**{winner_metrics['mase']:.1f}x the typical month-to-month price change**, "
-    f"which is normal for a 6-month horizon."
-)
-
-st.subheader("Actuals vs. CV forecasts")
-st.caption(
-    "Gray line = the actual price. Each colored segment = one model's "
-    "forecast for one CV window (so 12 segments per model). Bunching "
-    "tightly around the gray line means consistent skill; segments that "
-    "wander above or below the actual reveal where the model systematically "
-    "missed."
-)
-series_label = series_name  # human-readable for chart titles
-st.plotly_chart(
-    build_cv_overlay(
-        history,
-        filtered_cv,
-        label=series_label,
-        horizon=result.horizon,
-        n_windows=result.n_windows,
-    ),
-    use_container_width=True,
-)
-
-st.subheader(f"Residual diagnostics — {winner}")
-st.caption(
-    "**Residual** = actual minus forecast. Three views of how the winner missed "
-    "across all CV windows: (1) the **distribution** should be centered near "
-    "zero — a shifted center means the model is systematically biased; "
-    "(2) **MAE by horizon** shows how error grows the further out you forecast; "
-    "(3) **Q-Q vs. normal** — if residuals are normally distributed, the dots "
-    "track the dotted line. Tails curving away from the line mean the 80% "
-    "prediction interval is too narrow during shock periods (2020 COVID, etc.)."
-)
-st.plotly_chart(
-    build_residual_diagnostics(filtered_cv, model_name=winner, label=series_label),
-    use_container_width=True,
-)
-
-st.subheader("Forward 12-month forecast")
-st.caption(
-    "Gray line = history. Blue line = the winning model's point forecast for "
-    "the next 12 months. Shaded blue band = **80% prediction interval** — "
-    "read it as *\"under business-as-usual conditions, prices land in this "
-    "range about 80% of the time.\"* The band widens further out because "
-    "uncertainty compounds. Don't trust the band during regime changes "
-    "(slaughter shocks, sudden inventory swings) — the residual diagnostics "
-    "above show where the band tends to under-cover."
-)
-forecaster_registry = {
-    "AutoARIMA": StatsForecastAutoARIMA,
-    "Prophet": ProphetForecaster,
-    "LightGBM": LightGBMForecaster,
-}
-with st.spinner(f"Refitting {winner} on full history..."):
-    fcst = forecaster_registry[winner](seed=42)
-
-    # If the series has exogenous regressors, align history with them and
-    # fit/predict with exog. Otherwise fall back to the univariate path so
-    # series like lamb (no regressor) still work.
+    _catalog_full = _load_catalog("data/catalog.json")
+    _target_def_full = next((sd for sd in _catalog_full if sd.series_id == series_id), None)
+    _regressor_ids = list(_target_def_full.exogenous_regressors) if _target_def_full else []
+    effective_n_obs = n_obs
+    overlap_n_obs = n_obs
     if _regressor_ids:
-        _exog_history_long = (
+        _exog_long = (
             read_observations(obs_path)
             .filter(pl.col("series_id").is_in(_regressor_ids))
             .select(["series_id", "period_start", "value"])
             .collect()
         )
-        _exog_history_wide = (
-            _exog_history_long.pivot(
-                values="value", index="period_start", on="series_id"
+        _exog_wide = _exog_long.pivot(values="value", index="period_start", on="series_id")
+        _reg_cols = [c for c in _exog_wide.columns if c != "period_start"]
+        _exog_full = _exog_wide.filter(
+            pl.all_horizontal([pl.col(c).is_not_null() for c in _reg_cols])
+        )
+        _cash_dates = set(_series_full["period_start"].to_list())
+        _exog_dates = set(_exog_full["period_start"].to_list())
+        overlap_n_obs = len(_cash_dates & _exog_dates)
+        effective_n_obs = min(n_obs, overlap_n_obs)
+
+    max_horizon = max(1, min(12, effective_n_obs // 3 - 1))
+    default_horizon = min(6, max_horizon)
+
+    cfg_a, cfg_b, cfg_c, cfg_d = st.columns([1, 1, 2, 1])
+    horizon = cfg_a.slider(
+        "Horizon (months)", min_value=1, max_value=max_horizon, value=default_horizon
+    )
+    max_n_windows = max(2, min(24, effective_n_obs // horizon - 1))
+    default_n_windows = min(12, max_n_windows)
+    n_windows = cfg_b.slider(
+        "CV windows",
+        min_value=2,
+        max_value=max_n_windows,
+        value=default_n_windows,
+    )
+    all_models = ("AutoARIMA", "Prophet", "LightGBM")
+    selected_models = cfg_c.multiselect(
+        "Models", options=list(all_models), default=list(all_models)
+    )
+    run_clicked = cfg_d.button(
+        "> Run backtest", type="primary", use_container_width=True
+    )
+
+    if _regressor_ids and overlap_n_obs < n_obs:
+        st.caption(
+            f"Series has **{n_obs}** non-null cash observations, but only "
+            f"**{overlap_n_obs}** align with all {len(_regressor_ids)} futures "
+            f"regressors (yfinance's per-contract history is short). Sliders "
+            f"are bounded by the smaller number so CV always has enough rows."
+        )
+
+    cache_key = (
+        f"backtest:{series_id}:{horizon}:{n_windows}:{','.join(sorted(selected_models))}"
+    )
+
+    if run_clicked:
+        if not selected_models:
+            st.error("Pick at least one model.")
+            st.stop()
+
+        series = (
+            read_series(series_id, obs_path)
+            .filter(pl.col("value").is_not_null())
+            .select(["period_start", "value"])
+        )
+        _required_rows = horizon * (n_windows + 1)
+        if effective_n_obs < _required_rows:
+            _suffix = (
+                f" (after aligning with {len(_regressor_ids)} futures regressors)"
+                if _regressor_ids and overlap_n_obs < n_obs
+                else ""
             )
+            st.error(
+                f"Series has {effective_n_obs} effective observations{_suffix}; "
+                f"need at least {_required_rows} for {n_windows} windows of "
+                f"horizon {horizon}."
+            )
+            st.stop()
+
+        with st.status(
+            f"Running backtest for {series_name}...", expanded=True
+        ) as status:
+            progress_bar = st.progress(0.0)
+            total_steps = len(selected_models) * n_windows
+            completed = 0
+            try:
+                for event in iter_run_backtest(
+                    series_id,
+                    horizon=horizon,
+                    n_windows=n_windows,
+                    obs_path=obs_path,
+                    models=selected_models,
+                ):
+                    if isinstance(event, BacktestProgress):
+                        completed += 1
+                        pct = completed / total_steps
+                        progress_bar.progress(pct)
+                        mape_str = (
+                            f"{event.running_mape:.2f}%"
+                            if event.running_mape is not None
+                            else "n/a"
+                        )
+                        status.write(
+                            f"{event.model} window {event.window + 1}/"
+                            f"{event.n_windows} done — running MAPE: "
+                            f"{mape_str} — elapsed: {event.elapsed_s:.1f}s"
+                        )
+                    elif isinstance(event, BacktestResult):
+                        st.session_state[cache_key] = event
+                status.update(label="Backtest complete", state="complete")
+            except Exception as exc:
+                status.update(label=f"Backtest failed: {exc}", state="error")
+                st.exception(exc)
+                st.stop()
+
+    result: BacktestResult | None = st.session_state.get(cache_key)
+    if result is None:
+        st.info(
+            "Configure the inputs above and click **Run backtest** to see the "
+            "live scoreboard, CV overlay, residual diagnostics, and a "
+            "freshly-fit 12-month forward forecast."
+        )
+    else:
+        filtered_cv = result.cv_details.filter(pl.col("model").is_in(selected_models))
+        filtered_metrics = result.metrics.filter(pl.col("model").is_in(selected_models))
+
+        st.subheader("Scoreboard")
+        st.dataframe(
+            filtered_metrics.with_columns(
+                pl.col("mape").round(2),
+                pl.col("smape").round(2),
+                pl.col("mase").round(2),
+            ).sort("mape"),
+            hide_index=True,
+            use_container_width=True,
+        )
+
+        live_winner = filtered_metrics.sort("mape")["model"][0]
+        live_winner_metrics = filtered_metrics.filter(
+            pl.col("model") == live_winner
+        ).row(0, named=True)
+        history = (
+            read_series(series_id, obs_path)
+            .filter(pl.col("value").is_not_null())
             .sort("period_start")
         )
-        _aligned = history.select(["period_start", "value"]).join(
-            _exog_history_wide, on="period_start", how="inner"
+        last_actual = float(history["value"].tail(1).item())
+        typical_err = live_winner_metrics["mape"] / 100.0 * last_actual
+
+        st.success(
+            f"**Live winner:** {live_winner} — MAPE "
+            f"{live_winner_metrics['mape']:.2f}% &middot; sMAPE "
+            f"{live_winner_metrics['smape']:.2f}% &middot; MASE "
+            f"{live_winner_metrics['mase']:.2f}"
         )
-        _exog_cols = _regressor_ids
-        _history_for_fit = _aligned.select(["period_start", "value"])
-        _exog_for_fit = _aligned.select(["period_start", *_exog_cols])
+        st.markdown(
+            f"At the recent level of **${last_actual:,.2f} {_meta['unit']}**, a "
+            f"**{live_winner_metrics['mape']:.1f}% MAPE** means the typical "
+            f"{result.horizon}-month forecast is off by about "
+            f"**±${typical_err:,.2f} {_meta['unit']}**."
+        )
 
-        # Build exog_future: carry the latest observed regressor value
-        # forward for all 12 horizons. Continuous front-month doesn't tell
-        # us future spot prices, so the most defensible "no-new-info"
-        # assumption is to hold the current market view constant.
-        _last_exog_row = _exog_history_wide.tail(1)
-        _last_history_date = _history_for_fit["period_start"].max()
-        _future_dates = []
-        _yr, _mo = _last_history_date.year, _last_history_date.month
-        for _ in range(12):
-            _mo += 1
-            if _mo == 13:
-                _mo = 1
-                _yr += 1
-            _future_dates.append(date(_yr, _mo, 1))
-        _exog_future = pl.DataFrame(
-            {
-                "period_start": _future_dates,
-                **{col: [_last_exog_row[col][0]] * 12 for col in _exog_cols},
-            }
-        ).with_columns(pl.col("period_start").cast(pl.Date))
+        st.subheader("Actuals vs. CV forecasts")
+        st.plotly_chart(
+            build_cv_overlay(
+                history,
+                filtered_cv,
+                label=series_name,
+                horizon=result.horizon,
+                n_windows=result.n_windows,
+            ),
+            use_container_width=True,
+        )
 
-        fcst.fit(_history_for_fit, exog=_exog_for_fit)
-        forward = fcst.predict(horizon=12, exog_future=_exog_future)
-    else:
-        fcst.fit(history.select(["period_start", "value"]))
-        forward = fcst.predict(horizon=12)
+        st.subheader(f"Residual diagnostics — {live_winner}")
+        st.plotly_chart(
+            build_residual_diagnostics(
+                filtered_cv, model_name=live_winner, label=series_name
+            ),
+            use_container_width=True,
+        )
 
-# Calibrate the forward forecast's PI against CV residuals so the
-# "80% PI" actually means 80% empirical coverage on this series. A
-# per-horizon scale (one factor per step) tracks how miscoverage grows
-# with the forecast horizon; if CV used a shorter horizon than the
-# forward forecast, the last calibrated step's scale carries forward.
-_per_h_scales = conformal_scale_factors_per_horizon(
-    result.cv_details, model_name=winner, horizon=result.horizon
-)
-_forward_scales = _per_h_scales + [_per_h_scales[-1]] * max(
-    0, forward.height - len(_per_h_scales)
-)
-_forward_scales = _forward_scales[: forward.height]
-forward = apply_conformal_scaling(forward, scale=_forward_scales)
+        st.subheader("Live forward 12-month forecast")
+        forecaster_registry = {
+            "AutoARIMA": StatsForecastAutoARIMA,
+            "Prophet": ProphetForecaster,
+            "LightGBM": LightGBMForecaster,
+        }
+        with st.spinner(f"Refitting {live_winner} on full history..."):
+            fcst = forecaster_registry[live_winner](seed=42)
+            if _regressor_ids:
+                _exog_history_long = (
+                    read_observations(obs_path)
+                    .filter(pl.col("series_id").is_in(_regressor_ids))
+                    .select(["series_id", "period_start", "value"])
+                    .collect()
+                )
+                _exog_history_wide = (
+                    _exog_history_long.pivot(
+                        values="value", index="period_start", on="series_id"
+                    )
+                    .sort("period_start")
+                )
+                _aligned = history.select(["period_start", "value"]).join(
+                    _exog_history_wide, on="period_start", how="inner"
+                )
+                _history_for_fit = _aligned.select(["period_start", "value"])
+                _exog_for_fit = _aligned.select(["period_start", *_regressor_ids])
+                _last_exog_row = _exog_history_wide.tail(1)
+                _last_history_date = _history_for_fit["period_start"].max()
+                _future_dates: list[date] = []
+                _yr, _mo = _last_history_date.year, _last_history_date.month
+                for _ in range(12):
+                    _mo += 1
+                    if _mo == 13:
+                        _mo = 1
+                        _yr += 1
+                    _future_dates.append(date(_yr, _mo, 1))
+                _exog_future = pl.DataFrame(
+                    {
+                        "period_start": _future_dates,
+                        **{
+                            col: [_last_exog_row[col][0]] * 12
+                            for col in _regressor_ids
+                        },
+                    }
+                ).with_columns(pl.col("period_start").cast(pl.Date))
+                fcst.fit(_history_for_fit, exog=_exog_for_fit)
+                forward = fcst.predict(horizon=12, exog_future=_exog_future)
+            else:
+                fcst.fit(history.select(["period_start", "value"]))
+                forward = fcst.predict(horizon=12)
 
-st.plotly_chart(
-    build_forward_forecast(history, forward, model_name=winner, label=series_label),
-    use_container_width=True,
-)
-st.caption(
-    f"Prediction interval has been **conformally calibrated per horizon** "
-    f"against the {result.n_windows} CV windows above. The model's native "
-    f"band was scaled by **{_forward_scales[0]:.2f}x at h=1** and "
-    f"**{_forward_scales[-1]:.2f}x at h={forward.height}** to land at 80% "
-    f"empirical coverage on the calibration set. Factors above 1.0 mean the "
-    f"raw model was overconfident at that horizon; below 1.0 means "
-    f"overconservative."
-)
+        _per_h_scales = conformal_scale_factors_per_horizon(
+            result.cv_details, model_name=live_winner, horizon=result.horizon
+        )
+        _forward_scales = _per_h_scales + [_per_h_scales[-1]] * max(
+            0, forward.height - len(_per_h_scales)
+        )
+        _forward_scales = _forward_scales[: forward.height]
+        forward = apply_conformal_scaling(forward, scale=_forward_scales)
 
-with st.expander("Numeric forecast table"):
-    st.dataframe(
-        forward.with_columns(
-            pl.col("point").round(2),
-            pl.col("lower_80").round(2),
-            pl.col("upper_80").round(2),
-        ),
-        hide_index=True,
-        use_container_width=True,
+        st.plotly_chart(
+            build_forward_forecast(
+                history, forward, model_name=live_winner, label=series_name
+            ),
+            use_container_width=True,
+        )
+        with st.expander("Numeric forecast table"):
+            st.dataframe(
+                forward.with_columns(
+                    pl.col("point").round(2),
+                    pl.col("lower_80").round(2),
+                    pl.col("upper_80").round(2),
+                ),
+                hide_index=True,
+                use_container_width=True,
+            )
+
+# ---- Footer note ---------------------------------------------------------
+
+st.markdown("---")
+gen_str = ""
+if horizon_info is not None:
+    gen_str = (
+        f"Default forecast uses {horizon_info[0]}-month horizon, "
+        f"{horizon_info[1]} CV windows, and {horizon_info[2]}-month forward "
+        "forecast. "
     )
+st.markdown(
+    f"<p style='color:{INK_SOFT};font-size:0.85rem;'>"
+    f"{gen_str}See <a href='/Methodology' target='_self'>Methodology</a> for "
+    "how the models, prediction intervals, and conformal calibration work. "
+    "This page is informational and not financial advice."
+    "</p>",
+    unsafe_allow_html=True,
+)
