@@ -1,0 +1,65 @@
+dashboard/pages/5_About.py
+  s_b98f758bbec157::t_284c8e380aa6fc 27-46
+streamlit_app.py
+  s_b98f758bbec157::t_8b79300fef9d3f 72-88,91,96,113-115
+src/usda_sandbox/futures_daily.py
+  s_b98f758bbec157::t_bb0605fdf7aaa4 160
+  s_b98f758bbec157::t_1cb0e13d2dd4ab 52-56,61,67,73-91
+  s_b98f758bbec157::t_2706842ae53cdb 213
+  s_b98f758bbec157::t_57e9fe78182905 236,245
+dashboard/pages/8_Pricing.py
+  s_b98f758bbec157::t_41a845b806c406 1-174
+dashboard/pages/4_Methodology.py
+  s_b98f758bbec157::t_97a0cc7efb1d30 133,136-182
+dashboard/pages/6_Plan.py
+  s_b98f758bbec157::t_62291e518b0911 1-475
+dashboard/app.py
+  s_b98f758bbec157::t_eb9285827d1f14 43-46,48-51,55
+  s_b98f758bbec157::t_db7edaceeb8d19 62-68
+  s_b98f758bbec157::t_1ce9c01f5935f5 136-138,140-143
+  s_b98f758bbec157::t_0b076022469575 134-135,139,149
+  s_b98f758bbec157::t_f33bd13dc8f340 35-42
+src/usda_sandbox/__init__.py
+  s_b98f758bbec157::t_4005d1a0a2b3fd 3
+tests/test_futures_daily.py
+  s_b98f758bbec157::t_dfcbcf882efa23 101-105,108-111,113-116
+  s_b98f758bbec157::t_244ae6f5be8f34 45-51,73-77,80-84
+tests/test_direct_pricing.py
+  s_b98f758bbec157::t_eae60e7ae51682 1-69
+tests/test_direct_market.py
+  s_b98f758bbec157::t_8a3fadc3648dc6 1-126
+README.md
+  s_b98f758bbec157::t_1d2a93d44fab79 3-28
+  s_b98f758bbec157::t_c7c2b20b47623c 117,120,127-128
+  s_b98f758bbec157::t_99769da92a10f0 226-231
+  s_b98f758bbec157::t_24a09f6147294c 66-91
+docs/superpowers/specs/2026-05-15-v3-direct-market-design.md
+  s_b98f758bbec157::t_a18c5dbf773c03 1-234
+src/usda_sandbox/direct_pricing.py
+  s_b98f758bbec157::t_01788a36513bcb 26-28
+  s_b98f758bbec157::t_1b6b457362f2d6 1-25,29-165
+dashboard/pages/7_Costs.py
+  s_b98f758bbec157::t_1b778bcf055fc6 1-167,173-274
+  s_b98f758bbec157::t_c8b6784cd0174f 168-172
+src/usda_sandbox/direct_market.py
+  s_b98f758bbec157::t_53658e7b570a2b 131
+  s_b98f758bbec157::t_c1ec8599f69ef0 1-27,29,33-34,36-37,39-130,132-254,256-364
+  s_b98f758bbec157::t_01788a36513bcb 28,30-32,35,38
+  s_b98f758bbec157::t_a3b67cbb10ad0d 255
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "a70dcba9e31acbda3bc85aefb28bbc8c841a8e5e",
+  "prompts": {},
+  "sessions": {
+    "s_b98f758bbec157": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a24664b-43f2-4f20-b569-28736be51708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
