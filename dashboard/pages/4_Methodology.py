@@ -5,9 +5,8 @@ from __future__ import annotations
 import streamlit as st
 from components.cache import cache_generated_at, cache_horizon
 from components.sidebar import render_sidebar
-from components.theme import INK_SOFT, inject_global_css, set_page_chrome
+from components.theme import INK_SOFT, inject_global_css
 
-set_page_chrome(page_title="Methodology")
 inject_global_css()
 render_sidebar(persistent_picker=False)
 

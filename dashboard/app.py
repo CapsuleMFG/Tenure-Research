@@ -20,10 +20,8 @@ from components.theme import (
     BRAND_NAME,
     BRAND_TAGLINE,
     inject_global_css,
-    set_page_chrome,
 )
 
-set_page_chrome(page_title="Brief")
 inject_global_css()
 
 render_sidebar(persistent_picker=False)
@@ -109,7 +107,7 @@ for row_idx, row in enumerate(rows):
                 use_container_width=True,
             ):
                 st.session_state["series_id"] = sid
-                st.switch_page("pages/2_Series.py")
+                st.switch_page("dashboard/pages/2_Series.py")
 
 # ---- Footer hint ----------------------------------------------------------
 

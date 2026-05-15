@@ -27,13 +27,11 @@ from components.theme import (
     INK_SOFT,
     PARCHMENT_DEEP,
     inject_global_css,
-    set_page_chrome,
 )
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 from usda_sandbox.store import read_series
 
-set_page_chrome(page_title="Series")
 inject_global_css()
 series_id = render_sidebar(forecastable_only=True)
 
@@ -190,4 +188,4 @@ st.markdown(
 )
 if st.button("View 12-month forecast →", type="primary", key="goto_forecast"):
     st.session_state["series_id"] = series_id
-    st.switch_page("pages/3_Forecast.py")
+    st.switch_page("dashboard/pages/3_Forecast.py")

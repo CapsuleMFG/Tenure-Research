@@ -8,11 +8,10 @@ from pathlib import Path
 import streamlit as st
 from components.cache import cache_generated_at, cache_horizon
 from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
-from components.theme import BRAND_NAME, BRAND_TAGLINE, INK_SOFT, inject_global_css, set_page_chrome
+from components.theme import BRAND_NAME, BRAND_TAGLINE, INK_SOFT, inject_global_css
 
 from usda_sandbox import __version__
 
-set_page_chrome(page_title="About")
 inject_global_css()
 render_sidebar(persistent_picker=False)
 

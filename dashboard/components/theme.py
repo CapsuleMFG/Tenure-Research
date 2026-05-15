@@ -1,15 +1,12 @@
-"""Visual identity: page chrome + custom CSS for LivestockBrief.
-
-Two helpers:
-
-* :func:`set_page_chrome` — call once per page right after import. Sets
-  the page title, favicon, and layout. Wraps ``st.set_page_config`` so
-  pages all get a consistent posture.
-* :func:`inject_global_css` — called by ``render_sidebar`` so every page
-  gets the same styling without each page having to remember.
+"""Visual identity: global CSS for LivestockBrief.
 
 Streamlit's default theme picks up the colors in ``.streamlit/config.toml``;
-this module layers on typography, card chrome, and headline styling.
+this module layers on typography, card chrome, and headline styling via
+:func:`inject_global_css`. Call that helper once per page module.
+
+Page config (title, favicon, layout) is set centrally in
+``streamlit_app.py`` because ``st.navigation`` requires
+``st.set_page_config`` to be called once before navigation runs.
 """
 
 from __future__ import annotations
@@ -187,21 +184,6 @@ footer {{ visibility: hidden; }}
 """
 
 
-def set_page_chrome(*, page_title: str | None = None) -> None:
-    """Set page config for a LivestockBrief page.
-
-    Call this once per page module immediately after imports. ``page_title``
-    falls back to the brand name; the suffix is added automatically.
-    """
-    title = f"{page_title} — {BRAND_NAME}" if page_title else BRAND_NAME
-    st.set_page_config(
-        page_title=title,
-        page_icon="🌾",
-        layout="wide",
-        initial_sidebar_state="expanded",
-    )
-
-
 def inject_global_css() -> None:
     """Inject the brand stylesheet. Safe to call repeatedly per session."""
     st.markdown(_GLOBAL_CSS, unsafe_allow_html=True)
@@ -219,5 +201,4 @@ __all__ = [
     "PARCHMENT_DEEP",
     "UP",
     "inject_global_css",
-    "set_page_chrome",
 ]

@@ -32,7 +32,7 @@ from components.sidebar import (
     cached_series_notes,
     render_sidebar,
 )
-from components.theme import INK_SOFT, inject_global_css, set_page_chrome
+from components.theme import INK_SOFT, inject_global_css
 
 from usda_sandbox.calibration import (
     apply_conformal_scaling,
@@ -49,7 +49,6 @@ from usda_sandbox.forecast import (
 )
 from usda_sandbox.store import read_observations, read_series
 
-set_page_chrome(page_title="Forecast")
 inject_global_css()
 series_id = render_sidebar(frequencies=["monthly"], forecastable_only=True)
 

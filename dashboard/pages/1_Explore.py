@@ -12,11 +12,10 @@ from components.sidebar import (
     cached_list_series,
     render_sidebar,
 )
-from components.theme import INK_SOFT, inject_global_css, set_page_chrome
+from components.theme import INK_SOFT, inject_global_css
 
 from usda_sandbox.store import duckdb_connection
 
-set_page_chrome(page_title="Catalog")
 inject_global_css()
 render_sidebar(persistent_picker=False)
 
