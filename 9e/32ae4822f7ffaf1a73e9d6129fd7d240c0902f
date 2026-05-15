@@ -1,0 +1,66 @@
+tests/test_futures_daily.py
+  s_b98f758bbec157::t_0aaeafd51cbb10 1-94
+src/usda_sandbox/futures_daily.py
+  s_b98f758bbec157::t_43856452146cad 1-250
+dashboard/pages/5_About.py
+  s_b98f758bbec157::t_0c037bfadbe81d 27-35
+src/usda_sandbox/breakeven.py
+  s_b98f758bbec157::t_7fdd7c9533e7af 18
+  s_b98f758bbec157::t_aec82f37021d17 1-17,19-132
+tests/test_decision.py
+  s_b98f758bbec157::t_1ebc7c792abd31 1-100
+dashboard/pages/4_Methodology.py
+  s_b98f758bbec157::t_c2b0ec9ad26a61 129-155
+  s_b98f758bbec157::t_61be8da8343018 47-49,52,57-63
+pyproject.toml
+  s_b98f758bbec157::t_acee781d44ebc0 47-49
+src/usda_sandbox/ams_lmr.py
+  s_b98f758bbec157::t_d77371173da8b1 1-160
+README.md
+  s_b98f758bbec157::t_219913bf2d0f0c 3-4,6-9,11-18
+  s_b98f758bbec157::t_941b18ab296e13 186-197
+  s_b98f758bbec157::t_498fe1e2423916 121,123,127-132
+  s_b98f758bbec157::t_f7d2be12f1373a 40-42,50-52,56-63,67,71-72
+  s_b98f758bbec157::t_7121aa251f7baa 98-100,107-109
+dashboard/pages/7_Breakeven.py
+  s_b98f758bbec157::t_86683137a4e3ea 142-144
+  s_b98f758bbec157::t_016595a7f4c31d 1-141,145-171
+streamlit_app.py
+  s_b98f758bbec157::t_985963bdb46bac 55-64,79
+src/usda_sandbox/basis.py
+  s_b98f758bbec157::t_7fdd7c9533e7af 29
+  s_b98f758bbec157::t_4d44109f26ba42 1-28,30-214
+dashboard/app.py
+  s_b98f758bbec157::t_14d2b3e3bcf85e 15,23-25,29
+  s_b98f758bbec157::t_0f367fe376f79e 84-139
+dashboard/pages/2_Series.py
+  s_b98f758bbec157::t_bff6cf02760316 78-117
+tests/test_basis.py
+  s_b98f758bbec157::t_1478cd592867a0 1-157
+dashboard/pages/6_Decide.py
+  s_b98f758bbec157::t_01f9b4b5ad1a53 1-286
+src/usda_sandbox/__init__.py
+  s_b98f758bbec157::t_273c1aa089d9d2 3
+.github/workflows/refresh-daily.yml
+  s_b98f758bbec157::t_d170dde921626c 1-76
+tests/test_breakeven.py
+  s_b98f758bbec157::t_c09921bb3becb2 1-93
+src/usda_sandbox/decision.py
+  s_b98f758bbec157::t_658e96171728ee 1-207
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "9e32ae4822f7ffaf1a73e9d6129fd7d240c0902f",
+  "prompts": {},
+  "sessions": {
+    "s_b98f758bbec157": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a24664b-43f2-4f20-b569-28736be51708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
