@@ -36,10 +36,13 @@ render_sidebar(persistent_picker=False)
 
 st.markdown("# Today's input costs")
 st.markdown(
-    f"<p style='color:{INK_SOFT};font-size:1.0rem;'>"
-    "Snapshot of the prices that drive your operation: feeder cattle (buy "
-    "side), feed grains (corn / soybean meal / oats), and a hay reference. "
-    "Daily-refreshed where the data is daily; monthly where it isn't."
+    f"<p style='color:{INK_SOFT};font-size:1.0rem;line-height:1.5;"
+    f"max-width:780px;'>"
+    "What your operation pays for, today. Use this page as a "
+    "<strong>directional read</strong> on input costs — if corn is up "
+    "10% over the last month, your finishing feed budget needs the same "
+    "bump. Take any price you see here back to <strong>Plan</strong> as "
+    "an updated cost input."
     "</p>",
     unsafe_allow_html=True,
 )

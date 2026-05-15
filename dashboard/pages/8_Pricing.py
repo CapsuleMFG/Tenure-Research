@@ -34,11 +34,16 @@ render_sidebar(persistent_picker=False)
 
 st.markdown("# Pricing reference")
 st.markdown(
-    f"<p style='color:{INK_SOFT};font-size:1.0rem;'>"
-    "Research-derived pricing ranges for direct-market beef, late 2020s. "
-    "Use them as starting points and sanity checks against your local "
-    "market — actual price depends on your region, breed, finishing "
-    "style, brand maturity, and customer base."
+    f"<p style='color:{INK_SOFT};font-size:1.0rem;line-height:1.5;"
+    f"max-width:780px;'>"
+    "How much should you charge for a quarter share? A whole carcass? "
+    "There's no central index for direct-market beef, but a survey of "
+    "USDA AMS, extension publications, and real producer websites "
+    "gives defensible ranges. <strong>Use the cards as starting "
+    "anchors, not a price sheet</strong> — pricing varies considerably "
+    "by region, finishing style, breed, and brand maturity. The share "
+    "calculator below turns your hanging weight + $/lb into customer "
+    "totals."
     "</p>",
     unsafe_allow_html=True,
 )

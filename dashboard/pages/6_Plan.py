@@ -82,10 +82,13 @@ render_sidebar(persistent_picker=False)
 
 st.markdown("# Plan your operation")
 st.markdown(
-    f"<p style='color:{INK_SOFT};font-size:1.0rem;'>"
-    "Pick a mode below. Enter your real numbers. The math is honest and "
-    "transparent — every cost line shows on screen, and we'll surface the "
-    "current market signals that matter for your decisions."
+    f"<p style='color:{INK_SOFT};font-size:1.0rem;line-height:1.5;"
+    f"max-width:780px;'>"
+    "Three tabs for three operation modes. Pick yours, pick your "
+    "<strong>region</strong> (pre-fills typical costs), then adjust "
+    "every input to match your real operation. The big margin card at "
+    "the bottom of each tab is the answer — everything above it is the "
+    "math that produced it."
     "</p>",
     unsafe_allow_html=True,
 )
@@ -212,6 +215,19 @@ tab_cc, tab_st, tab_fd = st.tabs([
 # --- Cow-calf ---------------------------------------------------------------
 
 with tab_cc:
+    st.markdown(
+        "<div style='background:#F0EBE1;border-radius:8px;"
+        "padding:0.85rem 1.1rem;margin-bottom:1rem;font-size:0.95rem;"
+        "line-height:1.5;'>"
+        "<strong>Cow-calf operation.</strong> You maintain a breeding "
+        "herd and sell weaned calves (~500–600 lb) into the feeder "
+        "market each fall. This tab computes your annual per-cow cost, "
+        "your per-calf cost, your margin at today's feeder prices, and "
+        "the breakeven $/cwt you need to clear at weaning."
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
     st.markdown("### Today's relevant market")
     chips = []
     if fed_500 is not None:
@@ -395,6 +411,19 @@ with tab_cc:
 # --- Stocker ----------------------------------------------------------------
 
 with tab_st:
+    st.markdown(
+        "<div style='background:#F0EBE1;border-radius:8px;"
+        "padding:0.85rem 1.1rem;margin-bottom:1rem;font-size:0.95rem;"
+        "line-height:1.5;'>"
+        "<strong>Stocker operation.</strong> You buy weaned calves "
+        "(~450–550 lb), graze them up to feedlot placement weight "
+        "(~700–800 lb), and sell to a feedlot. The margin lives in the "
+        "gap between buy price and sell price, net of grass, hay, "
+        "supplement, vet, death loss, and interest on the placement."
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
     st.markdown("### Today's relevant market")
     chips = []
     if fed_500 is not None:
@@ -553,6 +582,21 @@ with tab_st:
 # --- Finish & direct (freezer beef) ----------------------------------------
 
 with tab_fd:
+    st.markdown(
+        "<div style='background:#F0EBE1;border-radius:8px;"
+        "padding:0.85rem 1.1rem;margin-bottom:1rem;font-size:0.95rem;"
+        "line-height:1.5;'>"
+        "<strong>Finish-and-direct (freezer beef).</strong> You raise "
+        "or buy feeders, finish them on the farm, and sell freezer beef "
+        "directly to consumers as quarters / halves / wholes. This tab "
+        "shows your cost per pound of hanging weight, your retail "
+        "margin, and a <em>commodity-floor sanity check</em>: what the "
+        "same animal would have fetched at today's Live Cattle futures, "
+        "so you can see your direct-market premium explicitly."
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
     st.markdown("### Today's relevant market")
     chips = []
     if le_today is not None:

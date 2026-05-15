@@ -19,7 +19,6 @@ from components.cache import cache_generated_at, cached_forecast_cache
 from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
 from components.theme import (
     BRAND_NAME,
-    BRAND_TAGLINE,
     DOWN,
     INK_SOFT,
     UP,
@@ -56,19 +55,91 @@ LEAD_SERIES = "cattle_feeder_steer_750_800"
 
 st.markdown(
     f"<h1 style='margin-bottom:0.1rem'>{BRAND_NAME}</h1>"
-    f"<p style='color:#5A5550;font-size:1.02rem;margin-top:0;'>{BRAND_TAGLINE}</p>"
-    "<p style='color:#5A5550;font-size:0.95rem;margin-top:0.6rem;max-width:780px;"
-    "line-height:1.5;'>"
-    "Built for direct-market cattle and hog producers — farms that raise, "
-    "finish, and sell freezer beef direct to consumers. Head to "
-    "<strong>Plan</strong> in the sidebar to model your cow-calf, stocker, "
-    "or finish-and-direct operation. <strong>Costs</strong> tracks today's "
-    "feed and feeder prices. <strong>Pricing</strong> is your reference "
-    "for setting share / hanging-weight prices. Free, public, not "
-    "financial advice."
+    f"<p style='color:#5A5550;font-size:1.05rem;margin-top:0.2rem;"
+    f"max-width:780px;line-height:1.45;'>"
+    "<strong>For direct-market cattle ranchers</strong> — farms that "
+    "raise, finish, and (often) slaughter their own cattle, selling "
+    "freezer beef directly to consumers. Free. Public. No login."
     "</p>",
     unsafe_allow_html=True,
 )
+
+# --- Quick-start onboarding panel -----------------------------------------
+
+with st.container(border=True):
+    st.markdown("#### What you'll get in 5 minutes")
+    a, b, c = st.columns(3)
+    with a:
+        st.markdown(
+            "<div style='font-size:0.92rem;line-height:1.5;'>"
+            "<div style='font-size:1.5rem;'>📋</div>"
+            "<strong>Your operation, modeled</strong><br>"
+            f"<span style='color:{INK_SOFT}'>Pick cow-calf, stocker, or "
+            "finish-and-direct. Pick your region (pre-fills typical "
+            "costs). Plug in your numbers. Get per-head margin and "
+            "annual P&L.</span></div>",
+            unsafe_allow_html=True,
+        )
+    with b:
+        st.markdown(
+            "<div style='font-size:0.92rem;line-height:1.5;'>"
+            "<div style='font-size:1.5rem;'>📈</div>"
+            "<strong>Today's input costs</strong><br>"
+            f"<span style='color:{INK_SOFT}'>Daily corn, soybean meal, "
+            "and feeder cattle prices — the inputs that drive your "
+            "real costs. From CME futures and USDA ERS.</span></div>",
+            unsafe_allow_html=True,
+        )
+    with c:
+        st.markdown(
+            "<div style='font-size:0.92rem;line-height:1.5;'>"
+            "<div style='font-size:1.5rem;'>🥩</div>"
+            "<strong>Freezer-beef pricing</strong><br>"
+            f"<span style='color:{INK_SOFT}'>Research-derived $/lb "
+            "hanging ranges for grain-finished, grass-finished, and "
+            "premium-branded beef. Plus a share-size calculator.</span>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("")
+    st.markdown("**How to use it**")
+    st.markdown(
+        "<ol style='color:#1F1F1F;font-size:0.92rem;line-height:1.55;"
+        "margin-top:0.2rem;padding-left:1.2rem;'>"
+        "<li>Go to <strong>Plan</strong> (sidebar). Pick the tab that "
+        "matches your operation: cow-calf, stocker, or finish-and-direct.</li>"
+        "<li>Pick your <strong>region</strong> from the dropdown. The cost "
+        "stack pre-fills with typical numbers for your geography.</li>"
+        "<li>Adjust any input to match your reality. The math updates live; "
+        "every cost line is shown so nothing is hidden.</li>"
+        "<li>Click <strong>🔗 Copy shareable link</strong> at the bottom "
+        "to save your inputs in the URL. Or use <strong>📋 Save / load "
+        "scenarios</strong> at the top to keep multiple named versions "
+        "in your browser.</li>"
+        "</ol>",
+        unsafe_allow_html=True,
+    )
+
+    cta_a, cta_b, cta_c = st.columns([1, 1, 1])
+    with cta_a:
+        if st.button(
+            "📋 Start with Plan", type="primary", use_container_width=True,
+            key="cta_plan",
+        ):
+            st.switch_page("dashboard/pages/6_Plan.py")
+    with cta_b:
+        if st.button(
+            "📈 See today's costs", use_container_width=True,
+            key="cta_costs",
+        ):
+            st.switch_page("dashboard/pages/7_Costs.py")
+    with cta_c:
+        if st.button(
+            "🥩 Pricing reference", use_container_width=True,
+            key="cta_pricing",
+        ):
+            st.switch_page("dashboard/pages/8_Pricing.py")
 
 obs_path = Path(DEFAULT_OBS_PATH)
 if not obs_path.exists():
@@ -156,12 +227,22 @@ def _render_futures_strip() -> None:
             )
 
 
+st.markdown("---")
 st.markdown("### Today's front-month futures")
+st.caption(
+    "CME daily closes via yfinance. These are the prices the industry "
+    "discovers daily — your local cash settles toward them through basis."
+)
 _render_futures_strip()
 
 # ---- Commodity-card grid --------------------------------------------------
 
-st.markdown("### What the market looks like right now")
+st.markdown("### Reference series — what the market looks like right now")
+st.caption(
+    "Monthly USDA ERS prices with 6-month forecasts and recent trend. "
+    "Use these as macro context — the feeder cards are most relevant to "
+    "buy-side decisions; the wholesale cards signal downstream demand."
+)
 
 cols_per_row = 3
 rows = [
@@ -202,9 +283,10 @@ gen_label = gen_at[:10] if gen_at else "unavailable"
 st.markdown(
     "<p style='color:#5A5550;font-size:0.85rem;'>"
     f"Latest forecast snapshot: <strong>{gen_label}</strong>. "
-    "See <a href='/Methodology' target='_self'>Methodology</a> for how the "
-    "forecasts are produced and how to read the prediction intervals. "
-    "This page is informational and not financial advice."
+    "See <a href='/Methodology' target='_self'>Methodology</a> for how "
+    "the data is sourced and the math works, or <a href='/About' "
+    "target='_self'>About</a> for the project background. "
+    "This site is informational and not financial advice."
     "</p>",
     unsafe_allow_html=True,
 )
