@@ -1,0 +1,22 @@
+src/usda_sandbox/precompute.py
+  s_b98f758bbec157::t_039477a79b9f02 245
+  s_b98f758bbec157::t_8b9962bb817444 348
+dashboard/components/brief.py
+  s_b98f758bbec157::t_8b9962bb817444 24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "5bd74191f220fe373364d7e64c4d24230ed42da9",
+  "prompts": {},
+  "sessions": {
+    "s_b98f758bbec157": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a24664b-43f2-4f20-b569-28736be51708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
