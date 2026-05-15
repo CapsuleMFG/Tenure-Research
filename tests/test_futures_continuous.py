@@ -12,7 +12,6 @@ import pytest
 
 from usda_sandbox.futures_continuous import (
     ContinuousManifestEntry,
-    _default_fetcher,
     _safe_filename,
     append_continuous_to_observations,
     sync_continuous_futures,

@@ -25,6 +25,8 @@ from dataclasses import dataclass
 
 __all__ = [
     "COW_CALF_REGIONS",
+    "FINISH_DIRECT_REGIONS",
+    "STOCKER_REGIONS",
     "CowCalfEconomics",
     "CowCalfInputs",
     "FinishDirectEconomics",
@@ -38,6 +40,8 @@ __all__ = [
     "default_cow_calf_inputs",
     "default_finish_direct_inputs",
     "default_stocker_inputs",
+    "finish_direct_inputs_for_region",
+    "stocker_inputs_for_region",
 ]
 
 
@@ -331,6 +335,126 @@ class StockerEconomics:
     total_margin: float
 
 
+# Regional stocker presets. The dominant variation across geography:
+# - **Plains**: wheat-pasture stocker, Nov-March, ~$0.55/head/day grazing
+#   on small-grain pasture, low hay needs, low death loss.
+# - **Midwest**: summer cool-season grass, longer cycle, slightly higher
+#   pasture cost, low hay needs.
+# - **Southeast**: tall fescue / bermudagrass on year-round pasture, low
+#   pasture cost per day, longer cycle.
+# - **PNW/Mountain**: irrigated meadow + dry-land mix, moderate cost.
+# - **Northeast**: small-scale on improved pasture; highest pasture cost.
+# - **Southwest rangeland**: many acres, low /day cost, higher death loss.
+STOCKER_REGIONS: dict[str, dict[str, object]] = {
+    "Plains (KS/OK wheat pasture)": {
+        "description": (
+            "Classic Nov-March wheat-pasture stocker (OSU CR-212). Higher "
+            "$/head/day on rented small-grain pasture; low hay supplement; "
+            "low death loss because of managed grazing."
+        ),
+        "days_on_grass": 150,
+        "pasture_cost_per_head_per_day": 0.55,
+        "hay_supplement_cost_per_head": 25.0,
+        "feed_supplement_cost_per_head": 20.0,
+        "vet_per_head": 30.0,
+        "death_loss_pct": 0.012,
+    },
+    "Midwest (IA/MO/IL summer grass)": {
+        "description": (
+            "Cool-season grass stocker May–October; moderate pasture cost; "
+            "minimal hay; competing with row-crop ground for acres."
+        ),
+        "days_on_grass": 165,
+        "pasture_cost_per_head_per_day": 0.50,
+        "hay_supplement_cost_per_head": 20.0,
+        "feed_supplement_cost_per_head": 25.0,
+        "vet_per_head": 30.0,
+        "death_loss_pct": 0.015,
+    },
+    "Southeast (TN/GA/KY fescue/bermuda)": {
+        "description": (
+            "Year-round forage on fescue/bermudagrass; lower $/day "
+            "pasture cost; longer cycles possible; higher vet (parasites)."
+        ),
+        "days_on_grass": 210,
+        "pasture_cost_per_head_per_day": 0.35,
+        "hay_supplement_cost_per_head": 30.0,
+        "feed_supplement_cost_per_head": 25.0,
+        "vet_per_head": 50.0,
+        "death_loss_pct": 0.020,
+    },
+    "Pacific NW / Mountain (MT/ID/OR/WA)": {
+        "description": (
+            "Mix of irrigated meadow and dry-land grass; moderate per-day "
+            "cost; longer pre-conditioning at higher elevations."
+        ),
+        "days_on_grass": 180,
+        "pasture_cost_per_head_per_day": 0.45,
+        "hay_supplement_cost_per_head": 55.0,
+        "feed_supplement_cost_per_head": 25.0,
+        "vet_per_head": 35.0,
+        "death_loss_pct": 0.015,
+    },
+    "Northeast (PA/NY/VT/MD/VA)": {
+        "description": (
+            "Small-scale stocker on improved pasture; highest $/day cost "
+            "but shorter cycles; less common as a standalone enterprise."
+        ),
+        "days_on_grass": 150,
+        "pasture_cost_per_head_per_day": 0.75,
+        "hay_supplement_cost_per_head": 70.0,
+        "feed_supplement_cost_per_head": 35.0,
+        "vet_per_head": 45.0,
+        "death_loss_pct": 0.015,
+    },
+    "Southwest rangeland (AZ/NM/NV/W-TX)": {
+        "description": (
+            "Dry-land rangeland; many acres needed; very low $/head/day "
+            "but higher death loss from heat, water-source distance, and "
+            "predator pressure."
+        ),
+        "days_on_grass": 200,
+        "pasture_cost_per_head_per_day": 0.30,
+        "hay_supplement_cost_per_head": 60.0,
+        "feed_supplement_cost_per_head": 45.0,
+        "vet_per_head": 45.0,
+        "death_loss_pct": 0.025,
+    },
+}
+
+
+def stocker_inputs_for_region(
+    region: str,
+    *,
+    n_head: int = 120,
+    purchase_weight_lbs: float = 525.0,
+    purchase_price_per_cwt: float = 315.0,
+    sale_weight_lbs: float = 775.0,
+    sale_price_per_cwt: float = 285.0,
+    interest_rate_annual: float = 0.085,
+) -> StockerInputs:
+    """Build a :class:`StockerInputs` from a regional preset."""
+    if region not in STOCKER_REGIONS:
+        raise ValueError(
+            f"Unknown region {region!r}; valid: {sorted(STOCKER_REGIONS)}"
+        )
+    cfg = STOCKER_REGIONS[region]
+    return StockerInputs(
+        n_head=n_head,
+        purchase_weight_lbs=purchase_weight_lbs,
+        purchase_price_per_cwt=purchase_price_per_cwt,
+        sale_weight_lbs=sale_weight_lbs,
+        sale_price_per_cwt=sale_price_per_cwt,
+        days_on_grass=int(cfg["days_on_grass"]),
+        pasture_cost_per_head_per_day=float(cfg["pasture_cost_per_head_per_day"]),
+        hay_supplement_cost_per_head=float(cfg["hay_supplement_cost_per_head"]),
+        feed_supplement_cost_per_head=float(cfg["feed_supplement_cost_per_head"]),
+        vet_per_head=float(cfg["vet_per_head"]),
+        death_loss_pct=float(cfg["death_loss_pct"]),
+        interest_rate_annual=interest_rate_annual,
+    )
+
+
 def default_stocker_inputs() -> StockerInputs:
     """OSU CR-212 (Sept 2024) wheat-pasture stocker baseline + Plains avgs.
 
@@ -437,6 +561,121 @@ class FinishDirectEconomics:
     total_revenue: float
     total_cost: float
     total_margin: float
+
+
+# Regional finish-and-direct presets. Three things vary by region:
+# - **Retail $/lb hanging**: NE / PNW commands the premium (NYC, Boston,
+#   Portland, Seattle markets); Plains and Midwest mid; SE / SW lower.
+# - **Grain supplement cost**: cheap in Corn Belt, expensive far from it.
+# - **Abattoir + cut-and-wrap fees**: highest in NE (small-plant
+#   capacity, premium labor), lowest in Midwest (high small-plant
+#   density), moderate elsewhere.
+FINISH_DIRECT_REGIONS: dict[str, dict[str, object]] = {
+    "Plains (KS/OK/TX panhandle)": {
+        "description": (
+            "Cheap grain access; lower abattoir density; mid-tier retail. "
+            "Strong for grain-finished freezer beef; grass-finish viable."
+        ),
+        "grain_supplement_cost_per_head": 290.0,
+        "hay_supplement_cost_per_head": 150.0,
+        "abattoir_slaughter_fee_per_head": 115.0,
+        "cut_and_wrap_per_lb_hanging": 0.85,
+        "direct_retail_per_lb_hanging": 6.00,
+    },
+    "Midwest / Corn Belt (IA/MO/IL/IN)": {
+        "description": (
+            "Cheapest grain access; densest small-plant abattoir network; "
+            "strong direct-market demand in metro Chicago / Indy / St. Louis."
+        ),
+        "grain_supplement_cost_per_head": 260.0,
+        "hay_supplement_cost_per_head": 160.0,
+        "abattoir_slaughter_fee_per_head": 110.0,
+        "cut_and_wrap_per_lb_hanging": 0.80,
+        "direct_retail_per_lb_hanging": 6.50,
+    },
+    "Southeast (TN/GA/KY/NC/VA)": {
+        "description": (
+            "Year-round forage favors grass-finish; moderate grain access; "
+            "moderate retail (Atlanta, Nashville, Charlotte metros)."
+        ),
+        "grain_supplement_cost_per_head": 350.0,
+        "hay_supplement_cost_per_head": 130.0,
+        "abattoir_slaughter_fee_per_head": 140.0,
+        "cut_and_wrap_per_lb_hanging": 0.95,
+        "direct_retail_per_lb_hanging": 6.25,
+    },
+    "Pacific NW / Mountain (MT/ID/OR/WA)": {
+        "description": (
+            "Grass-finish strong (Mountain Beef territory); high retail in "
+            "Portland / Seattle metros; longer hay needs in winter."
+        ),
+        "grain_supplement_cost_per_head": 360.0,
+        "hay_supplement_cost_per_head": 220.0,
+        "abattoir_slaughter_fee_per_head": 145.0,
+        "cut_and_wrap_per_lb_hanging": 1.05,
+        "direct_retail_per_lb_hanging": 7.00,
+    },
+    "Northeast (PA/NY/VT/MA/MD)": {
+        "description": (
+            "Highest retail (NYC / Boston / Philly metros); long winter "
+            "drives hay; small-plant capacity tight; abattoir + C&W fees "
+            "are the highest in the country."
+        ),
+        "grain_supplement_cost_per_head": 410.0,
+        "hay_supplement_cost_per_head": 260.0,
+        "abattoir_slaughter_fee_per_head": 175.0,
+        "cut_and_wrap_per_lb_hanging": 1.15,
+        "direct_retail_per_lb_hanging": 7.50,
+    },
+    "Southwest (AZ/NM/NV/W-TX)": {
+        "description": (
+            "Arid finishing is hard; grain heavy if you finish; lower "
+            "retail outside Phoenix / Denver; abattoir distances long."
+        ),
+        "grain_supplement_cost_per_head": 380.0,
+        "hay_supplement_cost_per_head": 200.0,
+        "abattoir_slaughter_fee_per_head": 150.0,
+        "cut_and_wrap_per_lb_hanging": 1.00,
+        "direct_retail_per_lb_hanging": 5.75,
+    },
+}
+
+
+def finish_direct_inputs_for_region(
+    region: str,
+    *,
+    n_head: int = 10,
+    feeder_cost_per_head: float = 2000.0,
+    days_on_farm: int = 210,
+    finished_live_weight_lbs: float = 1350.0,
+    dressing_pct: float = 0.61,
+    pasture_cost_per_head_per_day: float = 0.55,
+    vet_per_head: float = 55.0,
+    death_loss_pct: float = 0.01,
+    other_per_head: float = 75.0,
+) -> FinishDirectInputs:
+    """Build a :class:`FinishDirectInputs` from a regional preset."""
+    if region not in FINISH_DIRECT_REGIONS:
+        raise ValueError(
+            f"Unknown region {region!r}; valid: {sorted(FINISH_DIRECT_REGIONS)}"
+        )
+    cfg = FINISH_DIRECT_REGIONS[region]
+    return FinishDirectInputs(
+        n_head=n_head,
+        feeder_cost_per_head=feeder_cost_per_head,
+        days_on_farm=days_on_farm,
+        finished_live_weight_lbs=finished_live_weight_lbs,
+        dressing_pct=dressing_pct,
+        pasture_cost_per_head_per_day=pasture_cost_per_head_per_day,
+        hay_supplement_cost_per_head=float(cfg["hay_supplement_cost_per_head"]),
+        grain_supplement_cost_per_head=float(cfg["grain_supplement_cost_per_head"]),
+        vet_per_head=vet_per_head,
+        death_loss_pct=death_loss_pct,
+        abattoir_slaughter_fee_per_head=float(cfg["abattoir_slaughter_fee_per_head"]),
+        cut_and_wrap_per_lb_hanging=float(cfg["cut_and_wrap_per_lb_hanging"]),
+        other_per_head=other_per_head,
+        direct_retail_per_lb_hanging=float(cfg["direct_retail_per_lb_hanging"]),
+    )
 
 
 def default_finish_direct_inputs() -> FinishDirectInputs:

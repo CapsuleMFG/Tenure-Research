@@ -29,6 +29,8 @@ from components.theme import (
 
 from usda_sandbox.direct_market import (
     COW_CALF_REGIONS,
+    FINISH_DIRECT_REGIONS,
+    STOCKER_REGIONS,
     CowCalfInputs,
     FinishDirectInputs,
     StockerInputs,
@@ -39,6 +41,8 @@ from usda_sandbox.direct_market import (
     default_cow_calf_inputs,
     default_finish_direct_inputs,
     default_stocker_inputs,
+    finish_direct_inputs_for_region,
+    stocker_inputs_for_region,
 )
 from usda_sandbox.sources import (
     COW_CALF_SOURCES,
@@ -390,8 +394,28 @@ with tab_st:
         "(GF) for forward signals on where placement prices are headed."
     )
 
-    sd = default_stocker_inputs()
-    sd_session = st.session_state.get("st_inputs", sd)
+    # Region picker first — pre-fills the cost stack.
+    st_region_options = list(STOCKER_REGIONS.keys())
+    default_st_region = _qp_get_str("st_region", st_region_options[0])
+    if default_st_region not in st_region_options:
+        default_st_region = st_region_options[0]
+    st_region = st.selectbox(
+        "Pick your region (pre-fills typical costs)",
+        options=st_region_options,
+        index=st_region_options.index(default_st_region),
+        key="st_region",
+    )
+    st.caption(STOCKER_REGIONS[st_region]["description"])
+
+    prior_st_region = st.session_state.get("st_region_prior")
+    st_region_changed = prior_st_region != st_region
+    st.session_state["st_region_prior"] = st_region
+
+    if st_region_changed or "st_inputs" not in st.session_state:
+        sd_session = stocker_inputs_for_region(st_region)
+    else:
+        sd_session = st.session_state["st_inputs"]
+
     sd_session = StockerInputs(
         n_head=_qp_get_int("st_n", sd_session.n_head),
         purchase_weight_lbs=_qp_get_float("st_pw", sd_session.purchase_weight_lbs),
@@ -409,6 +433,7 @@ with tab_st:
         death_loss_pct=_qp_get_float("st_dl", sd_session.death_loss_pct),
         interest_rate_annual=_qp_get_float("st_ir", sd_session.interest_rate_annual),
     )
+    _ = default_stocker_inputs()  # referenced for legacy; unused
     c1, c2, c3 = st.columns(3)
     with c1:
         st.markdown("**Animals**")
@@ -487,6 +512,7 @@ with tab_st:
               f"${econ.breakeven_sale_price_per_cwt:,.2f}/cwt")
 
     _share_link_button("st", {
+        "st_region": st_region,
         "st_n": n_head,
         "st_pw": pw,
         "st_pp": pp,
@@ -530,8 +556,28 @@ with tab_fd:
         "drive your supplemental finishing feed cost."
     )
 
-    fd = default_finish_direct_inputs()
-    fd_session = st.session_state.get("fd_inputs", fd)
+    # Region picker first — pre-fills retail + abattoir + cut-and-wrap.
+    fd_region_options = list(FINISH_DIRECT_REGIONS.keys())
+    default_fd_region = _qp_get_str("fd_region", fd_region_options[0])
+    if default_fd_region not in fd_region_options:
+        default_fd_region = fd_region_options[0]
+    fd_region = st.selectbox(
+        "Pick your region (pre-fills typical retail + processing costs)",
+        options=fd_region_options,
+        index=fd_region_options.index(default_fd_region),
+        key="fd_region",
+    )
+    st.caption(FINISH_DIRECT_REGIONS[fd_region]["description"])
+
+    prior_fd_region = st.session_state.get("fd_region_prior")
+    fd_region_changed = prior_fd_region != fd_region
+    st.session_state["fd_region_prior"] = fd_region
+
+    if fd_region_changed or "fd_inputs" not in st.session_state:
+        fd_session = finish_direct_inputs_for_region(fd_region)
+    else:
+        fd_session = st.session_state["fd_inputs"]
+
     fd_session = FinishDirectInputs(
         n_head=_qp_get_int("fd_n", fd_session.n_head),
         feeder_cost_per_head=_qp_get_float("fd_fc", fd_session.feeder_cost_per_head),
@@ -555,6 +601,7 @@ with tab_fd:
         direct_retail_per_lb_hanging=_qp_get_float(
             "fd_retail", fd_session.direct_retail_per_lb_hanging),
     )
+    _ = default_finish_direct_inputs()  # referenced for legacy; unused
 
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -677,6 +724,7 @@ with tab_fd:
     )
 
     _share_link_button("fd", {
+        "fd_region": fd_region,
         "fd_n": n_head,
         "fd_fc": fcost,
         "fd_days": days,

@@ -5,15 +5,21 @@ from __future__ import annotations
 import pytest
 
 from usda_sandbox.direct_market import (
+    COW_CALF_REGIONS,
+    FINISH_DIRECT_REGIONS,
+    STOCKER_REGIONS,
     CowCalfInputs,
     FinishDirectInputs,
     StockerInputs,
     compute_cow_calf_economics,
     compute_finish_direct_economics,
     compute_stocker_economics,
+    cow_calf_inputs_for_region,
     default_cow_calf_inputs,
     default_finish_direct_inputs,
     default_stocker_inputs,
+    finish_direct_inputs_for_region,
+    stocker_inputs_for_region,
 )
 
 # --- Cow-calf -------------------------------------------------------------
@@ -124,3 +130,114 @@ def test_finish_direct_invalid_dressing_raises() -> None:
         compute_finish_direct_economics(
             FinishDirectInputs(**{**base.__dict__, "dressing_pct": 0.80})
         )
+
+
+# --- Regional presets ------------------------------------------------------
+
+
+def test_cow_calf_regions_cover_six_geographies() -> None:
+    assert len(COW_CALF_REGIONS) == 6
+    for cfg in COW_CALF_REGIONS.values():
+        # Every region has the keys the builder consumes
+        assert {
+            "pasture_acres_per_cow", "pasture_cost_per_acre",
+            "hay_tons_per_cow", "hay_cost_per_ton",
+            "supplement_cost_per_cow", "vet_breeding_per_cow",
+            "fixed_per_cow", "weaning_weight_lbs", "description",
+        } <= cfg.keys()
+
+
+def test_cow_calf_regional_costs_differ_meaningfully() -> None:
+    """Southeast (year-round forage) should be cheaper than Northeast
+    (long winter, expensive land). If they aren't, the presets aren't
+    differentiated enough to be useful."""
+    se = compute_cow_calf_economics(
+        cow_calf_inputs_for_region("Southeast (TN/GA/KY/AR/FL)")
+    )
+    ne = compute_cow_calf_economics(
+        cow_calf_inputs_for_region("Northeast (PA/NY/VT/MD/VA)")
+    )
+    assert se.annual_cost_per_cow < ne.annual_cost_per_cow
+    # At least $400/cow gap between SE and NE — they're fundamentally
+    # different cost structures.
+    assert (ne.annual_cost_per_cow - se.annual_cost_per_cow) > 400
+
+
+def test_cow_calf_region_builder_with_unknown_region_raises() -> None:
+    with pytest.raises(ValueError, match="Unknown region"):
+        cow_calf_inputs_for_region("Mars")
+
+
+def test_stocker_regions_cover_six_geographies() -> None:
+    assert len(STOCKER_REGIONS) == 6
+    for cfg in STOCKER_REGIONS.values():
+        assert {
+            "days_on_grass", "pasture_cost_per_head_per_day",
+            "hay_supplement_cost_per_head", "feed_supplement_cost_per_head",
+            "vet_per_head", "death_loss_pct", "description",
+        } <= cfg.keys()
+
+
+def test_stocker_regional_pasture_cost_differs() -> None:
+    """SE pasture should be cheapest per day; NE most expensive."""
+    se = stocker_inputs_for_region("Southeast (TN/GA/KY fescue/bermuda)")
+    ne = stocker_inputs_for_region("Northeast (PA/NY/VT/MD/VA)")
+    assert se.pasture_cost_per_head_per_day < ne.pasture_cost_per_head_per_day
+
+
+def test_finish_direct_regions_cover_six_geographies() -> None:
+    assert len(FINISH_DIRECT_REGIONS) == 6
+    for cfg in FINISH_DIRECT_REGIONS.values():
+        assert {
+            "grain_supplement_cost_per_head",
+            "hay_supplement_cost_per_head",
+            "abattoir_slaughter_fee_per_head",
+            "cut_and_wrap_per_lb_hanging",
+            "direct_retail_per_lb_hanging", "description",
+        } <= cfg.keys()
+
+
+def test_finish_direct_northeast_premium_over_midwest() -> None:
+    """NE direct-retail should exceed Midwest by a meaningful amount —
+    that's the NYC/Boston premium relative to flyover-metro markets."""
+    mw = finish_direct_inputs_for_region("Midwest / Corn Belt (IA/MO/IL/IN)")
+    ne = finish_direct_inputs_for_region("Northeast (PA/NY/VT/MA/MD)")
+    assert ne.direct_retail_per_lb_hanging > mw.direct_retail_per_lb_hanging
+    assert (ne.direct_retail_per_lb_hanging - mw.direct_retail_per_lb_hanging) >= 0.50
+
+
+def test_finish_direct_midwest_grain_cheapest() -> None:
+    """Corn Belt should be the cheapest grain region — that's its raison d'être."""
+    mw = finish_direct_inputs_for_region("Midwest / Corn Belt (IA/MO/IL/IN)")
+    for other_region in FINISH_DIRECT_REGIONS:
+        if other_region.startswith("Midwest"):
+            continue
+        other = finish_direct_inputs_for_region(other_region)
+        assert mw.grain_supplement_cost_per_head <= other.grain_supplement_cost_per_head, (
+            f"Midwest grain ({mw.grain_supplement_cost_per_head}) not <= "
+            f"{other_region} ({other.grain_supplement_cost_per_head})"
+        )
+
+
+def test_region_builders_propagate_user_overrides() -> None:
+    """Builder kwargs (n_cows, prices) should win over preset defaults."""
+    cc = cow_calf_inputs_for_region(
+        "Plains (KS/NE/OK/TX panhandle)",
+        n_cows=200, weaned_price_per_cwt=350.0,
+    )
+    assert cc.n_cows == 200
+    assert cc.weaned_price_per_cwt == 350.0
+
+    st_inputs = stocker_inputs_for_region(
+        "Plains (KS/OK wheat pasture)",
+        n_head=500, sale_price_per_cwt=300.0,
+    )
+    assert st_inputs.n_head == 500
+    assert st_inputs.sale_price_per_cwt == 300.0
+
+    fd = finish_direct_inputs_for_region(
+        "Midwest / Corn Belt (IA/MO/IL/IN)",
+        n_head=50, finished_live_weight_lbs=1450.0,
+    )
+    assert fd.n_head == 50
+    assert fd.finished_live_weight_lbs == 1450.0
