@@ -1,0 +1,43 @@
+dashboard/components/theme.py
+  s_b98f758bbec157::t_85792799de814c 1
+  s_b98f758bbec157::t_b148cf6c3ffd13 16-17
+streamlit_app.py
+  s_b98f758bbec157::t_8420c9c56e6bea 1,42
+  s_b98f758bbec157::t_a8216bf82ad1ed 30
+  s_b98f758bbec157::t_7a6ef72fe38cb1 44-46
+dashboard/pages/4_Methodology.py
+  s_b98f758bbec157::t_d1e2212ab65b12 13
+src/usda_sandbox/__init__.py
+  s_b98f758bbec157::t_9167ddf4315aea 1
+src/usda_sandbox/precompute.py
+  s_b98f758bbec157::t_35e41f858f8d6d 1,385
+dashboard/app.py
+  s_b98f758bbec157::t_1a2b79675be806 360,363-377
+  s_b98f758bbec157::t_857820cd2709b7 17
+  s_b98f758bbec157::t_6f0174f9c3e2dd 62,65-83,87-105,107-168,172-283
+  s_b98f758bbec157::t_dc96f39e60aea0 21,23,26,31-34
+  s_b98f758bbec157::t_9d48856ba57d2f 416-431
+  s_b98f758bbec157::t_4ea3ce30beb09f 1
+dashboard/pages/6_Plan.py
+  s_b98f758bbec157::t_3bfd05e12e6b35 87-89,94-136
+dashboard/pages/5_About.py
+  s_b98f758bbec157::t_95917fba1499f7 27,89
+README.md
+  s_b98f758bbec157::t_c4afc349955189 1,6,112,235
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "0c7ca3c18b2bad21f443f000f30093b3ed6d92db",
+  "prompts": {},
+  "sessions": {
+    "s_b98f758bbec157": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a24664b-43f2-4f20-b569-28736be51708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
