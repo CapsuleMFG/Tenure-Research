@@ -23,7 +23,6 @@ from components.theme import (
     BRAND_TAGLINE,
     DOWN,
     INK_SOFT,
-    PARCHMENT_DEEP,
     UP,
     inject_global_css,
 )
@@ -256,7 +255,7 @@ with c:
 st.markdown("&nbsp;", unsafe_allow_html=True)
 st.markdown("### How to use it")
 st.markdown(
-    f"""
+    """
     <ol style='padding-left:1.3rem;margin-top:0.5rem;
                line-height:1.6;color:#1F1F1F;max-width:780px;'>
       <li style='margin-bottom:0.5rem;'>
