@@ -107,13 +107,27 @@ about = st.Page(
     icon=":material/info:",
 )
 
-navigation = st.navigation(
-    {
-        "": [brief],
-        "Plan your operation": [plan, costs, pricing],
-        "Explore data": [catalog, series, forecast],
-        "Commodity tools (v2.0)": [decide, breakeven],
-        "Reference": [methodology, about],
-    }
-)
+# The v2.0 commodity tools (Decide / Feedlot Breakeven) target a
+# different audience (commodity feedlot operators) than the v3.0
+# direct-market focus. Keep them accessible but hide from the primary
+# nav so a direct-market rancher doesn't see noise. Opt in by appending
+# ``?advanced=1`` to the URL — same flag the admin sidebar uses.
+def _is_advanced_mode() -> bool:
+    try:
+        v = st.query_params.get("advanced") or st.query_params.get("admin")
+    except Exception:
+        return False
+    return v is not None and str(v).strip().lower() in ("1", "true", "yes")
+
+
+_nav: dict[str, list[st.Page]] = {
+    "": [brief],
+    "Plan your operation": [plan, costs, pricing],
+    "Explore data": [catalog, series, forecast],
+    "Reference": [methodology, about],
+}
+if _is_advanced_mode():
+    _nav["Commodity tools (v2.0)"] = [decide, breakeven]
+
+navigation = st.navigation(_nav)
 navigation.run()
