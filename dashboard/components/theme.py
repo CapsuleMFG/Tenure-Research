@@ -99,9 +99,16 @@ h3 {{ font-weight: 600; }}
   padding: 1.0rem 1.1rem 0.85rem 1.1rem;
   height: 100%;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  cursor: default;
+}}
+/* Hover lift is reserved for genuinely-clickable cards. Default
+   .lb-card is informational; signaling "I'm interactive" without
+   being interactive is the worst kind of UX confusion. */
+.lb-card-clickable {{
+  cursor: pointer;
   transition: box-shadow 0.15s ease, transform 0.15s ease;
 }}
-.lb-card:hover {{
+.lb-card-clickable:hover {{
   box-shadow: 0 3px 10px rgba(180, 82, 30, 0.10);
   transform: translateY(-1px);
 }}

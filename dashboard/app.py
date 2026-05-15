@@ -118,8 +118,8 @@ if sample_econ is not None:
             A typical <strong>Southeast cow-calf operation</strong> (60 cows,
             year-round fescue/bermuda pasture, ~1 ton hay/cow). Numbers below
             come straight from the <strong>Plan</strong> tool with the
-            <em>Southeast</em> regional preset. <em>Click "Try it with your
-            numbers" to put your real operation through the same math.</em>
+            <em>Southeast</em> regional preset. The buttons below this
+            box are the click targets — this card is illustrative only.
           </div>
           <div style='display:flex;flex-wrap:wrap;gap:1.6rem;
                       margin-top:0.4rem;'>
@@ -194,6 +194,10 @@ with cta_main_c:
 
 st.markdown("&nbsp;", unsafe_allow_html=True)
 st.markdown("### What you'll get")
+st.caption(
+    "The three tools that make up Tenure Brief. The buttons under each "
+    "card are the click targets — the cards themselves are descriptions."
+)
 
 a, b, c = st.columns(3)
 with a:
@@ -209,6 +213,9 @@ with a:
         "</div></div>",
         unsafe_allow_html=True,
     )
+    if st.button("Open Plan →", key="wyg_plan",
+                 use_container_width=True, type="tertiary"):
+        st.switch_page("dashboard/pages/6_Plan.py")
 with b:
     st.markdown(
         "<div class='lb-card' style='height:100%;'>"
@@ -222,6 +229,9 @@ with b:
         "</div></div>",
         unsafe_allow_html=True,
     )
+    if st.button("Open Costs →", key="wyg_costs",
+                 use_container_width=True, type="tertiary"):
+        st.switch_page("dashboard/pages/7_Costs.py")
 with c:
     st.markdown(
         "<div class='lb-card' style='height:100%;'>"
@@ -235,6 +245,9 @@ with c:
         "</div></div>",
         unsafe_allow_html=True,
     )
+    if st.button("Open Pricing →", key="wyg_pricing",
+                 use_container_width=True, type="tertiary"):
+        st.switch_page("dashboard/pages/8_Pricing.py")
 
 st.markdown("&nbsp;", unsafe_allow_html=True)
 st.markdown("### How to use it")
