@@ -19,6 +19,7 @@ from pathlib import Path
 
 import polars as pl
 import streamlit as st
+from components.scenarios import render_scenarios_panel
 from components.sidebar import DEFAULT_OBS_PATH, render_sidebar
 from components.theme import (
     ACCENT,
@@ -88,6 +89,25 @@ st.markdown(
     "</p>",
     unsafe_allow_html=True,
 )
+
+# --- Scenarios -------------------------------------------------------------
+# Named save/load via browser localStorage. Each scenario stores the
+# entire query string of the current Plan inputs; clicking a saved
+# scenario navigates the page to that querystring and the existing
+# _qp_get_* helpers repopulate every input.
+with st.expander("📋 Save / load scenarios", expanded=False):
+    st.caption(
+        "Save the current inputs under a name. Stored in this browser's "
+        "localStorage — survives page reloads and tab closes; not synced "
+        "across devices. To capture the current state, click the "
+        "**Copy shareable link** button at the bottom of any tab first "
+        "(it writes your inputs into the URL), then come back here and "
+        "name + save the scenario."
+    )
+    render_scenarios_panel(
+        accent=ACCENT,
+        parchment_deep=PARCHMENT_DEEP,
+    )
 
 obs_path = Path(DEFAULT_OBS_PATH)
 
