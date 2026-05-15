@@ -1,0 +1,34 @@
+src/usda_sandbox/sources.py
+  s_b98f758bbec157::t_f3fb0e0ca18434 1-23,26-188
+  s_b98f758bbec157::t_9c6ee967df1691 24-25
+src/usda_sandbox/direct_pricing.py
+  s_b98f758bbec157::t_97c6ed8b5686f4 53-58,61,64-68,72,75-79,83,87-89
+dashboard/pages/8_Pricing.py
+  s_b98f758bbec157::t_52c6194d4ff773 30
+  s_b98f758bbec157::t_671504d9d725fc 171-173,177-198
+dashboard/pages/6_Plan.py
+  s_b98f758bbec157::t_44d20a6ae43836 41-46,49-71
+  s_b98f758bbec157::t_a6fc4c54dc4ff0 249-251
+  s_b98f758bbec157::t_f5995ed790b91c 353-355
+  s_b98f758bbec157::t_4e1b6fc536fa92 505-507
+src/usda_sandbox/direct_market.py
+  s_b98f758bbec157::t_731453e8218b67 82-96,99-102,104-111
+  s_b98f758bbec157::t_0069dcb9a1462d 196-202,206,208,210,214-215
+  s_b98f758bbec157::t_ca413c14fc025f 304-320,323,332-333,335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "b44e985dea6fe5b7c1883043a920cd21e5a567d5",
+  "prompts": {},
+  "sessions": {
+    "s_b98f758bbec157": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a24664b-43f2-4f20-b569-28736be51708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "tylermark <147003392+tylermark@users.noreply.github.com>"
+    }
+  }
+}
